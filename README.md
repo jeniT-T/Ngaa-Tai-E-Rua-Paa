@@ -13,6 +13,7 @@ Clone repo:
 ```bash
 git clone https://github.com/jeniT-T/Ngaa-Tai-E-Rua-Paa
 cd marae-app
+docker compose up --build
 ```
 
 Create env file:
