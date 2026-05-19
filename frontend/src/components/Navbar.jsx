@@ -8,6 +8,7 @@ function Navbar() {
       <div style={{ display: "flex", gap: "15px" }}>
         <Link to="/">Home</Link>
         <Link to="/arrival">Arrival Info</Link>
+        <Link to="/contacts">Contacts</Link>
       </div>
     </nav>
   );
