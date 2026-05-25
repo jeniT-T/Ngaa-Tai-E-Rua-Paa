@@ -109,3 +109,66 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+/*Logo and Navigation interaction*/
+.header {
+  background: #27d3f5;
+  padding: 10px 20px;
+  border-bottom: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.header h3 {
+  margin: 0;
+  color: #08060d;
+  font-size: 18px;
+}
+
+.navbar {
+  background: #27d3f5;
+  padding: 12px 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+
+  border-bottom: 1px solid #ccc;
+  border-radius: 0;
+  height: auto;
+  width: 100%;
+  box-shadow: none;
+}
+
+.navbar a {
+  text-decoration: none;
+  color: #08060d;
+  font-weight: 600;
+}
+
+.navbar a:hover {
+  color: white;
+}
+/*
+.container{
+  background: #27D3F5;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+nav{
+  background: #27D3F5;
+  border-radius: 50%;
+  padding: 10%;
+  box-shadow: 0 25px 20px -20px rgba(0, 0, 0, 0.4);
+}*/
