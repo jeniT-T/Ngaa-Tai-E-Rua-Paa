@@ -16,19 +16,14 @@ function HomePage() {
       </section>
 
       {/* ACTION BUTTONS */}
-      <section style={{ 
-        display: "flex", 
-        justifyContent: "center", 
-        gap: "20px",
-        marginBottom: "50px"
-      }}>
+      <section className="actionButton">
         <Link to="/arrival">
-          <button>Visitor Information</button>
+          <button className="glButton">Visitor Information</button>
         </Link>
 
-        <button>Make a Booking</button>
+        <button className="glButton">Make a Booking</button>
 
-        <button>About</button>
+        <button className="glButton">About</button>
       </section>
 
     </div>
