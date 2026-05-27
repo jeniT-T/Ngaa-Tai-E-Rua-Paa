@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export default function WifiPage() {
   return (
     <main className="p-10">
