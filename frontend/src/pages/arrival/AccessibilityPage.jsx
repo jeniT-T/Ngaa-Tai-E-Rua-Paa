@@ -10,45 +10,31 @@ export default function AccessibilityPage() {
         </h1>
 
         <p className="text-gray-700 mb-6">
-          This information is provided to help disabled guests
-          navigate the marae comfortably and safely.
+          This information is provided to help disabled guests navigate the marae comfortably and safely.
         </p>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-3">
-            Disabled Bathrooms
-          </h2>
-
+          <h2 className="text-2xl font-semibold mb-3">Disabled Bathrooms</h2>
           <p className="text-gray-700">
-            Accessible bathrooms are located at 
+            Accessible bathrooms are located at the designated accessible facilities area.
           </p>
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-3">
-            Wheelchair Access Points
-          </h2>
-
+          <h2 className="text-2xl font-semibold mb-3">Wheelchair Access Points</h2>
           <p className="text-gray-700">
-            Wheelchair ramps are available at
+            Wheelchair ramps are available at main entrances and key buildings.
           </p>
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold mb-3">
-            Need Assistance?
-          </h2>
-
+          <h2 className="text-2xl font-semibold mb-3">Need Assistance?</h2>
           <p className="text-gray-700">
-            Please contact the marae caretaker if assistance
-            is required during your stay.
+            Please contact the marae caretaker if assistance is required during your stay.
           </p>
         </section>
 
-        <Link
-          href="/arrival"
-          className="inline-block mt-8 bg-black text-white px-6 py-3 rounded-xl"
-        >
+        <Link href="/arrival" className="inline-block mt-8 bg-black text-white px-6 py-3 rounded-xl">
           Back to Arrival Information
         </Link>
 

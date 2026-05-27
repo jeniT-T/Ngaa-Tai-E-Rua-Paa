@@ -17,17 +17,17 @@ export default function EmergencyPage() {
 
           <div>
             <h2 className="text-xl font-semibold">Primary Exit Point</h2>
-            <p>Follow signs to the.</p>
+            <p>Follow marked signage to the main exit.</p>
           </div>
 
           <div>
             <h2 className="text-xl font-semibold">Secondary Exit Point</h2>
-            <p>At the </p>
+            <p>Located at the rear near the kitchen area.</p>
           </div>
 
           <div>
             <h2 className="text-xl font-semibold">Assembly Area</h2>
-            <p>Open field located at.</p>
+            <p>Open field located away from the main buildings.</p>
           </div>
 
           <div className="bg-red-50 p-4 rounded-xl">
