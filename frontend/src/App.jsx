@@ -9,7 +9,7 @@ import HealthAndSafetyPage from "./pages/HealthAndSafetyPage.jsx";
 
 import GasPage from "./pages/arrival/GasPage.jsx";
 import WifiPage from "./pages/arrival/WifiPage.jsx";
-import MapPage from "./pages/arrival/MapPage.jsx";
+import MapPage from "./pages/MapPage.jsx";
 import EmergencyPage from "./pages/arrival/EmergencyPage.jsx";
 import AccessibilityPage from "./pages/arrival/AccessibilityPage.jsx";
 import RulesPage from "./pages/arrival/RulesPage.jsx";
@@ -26,16 +26,18 @@ function App() {
         {/* Arrival subpages */}
         <Route path="/arrival/gas" element={<GasPage />} />
         <Route path="/arrival/wifi" element={<WifiPage />} />
-        <Route path="/arrival/map" element={<MapPage />} />
         <Route path="/arrival/emergency" element={<EmergencyPage />} />
         <Route path="/arrival/accessibility" element={<AccessibilityPage />} />
         <Route path="/arrival/rules" element={<RulesPage />} />
 
         <Route path="/contacts" element={<ContactPage />} />
         <Route path="/health-and-safety" element={<HealthAndSafetyPage />} />
+        <Route path="/map" element={<MapPage />} />
       </Routes>
     </div>
   );
+
+  
 }
 
 export default App;

@@ -1,3 +1,4 @@
+/*Global CSS variable */
 :root {
   --text: #6b6375;
   --text-h: #08060d;
@@ -30,37 +31,18 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
 body {
   margin: 0;
 }
 
+/*id with "root"*/
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
+  width: 100%;
   min-height: 100svh;
+  margin: 0;
+  padding: 0;
+  border: none;
+  text-align: left;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -73,24 +55,6 @@ h2 {
   color: var(--text-h);
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
 p {
   margin: 0;
 }
@@ -115,11 +79,17 @@ code {
   background: #27d3f5;
   padding: 10px 20px;
   border-bottom: 1px solid #ccc;
+
   display: flex;
   align-items: center;
   gap: 10px;
+
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
+/*size of the logo image*/
 .logo {
   width: 40px;
   height: 40px;
@@ -132,6 +102,7 @@ code {
   font-size: 18px;
 }
 
+/*styling the Navbar*/
 .navbar {
   background: #27d3f5;
   padding: 12px 20px;
@@ -144,18 +115,28 @@ code {
   border-bottom: 1px solid #ccc;
   border-radius: 0;
   height: auto;
+
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+
   box-shadow: none;
 }
 
 .navbar a {
   text-decoration: none;
   color: #08060d;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 12px;
+  transition: 0.25s ease;
 }
 
+/*change text color to white when hovering*/
 .navbar a:hover {
   color: white;
+  background: rgba(20, 16, 244, 0.12);
 }
 
 /*Action buttons*/
@@ -185,9 +166,162 @@ code {
   transition: all 0.25s ease;
 }
 
+/*changes when mouse hovers*/
 .glButton:hover {
-  background: rgba(29, 116, 157, 0.45);
+  background: rgba(0, 129, 189, 0.905);
   transform: translateY(-3px);
   box-shadow: 0 12px 28px rgba(29, 55, 157, 0.45);
   color: white;
+}
+
+/*MAP STYLE*/
+.map-page {
+  min-height: 100vh;
+  padding: 32px;
+  background: rgba(255, 255, 255, 0.599);
+  color: rgb(29, 42, 45);
+}
+
+.map-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.map-header h1 {
+  margin: 0 0 10px;
+  font-size: 42px;
+  color: #33251c;
+}
+
+.map-header p {
+  margin: 0;
+  font-size: 18px;
+  color: #6b5b4d;
+}
+
+.map-content {
+  max-width: 1250px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.map-card {
+  background: white;
+  padding: 14px;
+  border-radius: 24px;
+  box-shadow: 0 16px 35px rgba(0, 0, 0, 0.18);
+}
+
+.map-container {
+  position: relative;
+  width: 100%;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.map-image {
+  width: 100%;
+  display: block;
+}
+
+.map-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 3px solid white;
+  background: #23207a;
+  color: white;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+  transition: 0.25s ease;
+  z-index: 5;
+}
+
+.map-marker:hover {
+  background: #2aadb6;
+  transform: translate(-50%, -50%) scale(1.15);
+}
+
+.map-marker.active {
+  background: #2aadb6;
+  ;
+  color: #2d1c10;
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
+.map-info-panel {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 24px;
+  padding: 28px;
+  border: 1px solid #e2d4c3;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+.map-label {
+  margin: 0 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 13px;
+  font-weight: bold;
+  color:black;
+}
+
+.map-info-panel h2 {
+  margin: 0 0 12px;
+  font-size: 30px;
+  color: #33251c;
+}
+
+.map-type {
+  display: inline-block;
+  margin-bottom: 18px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #b7e3ea;
+  color: #4a2b17;
+  font-weight: bold;
+}
+
+.map-description {
+  font-size: 16px;
+  line-height: 1.6;
+  color: black;
+}
+
+.map-instruction {
+  margin-top: 24px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #b7e3ea;
+  color: #4a2b17;
+  font-weight: bold;
+}
+
+/* RESPONSIVE MAP STYLE */
+
+@media (max-width: 900px) {
+  .map-page {
+    padding: 20px;
+  }
+
+  .map-content {
+    grid-template-columns: 1fr;
+  }
+
+  .map-header h1 {
+    font-size: 32px;
+  }
+
+  .map-marker {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
 }

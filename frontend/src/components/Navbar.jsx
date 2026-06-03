@@ -17,6 +17,7 @@ function Navbar() {
       <Link to="/arrival">Arrival Info</Link>
       <Link to="/contacts">Contacts</Link>
       <Link to="/health-and-safety">Health & Safety</Link>
+      <Link to="/map">Map</Link>
     </nav>
     </header>
   );
