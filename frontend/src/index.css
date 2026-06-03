@@ -74,6 +74,28 @@ code {
   background: var(--code-bg);
 }
 
+@media (max-width: 700px) {
+  .navbar {
+    width: 100%;
+    box-sizing: border-box;
+
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+
+    gap: 10px;
+    padding: 12px 10px;
+  }
+
+  .navbar a {
+    font-size: 16px;
+    padding: 8px 10px;
+    text-align: center;
+    line-height: 1.2;
+  }
+}
+
 /*Logo and Navigation interaction*/
 .header {
   background: #27d3f5;
@@ -323,5 +345,77 @@ code {
     width: 32px;
     height: 32px;
     font-size: 13px;
+  }
+}
+
+/* Hide hamburger button on desktop */
+.menu-toggle {
+  display: none;
+}
+
+/* PHONE NAVBAR */
+@media (max-width: 700px) {
+  .header {
+    position: relative;
+    padding: 10px 16px;
+    justify-content: flex-start;
+  }
+
+  .logo {
+    width: 42px;
+    height: 42px;
+  }
+
+  .header h3 {
+    font-size: 20px;
+  }
+
+  .menu-toggle {
+    display: block;
+    margin-left: auto;
+
+    background: transparent;
+    border: none;
+    color: #08060d;
+    font-size: 32px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .navbar {
+    display: none;
+    width: 100%;
+    box-sizing: border-box;
+
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 0;
+    padding: 0;
+    background: #27d3f5;
+    border-bottom: 1px solid #ccc;
+  }
+
+  .navbar.show-menu {
+    display: flex;
+  }
+
+  .navbar a {
+    width: 100%;
+    padding: 14px 20px;
+    text-align: center;
+
+    color: #08060d;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: 700;
+
+    border-top: 1px solid rgba(255, 255, 255, 0.45);
+  }
+
+  .navbar a:hover {
+    background: rgba(0, 0, 0, 0.12);
+    color: white;
   }
 }

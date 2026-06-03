@@ -22,10 +22,10 @@ function MapPage() {
     },
     {
       id: 3,
-      name: "Parking Area",
-      type: "Parking",
+      name: "Evacuation Area",
+      type: "Assembly area 1",
       description:
-        "This area can be used for visitor parking before entering the main facilities.",
+        "This area can be used in emergency situations or natural disasters.",
       x: 45,
       y: 16,
     },
