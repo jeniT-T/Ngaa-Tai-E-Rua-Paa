@@ -1,4 +1,5 @@
 import { useState } from "react";
+import mapImage from "../image/Map.png";
 
 function MapPage() {
   const facilities = [
@@ -70,7 +71,7 @@ function MapPage() {
       <main className="map-content">
         <section className="map-card">
           <div className="map-container">
-            <img src="/images/Map.png" alt="Facilities map" className="map-image" />
+            <img src={mapImage} alt="Facilities map" className="map-image" />
 
             {facilities.map((facility) => (
               <button
