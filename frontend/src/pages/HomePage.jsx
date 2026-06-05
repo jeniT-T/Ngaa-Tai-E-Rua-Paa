@@ -23,7 +23,9 @@ function HomePage() {
 
         <button className="glButton">Make a Booking</button>
 
-        <button className="glButton">About</button>
+        <Link to="/rules">
+          <button className="glButton">About</button>
+        </Link>
       </section>
 
     </div>

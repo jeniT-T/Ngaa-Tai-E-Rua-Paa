@@ -1,26 +1,42 @@
-import { Link } from "react-router-dom";
-
 export default function RulesPage() {
   return (
-    <main className="p-10">
-      <h1 className="text-3xl font-bold mb-4">
-        Rules & Regulations
-      </h1>
+    <main className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-3xl mx-auto bg-white p-8 rounded-2xl shadow">
 
-      <p className="mb-6">
-        Marae rules and expectations for all visitors.
-      </p>
+        <h1 className="text-4xl font-bold mb-6">
+          Rules & Regulations
+        </h1>
 
-      <section>
-        <h2 className="text-2xl font-semibold mb-2">
-          Facility Time Restrictions
-        </h2>
+        <p className="text-gray-700 mb-6">
+          Welcome to the marae. Please follow these rules to ensure respect,
+          safety, and a smooth stay for everyone.
+        </p>
 
-        <ul className="list-disc pl-6 text-gray-700 space-y-2">
-          <li>Kitchen use allowed 6am - 10pm</li>
-          <li>No loud activities during services</li>
-        </ul>
-      </section>
+        <section className="mb-6">
+          <h2 className="text-2xl font-semibold mb-2">
+            General Rules
+          </h2>
+
+          <ul className="list-disc pl-6 text-gray-700 space-y-2">
+            <li>Respect the marae and all visitors</li>
+            <li>No shoes inside the wharenui (meeting house)</li>
+            <li>Keep noise to a minimum during evening hours</li>
+            <li>Clean up after using shared spaces</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-semibold mb-2">
+            Facility Time Restrictions
+          </h2>
+
+          <ul className="list-disc pl-6 text-gray-700 space-y-2">
+            <li>Kitchen use: 6am – 10pm</li>
+            <li>Quiet hours: 10pm – 7am</li>
+          </ul>
+        </section>
+
+      </div>
     </main>
   );
 }
