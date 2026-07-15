@@ -1,12 +1,30 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
+
+// Where each role's "dashboard" link should point
+const DASHBOARD_LINKS = {
+  admin: { to: "/admin", label: "Admin Dashboard" },
+  caretaker: { to: "/caretaker/checklists", label: "Checklists" },
+  member: { to: "/bookings", label: "Bookings" },
+};
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   function closeMenu() {
     setMenuOpen(false);
   }
+
+  async function handleLogout() {
+    await logout();
+    closeMenu();
+    navigate("/");
+  }
+
+  const dashboard = user ? DASHBOARD_LINKS[user.role] : null;
 
   return (
     <header>
@@ -51,6 +69,30 @@ function Navbar() {
         <Link to="/map" onClick={closeMenu}>
           Map
         </Link>
+
+        {/* Auth-aware section */}
+        {user ? (
+          <>
+            {dashboard && (
+              <Link to={dashboard.to} onClick={closeMenu}>
+                {dashboard.label}
+              </Link>
+            )}
+            <span className="navbar-user">Kia ora, {user.name}</span>
+            <button className="navbar-logout" onClick={handleLogout}>
+              Logout
+            </button>
+          </>
+        ) : (
+          <>
+            <Link to="/login" onClick={closeMenu}>
+              Login
+            </Link>
+            <Link to="/register" onClick={closeMenu}>
+              Register
+            </Link>
+          </>
+        )}
       </nav>
     </header>
   );
