@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const cors = require('cors');
 
 const authRoutes = require('./routes/auth');
+const adminRoutes = require('./routes/admin');
 const requireAuth = require('./middleware/requireAuth');
 const requireRole = require('./middleware/requireRole');
 
@@ -22,6 +23,10 @@ app.use(
 // --- Auth routes (login, logout, register, me) ---
 app.use('/api/auth', authRoutes);
 
+// --- Admin routes (list/create users, change roles) ---
+// requireAuth + requireRole('admin') are applied inside admin.js itself
+app.use('/api/admin', adminRoutes);
+
 // --- Example protected routes, showing the pattern for each role ---
 
 // Members (and admins) can create bookings
@@ -36,11 +41,6 @@ app.get('/api/caretaker/checklists', requireAuth, requireRole('caretaker', 'admi
   res.json({ message: `Checklists for ${req.user.name}` });
 });
 
-// Only admins can manage site content
-app.get('/api/admin/content', requireAuth, requireRole('admin'), (req, res) => {
-  // TODO: replace with real content controller
-  res.json({ message: 'Admin content list' });
-});
-
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));
+

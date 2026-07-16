@@ -21,6 +21,7 @@ import LoginPage from "./pages/LoginPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
 import UnauthorizedPage from "./pages/UnauthorizedPage.jsx";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
+import UserManagementPage from "./pages/admin/UserManagementPage.jsx";
 import ChecklistsPage from "./pages/caretaker/ChecklistsPage.jsx";
 import TutorialsPage from "./pages/caretaker/TutorialsPage.jsx";
 
@@ -74,6 +75,14 @@ function App() {
             element={
               <RoleRoute allowed={["admin"]}>
                 <AdminDashboardPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <RoleRoute allowed={["admin"]}>
+                <UserManagementPage />
               </RoleRoute>
             }
           />
