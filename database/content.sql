@@ -1,7 +1,0 @@
-CREATE TABLE content (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    section_name VARCHAR(100),
-    title VARCHAR(255),
-    body TEXT,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
