@@ -12,20 +12,19 @@ Clone repo:
 
 ```bash
 git clone https://github.com/jeniT-T/Ngaa-Tai-E-Rua-Paa
-cd marae-app
+cd Ngaa-Tai-E-Rua-Paa
+```
+
+Build and start:
+
+```bash
 docker compose up --build
 ```
 
-Create env file:
+If you want to override defaults, copy the example file and edit it:
 
 ```bash
 cp .env.example .env
-```
-
-Run project:
-
-```bash
-docker compose up --build
 ```
 
 Open:

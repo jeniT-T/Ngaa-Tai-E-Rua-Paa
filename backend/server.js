@@ -8,6 +8,7 @@ const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const requireAuth = require('./middleware/requireAuth');
 const requireRole = require('./middleware/requireRole');
+const initDb = require('./scripts/initDb');
 
 const app = express();
 
@@ -43,13 +44,8 @@ app.use('/api/auth', authRoutes);
 // requireAuth + requireRole('admin') are applied inside admin.js itself
 app.use('/api/admin', adminRoutes);
 
-// --- Example protected routes, showing the pattern for each role ---
-
-// Members (and admins) can create bookings
-app.post('/api/bookings', requireAuth, requireRole('member', 'admin'), (req, res) => {
-  // TODO: replace with real bookings controller
-  res.json({ message: `Booking created by ${req.user.name}` });
-});
+// Booking API
+app.use('/api/bookings', require('./routes/bookings'));
 
 // Caretakers (and admins) can view/update checklists
 app.get('/api/caretaker/checklists', requireAuth, requireRole('caretaker', 'admin'), (req, res) => {
@@ -58,5 +54,13 @@ app.get('/api/caretaker/checklists', requireAuth, requireRole('caretaker', 'admi
 });
 
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));
+
+initDb()
+  .then(() => {
+    app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));
+  })
+  .catch((err) => {
+    console.error('Failed to initialize database', err);
+    process.exit(1);
+  });
 

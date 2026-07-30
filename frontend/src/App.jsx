@@ -24,6 +24,7 @@ import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
 import UserManagementPage from "./pages/admin/UserManagementPage.jsx";
 import ChecklistsPage from "./pages/caretaker/ChecklistsPage.jsx";
 import TutorialsPage from "./pages/caretaker/TutorialsPage.jsx";
+import BookingsPage from "./pages/BookingsPage.jsx";
 
 function App() {
   return (
@@ -83,6 +84,14 @@ function App() {
             element={
               <RoleRoute allowed={["admin"]}>
                 <UserManagementPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/bookings"
+            element={
+              <RoleRoute allowed={["member", "admin"]}>
+                <BookingsPage />
               </RoleRoute>
             }
           />

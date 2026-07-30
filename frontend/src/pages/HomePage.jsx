@@ -21,7 +21,9 @@ function HomePage() {
           <button className="glButton">Visitor Information</button>
         </Link>
 
-        <button className="glButton">Make a Booking</button>
+        <Link to="/bookings">
+          <button className="glButton">Make a Booking</button>
+        </Link>
 
         <Link to="/rules">
           <button className="glButton">About</button>

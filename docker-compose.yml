@@ -5,6 +5,8 @@ services:
     ports:
       - "3000:3000"
     working_dir: /app
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:4000/api}
     command: npm run dev
 
   backend:
@@ -12,13 +14,19 @@ services:
       context: ./backend
     ports:
       - "4000:4000"
-    # Use shared .env so the backend can read FRONTEND_URL and JWT_SECRET during development.
-    env_file:
-      - .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:password@db:5432/marae_db}
+      NODE_ENV: ${NODE_ENV:-development}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-me}
+      CREATE_ADMIN_EMAIL: ${CREATE_ADMIN_EMAIL:-admin@example.com}
+      CREATE_ADMIN_PASSWORD: ${CREATE_ADMIN_PASSWORD:-StrongPassword123}
+      CREATE_ADMIN_NAME: ${CREATE_ADMIN_NAME:-Admin Name}
     working_dir: /app
-    command: npm run dev
+    command: npm run start
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   db:
     image: postgres:16
@@ -28,6 +36,12 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: marae_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d marae_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
