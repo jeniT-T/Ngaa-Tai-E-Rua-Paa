@@ -13,9 +13,25 @@ const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
+
+// Allow the frontend app to call this backend during development.
+// The app is served from localhost:3000 in the current setup,
+// but we also keep localhost:5173 for Vite defaults or alternate dev ports.
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:3000',
+  'http://localhost:5173',
+];
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173', // Vite default port
+    origin: (origin, callback) => {
+      // If the request has no origin (server-to-server or same-origin), allow it.
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('CORS policy does not allow this origin'));
+      }
+    },
     credentials: true, // allows the httpOnly cookie to be sent/received
   })
 );
