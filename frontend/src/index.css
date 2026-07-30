@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 /*Global CSS variable */
 :root {
   --text: #6b6375;
