@@ -19,7 +19,7 @@ docker compose up --build
 Create env file:
 
 ```bash
-cp .env.example .env.local
+cp .env.example .env
 ```
 
 Run project:
