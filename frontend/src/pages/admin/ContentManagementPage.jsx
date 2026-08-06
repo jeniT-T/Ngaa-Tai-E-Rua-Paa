@@ -1,0 +1,294 @@
+// frontend/src/pages/admin/ContentManagementPage.jsx
+import { useState, useEffect } from "react";
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+const ALL_ROLES = ["member", "caretaker", "admin"];
+const SUGGESTED_CATEGORIES = [
+  "recipe",
+  "onboarding",
+  "equipment",
+  "maintenance",
+  "rules",
+  "health_safety",
+  "general",
+];
+
+const EMPTY_FORM = { title: "", body: "", category: "general", visibleToRoles: ["member"] };
+
+export default function ContentManagementPage() {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [editingId, setEditingId] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [moveTarget, setMoveTarget] = useState({}); // { [itemId]: newCategory }
+
+  useEffect(() => {
+    loadItems();
+  }, []);
+
+  async function loadItems() {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/content`, { credentials: "include" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to load content");
+      setItems(data.items);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function toggleRole(role) {
+    setForm((prev) => ({
+      ...prev,
+      visibleToRoles: prev.visibleToRoles.includes(role)
+        ? prev.visibleToRoles.filter((r) => r !== role)
+        : [...prev.visibleToRoles, role],
+    }));
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError("");
+
+    if (form.visibleToRoles.length === 0) {
+      setError("Select at least one user type who can view this content.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const isEditing = Boolean(editingId);
+      const res = await fetch(
+        isEditing ? `${API_BASE}/content/${editingId}` : `${API_BASE}/content`,
+        {
+          method: isEditing ? "PATCH" : "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save content");
+
+      if (isEditing) {
+        setItems((prev) => prev.map((i) => (i.id === editingId ? data.item : i)));
+      } else {
+        setItems((prev) => [data.item, ...prev]);
+      }
+      setForm(EMPTY_FORM);
+      setEditingId(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function startEdit(item) {
+    setEditingId(item.id);
+    setForm({
+      title: item.title,
+      body: item.body,
+      category: item.category,
+      visibleToRoles: item.visible_to_roles,
+    });
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+  }
+
+  async function handleDelete(id) {
+    if (!window.confirm("Delete this item? This cannot be undone.")) return;
+    setError("");
+    try {
+      const res = await fetch(`${API_BASE}/content/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok && res.status !== 204) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to delete");
+      }
+      setItems((prev) => prev.filter((i) => i.id !== id));
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleCopy(item) {
+    setError("");
+    try {
+      const res = await fetch(`${API_BASE}/content/${item.id}/copy`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to copy");
+      setItems((prev) => [data.item, ...prev]);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleMove(item) {
+    const category = moveTarget[item.id];
+    if (!category || category === item.category) return;
+    setError("");
+    try {
+      const res = await fetch(`${API_BASE}/content/${item.id}/move`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to move");
+      setItems((prev) => prev.map((i) => (i.id === item.id ? data.item : i)));
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  return (
+    <div className="p-8 max-w-3xl mx-auto">
+      <h1 className="text-2xl font-semibold mb-2">Content Manager</h1>
+      <p className="text-sm text-gray-500 mb-6">
+        Add, edit, move, copy, or delete content — and choose which user types can see it.
+      </p>
+
+      {error && <p className="text-red-600 mb-4">{error}</p>}
+
+      <section className="mb-10 border rounded p-4">
+        <h2 className="text-lg font-medium mb-4">{editingId ? "Edit item" : "Add new item"}</h2>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <input
+            type="text"
+            placeholder="Title"
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            required
+            className="w-full border rounded px-3 py-2"
+          />
+          <textarea
+            placeholder="Body / content"
+            value={form.body}
+            onChange={(e) => setForm({ ...form, body: e.target.value })}
+            required
+            rows={4}
+            className="w-full border rounded px-3 py-2"
+          />
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Category (area)</label>
+            <input
+              type="text"
+              list="category-suggestions"
+              value={form.category}
+              onChange={(e) => setForm({ ...form, category: e.target.value })}
+              className="w-full border rounded px-3 py-2"
+            />
+            <datalist id="category-suggestions">
+              {SUGGESTED_CATEGORIES.map((c) => (
+                <option key={c} value={c} />
+              ))}
+            </datalist>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Visible to</label>
+            <div className="flex gap-4">
+              {ALL_ROLES.map((role) => (
+                <label key={role} className="flex items-center gap-1 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={form.visibleToRoles.includes(role)}
+                    onChange={() => toggleRole(role)}
+                  />
+                  {role}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={saving}
+              className="bg-black text-white rounded px-4 py-2 disabled:opacity-50"
+            >
+              {saving ? "Saving..." : editingId ? "Save changes" : "Add item"}
+            </button>
+            {editingId && (
+              <button type="button" onClick={cancelEdit} className="border rounded px-4 py-2">
+                Cancel
+              </button>
+            )}
+          </div>
+        </form>
+      </section>
+
+      <section>
+        <h2 className="text-lg font-medium mb-4">Existing content</h2>
+        {loading ? (
+          <p>Loading...</p>
+        ) : items.length === 0 ? (
+          <p className="text-gray-500">No content yet.</p>
+        ) : (
+          <ul className="space-y-3">
+            {items.map((item) => (
+              <li key={item.id} className="border rounded p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-medium">{item.title}</h3>
+                  <span className="text-xs px-2 py-1 rounded bg-gray-100">
+                    {item.category}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 whitespace-pre-line mb-2">{item.body}</p>
+                <p className="text-xs text-gray-500 mb-3">
+                  Visible to: {item.visible_to_roles.join(', ')}
+                </p>
+
+                <div className="flex flex-wrap gap-2 items-center">
+                  <button onClick={() => startEdit(item)} className="text-sm border rounded px-3 py-1">
+                    Modify
+                  </button>
+                  <button onClick={() => handleCopy(item)} className="text-sm border rounded px-3 py-1">
+                    Copy
+                  </button>
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    className="text-sm text-red-600 border border-red-200 rounded px-3 py-1"
+                  >
+                    Delete
+                  </button>
+
+                  <select
+                    value={moveTarget[item.id] ?? item.category}
+                    onChange={(e) => setMoveTarget((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                    className="text-sm border rounded px-2 py-1"
+                  >
+                    {SUGGESTED_CATEGORIES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                  <button onClick={() => handleMove(item)} className="text-sm border rounded px-3 py-1">
+                    Move
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
+  );
+}

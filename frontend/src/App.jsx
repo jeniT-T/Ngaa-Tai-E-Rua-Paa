@@ -25,6 +25,12 @@ import UserManagementPage from "./pages/admin/UserManagementPage.jsx";
 import ChecklistsPage from "./pages/caretaker/ChecklistsPage.jsx";
 import TutorialsPage from "./pages/caretaker/TutorialsPage.jsx";
 
+import ContentLibraryPage from "./pages/ContentLibraryPage.jsx";
+import ReportIssuePage from "./pages/ReportIssuePage.jsx";
+import IssuesInboxPage from "./pages/admin/IssuesInboxPage.jsx";
+import ContentManagementPage from "./pages/admin/ContentManagementPage.jsx";
+
+
 function App() {
   return (
     <AuthProvider>
@@ -60,11 +66,53 @@ function App() {
               </RoleRoute>
             }
           />
+
+          {/* Content library — any logged-in user (member, caretaker, or admin) */}
+          <Route
+            path="/content"
+            element={
+              <RoleRoute allowed={["member", "caretaker", "admin"]}>
+                <ContentLibraryPage />
+              </RoleRoute>
+            }
+          />
+
+
           <Route
             path="/caretaker/tutorials"
             element={
               <RoleRoute allowed={["caretaker", "admin"]}>
                 <TutorialsPage />
+              </RoleRoute>
+            }
+          />
+
+          {/* Report an issue — any logged-in user */}
+          <Route
+            path="/report-issue"
+            element={
+              <RoleRoute allowed={["member", "caretaker", "admin"]}>
+                <ReportIssuePage />
+              </RoleRoute>
+            }
+          />
+
+          {/* Admin: view reported issues */}
+          <Route
+            path="/admin/issues"
+            element={
+              <RoleRoute allowed={["admin"]}>
+                <IssuesInboxPage />
+              </RoleRoute>
+            }
+          />
+
+          {/* Admin: view reported issues */}
+          <Route
+            path="/admin/content"
+            element={
+              <RoleRoute allowed={["admin"]}>
+                <ContentManagementPage />
               </RoleRoute>
             }
           />
