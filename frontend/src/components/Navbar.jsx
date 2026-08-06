@@ -54,20 +54,12 @@ function Navbar() {
           Home
         </Link>
 
-        <Link to="/arrival" onClick={closeMenu}>
-          Arrival Info
+        <Link to="/events" onClick={closeMenu}>
+          Events
         </Link>
 
         <Link to="/contacts" onClick={closeMenu}>
-          Contacts
-        </Link>
-
-        <Link to="/health-and-safety" onClick={closeMenu}>
-          Health & Safety
-        </Link>
-
-        <Link to="/map" onClick={closeMenu}>
-          Map
+          Contact Us
         </Link>
 
         {/* Auth-aware section */}

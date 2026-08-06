@@ -1,6 +1,6 @@
 // frontend/src/pages/LoginPage.jsx
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const ROLE_DESTINATIONS = {
@@ -78,6 +78,13 @@ export default function LoginPage() {
           {submitting ? 'Logging in...' : 'Log in'}
         </button>
       </form>
+
+      <p className="text-sm text-gray-600 mt-4 text-center">
+        Don't have an account?{' '}
+        <Link to="/register" className="font-medium underline">
+          Register
+        </Link>
+      </p>
     </div>
   );
 }
