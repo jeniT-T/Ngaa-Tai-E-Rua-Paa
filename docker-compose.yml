@@ -1,21 +1,20 @@
 services:
   frontend:
-  build:
-    context: ./frontend
-  ports:
-    - "3000:3000"
-  volumes:
-    - ./frontend:/app
-    - /app/node_modules
-  working_dir: /app
-  command: npm run dev
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    working_dir: /app
+    command: npm run dev
 
   backend:
     build:
       context: ./backend
     ports:
       - "4000:4000"
-    # Use shared .env so the backend can read FRONTEND_URL and JWT_SECRET during development.
     env_file:
       - .env
     working_dir: /app
