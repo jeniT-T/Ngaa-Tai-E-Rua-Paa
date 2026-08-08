@@ -9,10 +9,17 @@ export default function AdminDashboardPage() {
     <div className="p-8">
       <h1 className="text-2xl font-semibold mb-4">Admin Dashboard</h1>
       <p className="mb-4">Welcome, {user?.name}. Manage marae content from here.</p>
-      <Link to="/admin/users" className="underline">
-        Manage users &amp; roles →
-      </Link>
-      {/* TODO: content management UI */}
+      <div className="flex flex-col gap-2 items-start">
+        <Link to="/admin/content" className="underline">
+          Manage content →
+        </Link>
+        <Link to="/admin/users" className="underline">
+          Manage users &amp; roles →
+        </Link>
+        <Link to="/admin/issues" className="underline">
+          Reported issues →
+        </Link>
+      </div>
     </div>
   );
 }

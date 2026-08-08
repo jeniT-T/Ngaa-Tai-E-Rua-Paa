@@ -17,6 +17,7 @@ const EMPTY_FORM = { title: "", body: "", category: "general", visibleToRoles: [
 
 export default function ContentManagementPage() {
   const [items, setItems] = useState([]);
+  const [categories, setCategories] = useState(SUGGESTED_CATEGORIES);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [form, setForm] = useState(EMPTY_FORM);
@@ -26,6 +27,7 @@ export default function ContentManagementPage() {
 
   useEffect(() => {
     loadItems();
+    loadCategories();
   }, []);
 
   async function loadItems() {
@@ -39,6 +41,21 @@ export default function ContentManagementPage() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  // Pulls in whatever categories actually exist in the database (which may
+  // include ones an admin created on the fly), merged with the suggested
+  // list, so "move" always has the item's real current category as an option.
+  async function loadCategories() {
+    try {
+      const res = await fetch(`${API_BASE}/content/categories`, { credentials: "include" });
+      const data = await res.json();
+      if (res.ok) {
+        setCategories([...new Set([...SUGGESTED_CATEGORIES, ...data.categories])]);
+      }
+    } catch {
+      // non-critical — fall back to the suggested list
     }
   }
 
@@ -82,6 +99,7 @@ export default function ContentManagementPage() {
       }
       setForm(EMPTY_FORM);
       setEditingId(null);
+      loadCategories(); // in case a brand-new category was typed in
     } catch (err) {
       setError(err.message);
     } finally {
@@ -153,6 +171,7 @@ export default function ContentManagementPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to move");
       setItems((prev) => prev.map((i) => (i.id === item.id ? data.item : i)));
+      loadCategories(); // in case it moved into a brand-new category
     } catch (err) {
       setError(err.message);
     }
@@ -197,7 +216,7 @@ export default function ContentManagementPage() {
               className="w-full border rounded px-3 py-2"
             />
             <datalist id="category-suggestions">
-              {SUGGESTED_CATEGORIES.map((c) => (
+              {categories.map((c) => (
                 <option key={c} value={c} />
               ))}
             </datalist>
@@ -271,15 +290,13 @@ export default function ContentManagementPage() {
                     Delete
                   </button>
 
-                  <select
+                  <input
+                    type="text"
+                    list="category-suggestions"
                     value={moveTarget[item.id] ?? item.category}
                     onChange={(e) => setMoveTarget((prev) => ({ ...prev, [item.id]: e.target.value }))}
-                    className="text-sm border rounded px-2 py-1"
-                  >
-                    {SUGGESTED_CATEGORIES.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
+                    className="text-sm border rounded px-2 py-1 w-36"
+                  />
                   <button onClick={() => handleMove(item)} className="text-sm border rounded px-3 py-1">
                     Move
                   </button>
