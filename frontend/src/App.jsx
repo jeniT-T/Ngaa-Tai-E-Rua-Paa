@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 
 import { AuthProvider } from "./context/AuthContext.jsx";
 import RoleRoute from "./components/RoleRoute.jsx";
+import ArrivalAccessGate from "./components/ArrivalAccessGate.jsx";
 
 import Navbar from "./components/Navbar.jsx";
 
@@ -13,6 +14,7 @@ import HistoryPage from "./pages/HistoryPage.jsx";
 import FacilitiesPage from "./pages/FacilitiesPage.jsx";
 import EventsPage from "./pages/EventsPage.jsx";
 import BookingRequestPage from "./pages/BookingRequestPage.jsx";
+import MyBookingsPage from "./pages/MyBookingsPage.jsx";
 
 import GasPage from "./pages/arrival/GasPage.jsx";
 import WifiPage from "./pages/arrival/WifiPage.jsx";
@@ -35,6 +37,7 @@ import ContentLibraryPage from "./pages/ContentLibraryPage.jsx";
 import ReportIssuePage from "./pages/ReportIssuePage.jsx";
 import IssuesInboxPage from "./pages/admin/IssuesInboxPage.jsx";
 import ContentManagementPage from "./pages/admin/ContentManagementPage.jsx";
+import AdminBookingsPage from "./pages/admin/AdminBookingsPage.jsx";
 
 
 function App() {
@@ -45,13 +48,60 @@ function App() {
 
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/arrival" element={<ArrivalPage />} />
 
-          {/* Arrival subpages */}
-          <Route path="/arrival/gas" element={<GasPage />} />
-          <Route path="/arrival/wifi" element={<WifiPage />} />
-          <Route path="/arrival/emergency" element={<EmergencyPage />} />
-          <Route path="/arrival/accessibility" element={<AccessibilityPage />} />
+          {/* Arrival guide — only for logged-in users with an approved,
+              still-current booking (caretaker/admin always allowed).
+              /arrival/rules stays public — it's linked from the Facilities page. */}
+          <Route
+            path="/arrival"
+            element={
+              <RoleRoute allowed={["member", "caretaker", "admin"]}>
+                <ArrivalAccessGate>
+                  <ArrivalPage />
+                </ArrivalAccessGate>
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/arrival/gas"
+            element={
+              <RoleRoute allowed={["member", "caretaker", "admin"]}>
+                <ArrivalAccessGate>
+                  <GasPage />
+                </ArrivalAccessGate>
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/arrival/wifi"
+            element={
+              <RoleRoute allowed={["member", "caretaker", "admin"]}>
+                <ArrivalAccessGate>
+                  <WifiPage />
+                </ArrivalAccessGate>
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/arrival/emergency"
+            element={
+              <RoleRoute allowed={["member", "caretaker", "admin"]}>
+                <ArrivalAccessGate>
+                  <EmergencyPage />
+                </ArrivalAccessGate>
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/arrival/accessibility"
+            element={
+              <RoleRoute allowed={["member", "caretaker", "admin"]}>
+                <ArrivalAccessGate>
+                  <AccessibilityPage />
+                </ArrivalAccessGate>
+              </RoleRoute>
+            }
+          />
           <Route path="/arrival/rules" element={<RulesPage />} />
 
           <Route path="/contacts" element={<ContactPage />} />
@@ -70,12 +120,30 @@ function App() {
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-          {/* Bookings — any logged-in user can request a booking */}
+          {/* Bookings — any logged-in user can view their own bookings and request new ones */}
           <Route
             path="/bookings"
             element={
               <RoleRoute allowed={["member", "caretaker", "admin"]}>
+                <MyBookingsPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/bookings/new"
+            element={
+              <RoleRoute allowed={["member", "caretaker", "admin"]}>
                 <BookingRequestPage />
+              </RoleRoute>
+            }
+          />
+
+          {/* Admin: review booking requests */}
+          <Route
+            path="/admin/bookings"
+            element={
+              <RoleRoute allowed={["admin"]}>
+                <AdminBookingsPage />
               </RoleRoute>
             }
           />

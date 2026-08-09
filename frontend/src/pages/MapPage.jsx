@@ -1,7 +1,9 @@
 import { useState } from "react";
 import mapImage from "../image/Map.png";
+import usePageContent from "../hooks/usePageContent.js";
 
 function MapPage() {
+  const { heading } = usePageContent("map");
   const facilities = [
     {
       id: 1,
@@ -64,8 +66,10 @@ function MapPage() {
   return (
     <div className="map-page">
       <header className="map-header">
-        <h1>Facilities</h1>
-        <p>Click on a marker to view information about each facility.</p>
+        <h1>{heading ? heading.title : "Facilities"}</h1>
+        <p style={{ whiteSpace: "pre-line" }}>
+          {heading ? heading.body : "Click on a marker to view information about each facility."}
+        </p>
       </header>
 
       <main className="map-content">

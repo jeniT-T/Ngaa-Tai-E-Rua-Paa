@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
 const requireAuth = require('../middleware/requireAuth');
+const { sendEmail } = require('../utils/mailer');
 
 const router = express.Router();
 
@@ -17,12 +18,17 @@ const COOKIE_OPTIONS = {
 
 const RESET_TOKEN_TTL_MS = 1000 * 60 * 60; // 1 hour
 
-// TODO: swap this out for a real email provider (e.g. nodemailer + SMTP,
-// SendGrid, Resend, etc.) when one is available. For now it just logs the
-// reset link to the backend console so the flow is fully testable locally
-// without needing real email credentials.
 async function sendPasswordResetEmail(email, resetLink) {
-  console.log(`[password reset] Would email ${email} a link to: ${resetLink}`);
+  await sendEmail({
+    to: email,
+    subject: 'Reset your Marae System password',
+    text: `We received a request to reset your password. Follow this link to choose a new one (expires in 1 hour):\n\n${resetLink}\n\nIf you didn't request this, you can safely ignore this email.`,
+    html: `
+      <p>We received a request to reset your password.</p>
+      <p><a href="${resetLink}">Click here to choose a new password</a> (expires in 1 hour).</p>
+      <p>If you didn't request this, you can safely ignore this email.</p>
+    `,
+  });
 }
 
 router.post('/register', async (req, res) => {

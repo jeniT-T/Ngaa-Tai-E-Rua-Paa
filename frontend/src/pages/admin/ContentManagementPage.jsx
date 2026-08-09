@@ -7,13 +7,44 @@ const SUGGESTED_CATEGORIES = [
   "recipe",
   "onboarding",
   "equipment",
+  "cleaning",
   "maintenance",
   "rules",
   "health_safety",
   "general",
 ];
 
-const EMPTY_FORM = { title: "", body: "", category: "general", visibleToRoles: ["member"] };
+// Where an item can be shown. Empty string = internal content library only
+// (existing behaviour, gated by "Visible to" below). Anything else = it shows
+// up on that public/marae-info page instead, with no login required.
+// For the arrival guide specifically, "Category" doubles as which
+// collapsible group the item appears under — use "equipment", "cleaning"
+// or "facilities" (anything else falls under "Facilities & General").
+const PUBLIC_PAGES = [
+  { value: "", label: "Library only (internal)" },
+  { value: "home", label: "Home page" },
+  { value: "history", label: "History page" },
+  { value: "facilities", label: "Facilities page" },
+  { value: "events", label: "Events page" },
+  { value: "contacts", label: "Contact Us page" },
+  { value: "health-and-safety", label: "Health & Safety page" },
+  { value: "map", label: "Map page (heading/intro only)" },
+  { value: "arrival", label: "Arrival guide (main dropdown list)" },
+  { value: "arrival-gas", label: "Arrival guide → Gas page" },
+  { value: "arrival-wifi", label: "Arrival guide → WiFi page" },
+  { value: "arrival-emergency", label: "Arrival guide → Emergency page" },
+  { value: "arrival-accessibility", label: "Arrival guide → Accessibility page" },
+  { value: "arrival-rules", label: "Arrival guide → Rules & Regulations page" },
+];
+
+const EMPTY_FORM = {
+  title: "",
+  body: "",
+  category: "general",
+  visibleToRoles: ["member"],
+  placement: "",
+  blockType: "section",
+};
 
 export default function ContentManagementPage() {
   const [items, setItems] = useState([]);
@@ -114,6 +145,8 @@ export default function ContentManagementPage() {
       body: item.body,
       category: item.category,
       visibleToRoles: item.visible_to_roles,
+      placement: item.placement || "",
+      blockType: item.block_type || "section",
     });
   }
 
@@ -223,6 +256,39 @@ export default function ContentManagementPage() {
           </div>
 
           <div>
+            <label className="block text-sm font-medium mb-1">Show on public page</label>
+            <select
+              value={form.placement}
+              onChange={(e) => setForm({ ...form, placement: e.target.value })}
+              className="w-full border rounded px-3 py-2"
+            >
+              {PUBLIC_PAGES.map(({ value, label }) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Choosing a page here makes this item visible to everyone (logged in or not) on
+              that page — "Visible to" below only applies to library items.
+            </p>
+          </div>
+
+          {form.placement && (
+            <div>
+              <label className="block text-sm font-medium mb-1">Block type</label>
+              <select
+                value={form.blockType}
+                onChange={(e) => setForm({ ...form, blockType: e.target.value })}
+                className="w-full border rounded px-3 py-2"
+              >
+                <option value="section">Section (a card in the page's list)</option>
+                <option value="heading">Heading (the page's title / intro text)</option>
+              </select>
+            </div>
+          )}
+
+          <div>
             <label className="block text-sm font-medium mb-1">Visible to</label>
             <div className="flex gap-4">
               {ALL_ROLES.map((role) => (
@@ -267,13 +333,22 @@ export default function ContentManagementPage() {
               <li key={item.id} className="border rounded p-4">
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="font-medium">{item.title}</h3>
-                  <span className="text-xs px-2 py-1 rounded bg-gray-100">
-                    {item.category}
-                  </span>
+                  <div className="flex gap-1">
+                    {item.placement && (
+                      <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800">
+                        {item.placement} page · {item.block_type}
+                      </span>
+                    )}
+                    <span className="text-xs px-2 py-1 rounded bg-gray-100">
+                      {item.category}
+                    </span>
+                  </div>
                 </div>
                 <p className="text-sm text-gray-600 whitespace-pre-line mb-2">{item.body}</p>
                 <p className="text-xs text-gray-500 mb-3">
-                  Visible to: {item.visible_to_roles.join(', ')}
+                  {item.placement
+                    ? `Public on the ${item.placement} page`
+                    : `Visible to: ${item.visible_to_roles.join(', ')}`}
                 </p>
 
                 <div className="flex flex-wrap gap-2 items-center">

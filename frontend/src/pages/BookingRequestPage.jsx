@@ -1,5 +1,6 @@
 // frontend/src/pages/BookingRequestPage.jsx
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 
@@ -52,10 +53,12 @@ export default function BookingRequestPage() {
       </p>
 
       {success && (
-        <p className="mb-4 text-green-700 bg-green-50 border border-green-200 rounded p-3">
-          Thanks — your booking request has been sent. We'll be in touch to confirm the
-          details.
-        </p>
+        <div className="mb-4 text-green-700 bg-green-50 border border-green-200 rounded p-3">
+          <p>Thanks — your booking request has been sent. We'll email you once it's been reviewed.</p>
+          <Link to="/bookings" className="underline font-medium">
+            View my bookings →
+          </Link>
+        </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-3">

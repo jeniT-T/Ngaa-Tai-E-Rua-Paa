@@ -24,6 +24,11 @@ const Booking = {
     return result.rows;
   },
 
+  async findById(id) {
+    const result = await pool.query(`SELECT * FROM bookings WHERE id = $1`, [id]);
+    return result.rows[0] || null;
+  },
+
   async findAll() {
     const result = await pool.query(
       `SELECT bookings.*, users.name AS requester_name, users.email AS requester_email
@@ -36,6 +41,8 @@ const Booking = {
     return result.rows;
   },
 
+  // Admin decision — approve/deny (or re-open back to pending if they change
+  // their mind), optionally leaving a note for the requester.
   async updateStatus(id, status, adminNotes) {
     const result = await pool.query(
       `UPDATE bookings
@@ -43,6 +50,33 @@ const Booking = {
        WHERE id = $3
        RETURNING *`,
       [status, adminNotes ?? null, id]
+    );
+    return result.rows[0] || null;
+  },
+
+  // Owner edits their own request (dates/purpose/type) and it goes back to
+  // 'pending' for the admin to look at again — a "re-request" after a change.
+  async update(id, { startDate, endDate, purpose, bookingType }) {
+    const result = await pool.query(
+      `UPDATE bookings
+       SET start_date = COALESCE($1, start_date),
+           end_date = COALESCE($2, end_date),
+           purpose = COALESCE($3, purpose),
+           booking_type = COALESCE($4, booking_type),
+           status = 'pending',
+           admin_notes = NULL,
+           updated_at = NOW()
+       WHERE id = $5
+       RETURNING *`,
+      [startDate, endDate, purpose, bookingType, id]
+    );
+    return result.rows[0] || null;
+  },
+
+  async cancel(id) {
+    const result = await pool.query(
+      `UPDATE bookings SET status = 'cancelled', updated_at = NOW() WHERE id = $1 RETURNING *`,
+      [id]
     );
     return result.rows[0] || null;
   },

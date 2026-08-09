@@ -1,5 +1,8 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 
 const FEATURES = [
   {
@@ -20,7 +23,18 @@ const FEATURES = [
 
 function HomePage() {
   const { user } = useAuth();
-  const bookingLink = user ? "/bookings" : "/login";
+  const [hero, setHero] = useState(null);
+  // "Make a Booking" always means starting a new request, so it goes straight
+  // to the create form (the list of a member's existing bookings lives at
+  // /bookings, reached via the navbar instead).
+  const bookingLink = user ? "/bookings/new" : "/login";
+
+  useEffect(() => {
+    fetch(`${API_BASE}/content/public/home`)
+      .then((res) => res.json())
+      .then((data) => setHero((data.items || []).find((i) => i.block_type === "heading") || null))
+      .catch(() => {});
+  }, []);
 
   return (
     <div>
@@ -35,10 +49,10 @@ function HomePage() {
         className="text-white px-6 py-24 text-center"
       >
         <h1 className="text-4xl md:text-5xl font-semibold mb-4">
-          Welcome to the Marae
+          {hero ? hero.title : "Welcome to the Marae"}
         </h1>
-        <p className="text-lg md:text-xl max-w-xl mx-auto text-white/90">
-          A place of connection, culture, and community.
+        <p className="text-lg md:text-xl max-w-xl mx-auto text-white/90 whitespace-pre-line">
+          {hero ? hero.body : "A place of connection, culture, and community."}
         </p>
       </section>
 
@@ -60,9 +74,13 @@ function HomePage() {
             </Link>
           ))}
 
-          {/* Booking box — styled the same, but with an accent border to draw the eye */}
+          {/* Booking box — styled the same, but with an accent border to draw the eye.
+              If logged out, we pass along where we actually wanted to go so
+              the login/register flow can send the user straight to the
+              booking form afterwards instead of dropping them on the home page. */}
           <Link
             to={bookingLink}
+            state={!user ? { from: { pathname: "/bookings/new" } } : undefined}
             className="flex flex-col items-start gap-3 p-8 rounded-2xl border-2 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
             style={{ borderColor: "#0081bd", background: "rgba(144, 222, 255, 0.12)" }}
           >

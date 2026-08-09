@@ -8,8 +8,8 @@ management).
 ## Tech stack
 
 - **Frontend**: React 19 + Vite, React Router, Tailwind CSS
-- **Backend**: Node.js + Express, JWT auth via httpOnly cookies (jsonwebtoken, bcryptjs)
-- **Database**: PostgreSQL (via `pg`)
+- **Backend**: Node.js + Express, JWT auth via httpOnly cookies
+- **Database**: PostgreSQL
 - **Infra**: Docker Compose (frontend, backend, db)
 
 ## Setup
@@ -33,9 +33,9 @@ Create env file:
 cp .env.example .env
 ```
 
-Open `.env` and add a `JWT_SECRET` (any long random string). It's required for login/register
-to work but isn't included in `.env.example` yet — without it, `jwt.sign()` in
-`backend/routes/auth.js` will throw.
+Then open `.env` and fill in real values — see [Environment variables](#environment-variables)
+below. In particular, add a `JWT_SECRET`; it's required for login/register to work and isn't
+included in `.env.example` yet.
 
 Run project:
 
@@ -49,11 +49,13 @@ http://localhost:3000
 
 ### Stop containers
 
-Press `CTRL + C`.
+Press:
+
+CTRL + C
 
 ## Environment variables
 
-Set these in `.env` (the backend reads them via `docker-compose.yml`'s `env_file`):
+Set these in `.env` (backend reads them via `docker-compose.yml`'s `env_file`):
 
 | Variable | Used for | Example |
 |---|---|---|
@@ -61,11 +63,14 @@ Set these in `.env` (the backend reads them via `docker-compose.yml`'s `env_file
 | `JWT_SECRET` | Signing/verifying login session tokens | any long random string |
 | `PAYLOAD_SECRET` | Reserved, not currently read by the app | `notsetyet` |
 
+Without `JWT_SECRET`, `jwt.sign()` in `backend/routes/auth.js` will throw and login/register
+will fail.
+
 ## Database
 
 Run `database/schema.sql` against a fresh database to create the `users`, `bookings`,
 `content_items` and `issues` tables. If you already have a database from an earlier version,
-run `database/migration_content_v2.sql` instead of re-running the full schema.
+use `database/migration_content_v2.sql` instead of re-running the full schema.
 
 ## User roles
 
@@ -73,30 +78,7 @@ run `database/migration_content_v2.sql` instead of re-running the full schema.
 |---|---|
 | `member` | Log in, request bookings, view the content library, report issues |
 | `caretaker` | Everything a member can, plus checklists and tutorials |
-| `admin` | Everything above, plus manage users, manage content, and view reported issues |
-
-## Public routes
-
-| Route | Page |
-|---|---|
-| `/` | Home — hero + History / Facilities / Make a Booking boxes |
-| `/history` | History of the marae |
-| `/facilities` | Available facilities |
-| `/events` | Upcoming events |
-| `/contacts` | Contact information |
-| `/arrival`, `/arrival/*` | Operations guide for hirers/caretakers (equipment, cleaning, facilities info) |
-| `/health-and-safety`, `/map` | |
-| `/login`, `/register` | Auth |
-
-## Protected routes
-
-| Route | Allowed roles |
-|---|---|
-| `/bookings` | member, caretaker, admin |
-| `/content` | member, caretaker, admin |
-| `/report-issue` | member, caretaker, admin |
-| `/caretaker/checklists`, `/caretaker/tutorials` | caretaker, admin |
-| `/admin`, `/admin/users`, `/admin/issues`, `/admin/content` | admin |
+| `admin` | Everything above, plus manage users, manage content, view reported issues, and (once wired up — see Known gaps) approve/deny bookings |
 
 ## Folder structure
 
@@ -161,6 +143,27 @@ marae-app/
 │       └── admin.js             /api/admin — user management
 ```
 
+## Public routes
+
+| Route | Page |
+|---|---|
+| `/` | Home — hero + History / Facilities / Make a Booking boxes |
+| `/history` | History of the marae |
+| `/facilities` | Available facilities |
+| `/events` | Upcoming events |
+| `/contacts` | Contact information |
+| `/login`, `/register` | Auth |
+
+## Protected routes
+
+| Route | Allowed roles |
+|---|---|
+| `/bookings` | member, caretaker, admin |
+| `/content` | member, caretaker, admin |
+| `/report-issue` | member, caretaker, admin |
+| `/caretaker/checklists`, `/caretaker/tutorials` | caretaker, admin |
+| `/admin`, `/admin/users`, `/admin/issues`, `/admin/content` | admin |
+
 ## Known gaps / TODO
 
 - **History and Facilities copy is placeholder.** Swap the text in `HistoryPage.jsx` and
@@ -170,8 +173,7 @@ marae-app/
 - **No admin UI for bookings yet.** `backend/routes/bookings.js` supports an admin listing
   and approve/deny endpoint (`GET /api/bookings`, `PATCH /api/bookings/:id`), but there's no
   frontend page for admins to review booking requests — only the requester-facing form exists.
-- **`backend/routes/checklists.js` and `backend/controllers/` are empty and unused.** Routes
-  are defined inline inside each `routes/*.js` file rather than in separate controllers; the
-  `controllers` folder and `checklists.js` are leftover from an earlier structure and aren't
-  wired into `server.js`.
-- **`JWT_SECRET`** isn't in `.env.example` yet — see Environment variables above.
+- **`backend/routes/checklists.js` and `backend/controllers/` are empty/unused.** Routes are
+  defined inline inside each `routes/*.js` file rather than in separate controllers; the
+  `controllers` folder is left over from an earlier structure and isn't required by anything.
+- **`JWT_SECRET`** isn't in `.env.example` — see Environment variables above.
