@@ -7,6 +7,7 @@ import Navbar from "./components/Navbar.jsx";
 
 import HomePage from "./pages/HomePage.jsx";
 import ArrivalPage from "./pages/ArrivalPage.jsx";
+import ArrivalEditPage from "./pages/ArrivalEditPage.jsx";
 import ContactPage from "./pages/ContactPage.jsx";
 import HealthAndSafetyPage from "./pages/HealthAndSafetyPage.jsx";
 
@@ -40,6 +41,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/arrival" element={<ArrivalPage />} />
+          <Route path="/arrival/edit" element={<ArrivalEditPage />} />
 
           {/* Arrival subpages */}
           <Route path="/arrival/gas" element={<GasPage />} />

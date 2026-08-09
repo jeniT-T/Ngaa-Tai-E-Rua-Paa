@@ -64,3 +64,23 @@ CREATE TABLE issues (
     CHECK (status IN ('open', 'in_progress', 'resolved')),
   created_at TIMESTAMP DEFAULT NOW()
 );
+
+-- Editable items shown on the /arrival page. Each item belongs to a group
+-- (equipment, cleaning, facilities) and can have its body text edited and
+-- an optional YouTube video embedded. No access control currently - anyone
+-- can create/edit/delete these via the API.
+CREATE TABLE arrival_items (
+  id SERIAL PRIMARY KEY,
+  item_key VARCHAR(100) UNIQUE NOT NULL,
+  group_key VARCHAR(20) NOT NULL
+    CHECK (group_key IN ('equipment', 'cleaning', 'facilities')),
+  title VARCHAR(255) NOT NULL,
+  color VARCHAR(20) NOT NULL DEFAULT '#2c3e50',
+  body TEXT NOT NULL DEFAULT '',
+  youtube_url TEXT,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_arrival_items_group ON arrival_items(group_key, sort_order);
