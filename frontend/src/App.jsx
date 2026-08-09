@@ -9,6 +9,10 @@ import HomePage from "./pages/HomePage.jsx";
 import ArrivalPage from "./pages/ArrivalPage.jsx";
 import ContactPage from "./pages/ContactPage.jsx";
 import HealthAndSafetyPage from "./pages/HealthAndSafetyPage.jsx";
+import HistoryPage from "./pages/HistoryPage.jsx";
+import FacilitiesPage from "./pages/FacilitiesPage.jsx";
+import EventsPage from "./pages/EventsPage.jsx";
+import BookingRequestPage from "./pages/BookingRequestPage.jsx";
 
 import GasPage from "./pages/arrival/GasPage.jsx";
 import WifiPage from "./pages/arrival/WifiPage.jsx";
@@ -19,6 +23,8 @@ import RulesPage from "./pages/arrival/RulesPage.jsx";
 
 import LoginPage from "./pages/LoginPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage.jsx";
+import ResetPasswordPage from "./pages/ResetPasswordPage.jsx";
 import UnauthorizedPage from "./pages/UnauthorizedPage.jsx";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
 import UserManagementPage from "./pages/admin/UserManagementPage.jsx";
@@ -52,10 +58,27 @@ function App() {
           <Route path="/health-and-safety" element={<HealthAndSafetyPage />} />
           <Route path="/map" element={<MapPage />} />
 
+          {/* Public landing page sections */}
+          <Route path="/history" element={<HistoryPage />} />
+          <Route path="/facilities" element={<FacilitiesPage />} />
+          <Route path="/events" element={<EventsPage />} />
+
           {/* Auth */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
+          {/* Bookings — any logged-in user can request a booking */}
+          <Route
+            path="/bookings"
+            element={
+              <RoleRoute allowed={["member", "caretaker", "admin"]}>
+                <BookingRequestPage />
+              </RoleRoute>
+            }
+          />
 
           {/* Caretaker-only (and admin) */}
           <Route

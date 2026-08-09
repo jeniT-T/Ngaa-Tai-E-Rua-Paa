@@ -9,6 +9,8 @@ CREATE TABLE users (
   role VARCHAR(20) NOT NULL DEFAULT 'member'
     CHECK (role IN ('member', 'caretaker', 'admin')),
   name VARCHAR(255),
+  reset_token VARCHAR(255),
+  reset_token_expires TIMESTAMP,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
