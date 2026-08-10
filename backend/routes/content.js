@@ -23,6 +23,14 @@ const PUBLIC_PAGES = [
 ];
 const BLOCK_TYPES = ['heading', 'section'];
 
+// Ported from the teammate's arrival-items branch: accepts watch?v=, youtu.be/,
+// and /embed/ URL forms. videoUrl is optional on any content item — most
+// useful for arrival-guide sections, but not restricted to them.
+function isValidYoutubeUrl(url) {
+  if (!url) return true; // optional field
+  return /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/)|youtu\.be\/)/.test(url);
+}
+
 // GET /api/content/public/:page — no auth. Powers every public/marae-info
 // page (home/history/facilities/events/contacts/health-and-safety/map/
 // arrival guide + subpages). Admins choose a page as an item's "placement"
@@ -84,7 +92,7 @@ router.get('/', requireAuth, requireRole('admin'), async (req, res) => {
 
 router.post('/', requireAuth, requireRole('admin'), async (req, res) => {
   try {
-    const { title, body, category, visibleToRoles, placement, blockType } = req.body;
+    const { title, body, category, visibleToRoles, placement, blockType, videoUrl } = req.body;
 
     if (!title || !body) {
       return res.status(400).json({ error: 'Title and body are required' });
@@ -98,6 +106,9 @@ router.post('/', requireAuth, requireRole('admin'), async (req, res) => {
     if (blockType && !BLOCK_TYPES.includes(blockType)) {
       return res.status(400).json({ error: `blockType must be one of: ${BLOCK_TYPES.join(', ')}` });
     }
+    if (!isValidYoutubeUrl(videoUrl)) {
+      return res.status(400).json({ error: 'videoUrl must be a valid YouTube link' });
+    }
 
     const item = await ContentItem.create({
       title,
@@ -107,6 +118,7 @@ router.post('/', requireAuth, requireRole('admin'), async (req, res) => {
       createdBy: req.user.id,
       placement: placement || null,
       blockType,
+      videoUrl: videoUrl || null,
     });
     res.status(201).json({ item });
   } catch (err) {
@@ -117,7 +129,7 @@ router.post('/', requireAuth, requireRole('admin'), async (req, res) => {
 
 router.patch('/:id', requireAuth, requireRole('admin'), async (req, res) => {
   try {
-    const { title, body, category, visibleToRoles, placement, blockType } = req.body;
+    const { title, body, category, visibleToRoles, placement, blockType, videoUrl } = req.body;
 
     if (visibleToRoles && (!Array.isArray(visibleToRoles) || visibleToRoles.length === 0)) {
       return res.status(400).json({ error: 'visibleToRoles must be a non-empty array' });
@@ -128,6 +140,9 @@ router.patch('/:id', requireAuth, requireRole('admin'), async (req, res) => {
     if (blockType && !BLOCK_TYPES.includes(blockType)) {
       return res.status(400).json({ error: `blockType must be one of: ${BLOCK_TYPES.join(', ')}` });
     }
+    if (!isValidYoutubeUrl(videoUrl)) {
+      return res.status(400).json({ error: 'videoUrl must be a valid YouTube link' });
+    }
 
     const item = await ContentItem.update(req.params.id, {
       title,
@@ -136,6 +151,7 @@ router.patch('/:id', requireAuth, requireRole('admin'), async (req, res) => {
       visibleToRoles,
       placement: placement || null,
       blockType,
+      videoUrl: videoUrl || null,
     });
     if (!item) {
       return res.status(404).json({ error: 'Content item not found' });

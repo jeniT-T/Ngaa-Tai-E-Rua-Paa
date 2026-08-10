@@ -1,566 +1,57 @@
 import { useState, useMemo, useEffect } from "react";
 import usePageContent from "../hooks/usePageContent.js";
+import { getYoutubeEmbedUrl } from "../utils/youtube.js";
 
 // --- Fallback content -------------------------------------------------
-// Used only until the admin's arrival-guide content has been migrated into
-// the CMS (see database/migration_arrival_content.sql), or if the content
-// service is unreachable. Once the CMS has items placed on "arrival", those
-// are used instead — and are fully editable/addable from the admin Content
-// Manager, same as every other public page.
-const FALLBACK_SECTION_CONTENT = {
-  aircon: {
-    title: "Airconditioning",
-    color: "#1976d2",
-    body: "remote air conditioning wharenui dining room",
-    content: () => (
-      <>
-        <h3 style={{ color: "#1565c0", marginTop: 0, marginBottom: "12px", fontSize: "1rem" }}>Wharenui</h3>
-        <p style={{ color: "#555", lineHeight: 1.7, margin: 0, marginBottom: "16px" }}>The remote for the air conditioning is located on the right side of the 4<sup>th</sup> pillar when looking inside from the front entrance.</p>
-        <h3 style={{ color: "#1565c0", marginTop: "16px", marginBottom: "12px", fontSize: "1rem" }}>Dining Room / Reitu</h3>
-        <p style={{ color: "#555", lineHeight: 1.7, margin: 0 }}>The remote is located on the wall. If you come in from the Reitu carving entrance it is on the left wall below the mural. If you come in from the side entrance it's on your right side.</p>
-      </>
-    ),
-  },
-  bakersOven: {
-    title: "Bakers Oven",
-    color: "#e65100",
-    body: "oven gas fan dial lighter flame temperature",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>Ensure the Oven is turned on the wall.</li>
-        <li>Ensure the Gas Fan is turned on. The Gas Fan makes the Gas Flow.</li>
-        <li>Open the door of the oven until flat.</li>
-        <li>Locate the Gas light flap and open it.</li>
-        <li>Turn the oven on until you see the green light.</li>
-        <li>Press and turn the Dial to the Pilot light. Keep your finger on the Dial and then press the Lighter button about 10 times.</li>
-        <li>Look through the light port you will see a blue flame. It's very light but you can see it.</li>
-        <li>If it doesn't appear keep your finger on the dial and press the Lighter Button another 5 times. If it doesn't light up a blue flame keep trying until you see the flame.</li>
-        <li>When the flame is lit the oven is now active. Turn the dial to the far left to start in full ignition mode.</li>
-        <li>To turn off, turn the Dial to the far right and turn the temperature dial to off.</li>
-      </ul>
-    ),
-  },
-  brattPan: {
-    title: "Bratt Pan",
-    color: "#2e7d32",
-    body: "bratt pan turned water temperature dials",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>Ensure the Bratt pan is turned on the wall.</li>
-        <li>Ensure the Gas Fan is turned on. The Gas Fan makes the Gas Flow.</li>
-        <li>Press the button to fill the Bratt pan with water.</li>
-        <li>When the Bratt pan is full turn, the temperature dials up to its required temperature.</li>
-      </ul>
-    ),
-  },
-  chairs: {
-    title: "Chairs",
-    color: "#c2185b",
-    body: "chairs wharenui stacked dining stage awning",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li><strong>Wharenui Chairs</strong> are stacked to the far left of the Wharenui.</li>
-        <li><strong>Outside chairs</strong> are stacked under the awning.</li>
-        <li><strong>Forms and stacked chairs</strong> are under the marae.</li>
-        <li><strong>Dining Chairs</strong> are stacked on the stage, 5 high and 2 rows all the way across.</li>
-      </ul>
-    ),
-  },
-  chiller: {
-    title: "Chiller",
-    color: "#00695c",
-    body: "chiller ladder switch food clean mop",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>To use the Chiller, you must use the step ladder to the left of the Chiller and switch the Chiller on by looking on top of the chiller and turning on the switch.</li>
-        <li>Upon final clean ensure all food is removed.</li>
-        <li>Give the chiller a quick mop on exit and switch off from the wall.</li>
-      </ul>
-    ),
-  },
-  combiOvens: {
-    title: "Combi Ovens",
-    color: "#2c3e50",
-    body: "combi oven cook trays clean",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>Watch this space. There will be some instructions on how to cook using the Combi ovens if you don't already know. Ensure to run a quick clean when you finish. Trays are to the right of the Combi Ovens on the bench.</li>
-      </ul>
-    ),
-  },
-  deepFryer: {
-    title: "Deep Fryer",
-    color: "#2c3e50",
-    body: "deep fryer oil instructions",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>It takes about 20 Litres of oil to use this, Fryer. To start do the same instructions as for the Bakers Oven.</li>
-      </ul>
-    ),
-  },
-  defibrillator: {
-    title: "Defibrillator",
-    color: "#d32f2f",
-    body: "defibrillator wharenui emergency",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>Located to the right of the Wharenui. Please follow the instructions. Inform the Paa Committee Chairperson if it's been used.</li>
-      </ul>
-    ),
-  },
-  cleanDining: {
-    title: "Clean – Final Dining Hall",
-    color: "#d84315",
-    body: "dining hall clean windows curtains chairs trolleys sweep mop",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>Close all windows.</li>
-        <li>Close Curtains.</li>
-        <li>Ensure all chairs are stacked away. 5 chairs high, 2 rows across the stage</li>
-        <li>The 2 Table Trolleys and 1 Chair Trolley positioned in front of the stage.</li>
-        <li>Sweep the floors with the brush and dustpan.</li>
-        <li>Close all doors. Don't allow anyone to go on the floors.</li>
-        <li>From the Loading Dock there are 2 Green Mop Buckets and 2 Mops. Use these only for the Dining Hall. The cleaning products are to the left of the hot water Urn. If you want to get hot water out of the taps you must make sure the Gas Button is turned on. This allows the Gas to flow and heat the water.</li>
-        <li>Mop the Floor as usual.</li>
-        <li>When finished poor the water outside down the drain. Ring out the Mops and hang back up on the wall of the Loading Dock.</li>
-      </ul>
-    ),
-  },
-  cleanKitchen: {
-    title: "Clean – Final Kitchen",
-    color: "#1b5e20",
-    body: "kitchen clean rubbish fridges dishes combi ovens benches dishwasher mop",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>The Kitchen should be the final thing you do before exiting.</li>
-        <li>Close all windows.</li>
-        <li>Ensure all rubbish is removed. You're responsible for removing your rubbish unless prior approval with the Paa Committee Chairperson as there is an extra cost.</li>
-        <li>All Trolleys are put away in the backroom with the dishes.</li>
-        <li>All Food is removed.</li>
-        <li>All Fridges are emptied and turned off.</li>
-        <li>All Bins are cleaned and stacked to the right side of the Exit door inside.</li>
-        <li>Dishes have been put away.</li>
-        <li>Tea towels have been placed in the Washing machine and turned on.</li>
-        <li>Combi ovens have been put on clean mode.</li>
-        <li>All Stainless-steel benches are wiped down.</li>
-        <li>Dishwasher unit is emptied and racks put away.</li>
-        <li>Ensure you're the last to exit the kitchen. Don't allow anyone to go on the floors.</li>
-        <li>Urn. If you want to get hot water out of the taps you must make sure the Gas Button is turned on. This allows the Gas to flow and heat the water. Turn off when you have the hot water.</li>
-        <li>Mop the Floor ensuring you cover the entire floor. Make a track so that you'll mop all the way out to the exit door. Close the Door and lock up.</li>
-        <li>When finished pour the water outside down the drain. Ring out the Mops and hang back up on the wall of the Loading Dock.</li>
-      </ul>
-    ),
-  },
-  cleanToilets: {
-    title: "Clean – Final Toilets",
-    color: "#004d40",
-    body: "toilet clean rubbish products benches window cleaner mop shower",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>Place all of the rubbish in the toilets to the outside bin. It's the responsibility of the hirer to get rid of the rubbish unless prior approval as there is an extra cost.</li>
-        <li>The Cleaning products are in the ladies toilets.</li>
-        <li>Use the paper towels and the Spray bottle labelled Bench tops to wipe down the benches.</li>
-        <li>Use the paper towels and the Spray bottle for the toilets.</li>
-        <li>Ensure all of the Lids and under the lids of the toilets are set up after cleaning.</li>
-        <li>Use the Window Cleaner to clean any dirty windows.</li>
-        <li>The Blue Mop buckets and Blue Mops are on the wall in the corner of the Dining Hall. If you come out of the toilets and head left and left again you can look on the wall to the right, and you'll see them.</li>
-        <li>Use the Floor cleaning product. Turn on a shower and use the hot water from there. Mop the showers and the floors.</li>
-        <li>Return the Mop and Buckets to original spots please.</li>
-        <li>Lock the Toilet doors so no one can use them.</li>
-      </ul>
-    ),
-  },
-  cleanWharenui: {
-    title: "Clean – Final Wharenui",
-    color: "#1565c0",
-    body: "wharenui clean chairs ariki room rubbish vacuum mattress windows",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>Chairs to be stacked on the far left of the wharenui by the entrance of the ariki room.</li>
-        <li>All Rubbish must be removed.</li>
-        <li>Floors to be vacuum.</li>
-        <li>Ensure to vacuum the mattress room and return the Vacuum to the Mattress room.</li>
-        <li>If windows are dirty, please use the window cleaner in the toilets and paper towels to clean.</li>
-      </ul>
-    ),
-  },
-  cleanEquipment: {
-    title: "Cleaning Equipment",
-    color: "#2c3e50",
-    body: "cleaning equipment vacuum brushes brooms chemicals mops buckets",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li><strong>Wharenui</strong> – Vacuum, Brushes and Brooms are in the Mattress Room.</li>
-        <li><strong>Toilets</strong> – Cleaning chemicals are in the ladies toilet. Brooms are next to the disability toilets. Mops and Buckets are on the back wall of the Wharekai Reitu.</li>
-        <li><strong>Kitchen</strong> – All cleaning chemicals are on the bench next to the Urn. All mops, buckets and brooms are on the back loading dock.</li>
-      </ul>
-    ),
-  },
-  dishWasher: {
-    title: "Dish Washer",
-    color: "#2c3e50",
-    body: "dishwasher power dishes hood racks clean",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>Turn on the power for the dishwasher.</li>
-        <li>Then press the Power on the dishwasher.</li>
-        <li>Slide in a rack of dirty dishes and close hood.</li>
-        <li>Press Start.</li>
-        <li>Wait till finished then lift hood and remove the rack.</li>
-        <li>For the final clean ensure all of the Racks are put away below the benches and the Dishwasher hood is raised.</li>
-      </ul>
-    ),
-  },
-  dishes: {
-    title: "Dishes",
-    color: "#2c3e50",
-    body: "dishes backroom labels cutlery cups trolley clean",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>The backroom has labels for where each dish must return to.</li>
-        <li>Cutlery and Cups are on the trolley with drawers.</li>
-        <li>Ensure every dish is put away on your final clean.</li>
-      </ul>
-    ),
-  },
-  freezers: {
-    title: "Freezers",
-    color: "#2c3e50",
-    body: "freezer button kai remove turn off",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>Press the button on the top of the freezer to turn on.</li>
-        <li>Remove all kai from Freezer on final clean and turn off the Freezer.</li>
-      </ul>
-    ),
-  },
-  fridges: {
-    title: "Fridges",
-    color: "#2c3e50",
-    body: "fridge button kai remove turn off",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>Press the button on the top of the Fridges to turn on.</li>
-        <li>Remove all kai from Freezer on final clean and turn off the Fridge.</li>
-      </ul>
-    ),
-  },
-  gas: {
-    title: "Gas",
-    color: "#ff6f00",
-    body: "gas bottles dial switch kitchen combi cookers hot water",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>There are 2 areas where our gas bottles are located. 1 is at the back of the kitchen and the other is at the back of the new toilets.</li>
-        <li>If the gas runs out, turn the dial to the other gas bottle and open up the value. Close the Value of the gas bottle that has run out.</li>
-        <li><strong>Important:</strong> In the kitchen, you must switch the Gas switch on (located below the power buttons for the Combi Ovens). This controls the flow of Gas. Without it switched on your gas cookers will not work and no Hot water will come out of the taps.</li>
-        <li>When not in use turn off the Gas switch.</li>
-      </ul>
-    ),
-  },
-  grillTops: {
-    title: "Grill Tops",
-    color: "#2c3e50",
-    body: "grill tops gas switch dial lighter",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>Switch on the Gas Switch.</li>
-        <li>Turn on the Gas dial and light with the Gas Lighter located on the shelf above the GrilTops.</li>
-      </ul>
-    ),
-  },
-  hangiCookers: {
-    title: "Hangi Cookers",
-    color: "#2c3e50",
-    body: "hangi cookers gas outlet wall",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>Hangi Cookers should have a connection directly to the wall gas outlet.</li>
-      </ul>
-    ),
-  },
-  hotBoxes: {
-    title: "Hot Boxes",
-    color: "#2c3e50",
-    body: "hot boxes kai warm turn on off wipe clean",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>Hot boxes used to keep your bulk kai warm.</li>
-        <li>Just turn on and turn off as needed.</li>
-        <li>Make sure on your final clean to give it a wipe out and switch off.</li>
-      </ul>
-    ),
-  },
-  hotWater: {
-    title: "Hot Water",
-    color: "#2c3e50",
-    body: "hot water urn wall taps gas switch",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>For immediate hot water use the Urn on the Wall.</li>
-        <li>There maybe in some cases a plug in Urn available to you.</li>
-        <li>Hot water from the taps you must make sure you turn the Gas Switch 1*.</li>
-      </ul>
-    ),
-  },
-  microwave: {
-    title: "Microwave",
-    color: "#2c3e50",
-    body: "microwave remove turn off not in use",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>Make sure everything is removed and switch off when not in use.</li>
-      </ul>
-    ),
-  },
-  evacuation: {
-    title: "Evacuation Point",
-    color: "#d32f2f",
-    body: "evacuation point front car park main road emergency",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>The Evacuation point is located in the front car park by the main road.</li>
-      </ul>
-    ),
-  },
-  firstAid: {
-    title: "First Aid",
-    color: "#2c3e50",
-    body: "first aid kit shelf urn emergency",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>The 1<sup>st</sup> Aid kit is located at the shelf next to the Urn.</li>
-      </ul>
-    ),
-  },
-  flag: {
-    title: "Flag / Kara",
-    color: "#2c3e50",
-    body: "flag kara hui tangi wananga",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>The Flag / Kara will stay up during the whole duration of the hui/tangi/wananga.</li>
-      </ul>
-    ),
-  },
-  floors: {
-    title: "Floors",
-    color: "#2c3e50",
-    body: "floors mop bucket dining kitchen toilets cleaner jiff",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>Every floor has a different Mop and Bucket.</li>
-        <li>The Green mop and bucket are for the Dining hall only. Use the floor cleaner.</li>
-        <li>The Yellow mop and bucket are for the Kitchen only. Do spot cleans during your time and use the Yellow mop and bucket for your final exit clean. If not, the floor will come up dirty unless its dried. Also use the sjax or Jiff products for this floor.</li>
-        <li>The Blue mop and bucket are for the new and old toilets. Floor cleaner in Ladies Toilet.</li>
-      </ul>
-    ),
-  },
-  linen: {
-    title: "Linen",
-    color: "#2c3e50",
-    body: "linen mattress room cupboard laundry bag collection",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>All linen is in the Mattress Room Cupboard.</li>
-        <li>On exit day, use the Green Laundry bag that is located in the Cupboard to the left of the linen cupboard and fill up with all of the linen to be collected. Leave the bags in the Mattress Room for collection.</li>
-      </ul>
-    ),
-  },
-  loadingDock: {
-    title: "Loading Dock",
-    color: "#2c3e50",
-    body: "loading dock chairs dining room smoking hose clean",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>Do not use the Dining Room chairs outside. It ruins the chair foot rubbers.</li>
-        <li>No smoking on the Loading Dock.</li>
-        <li>On the final clean, use the hose on the wall to hose down.</li>
-      </ul>
-    ),
-  },
-  mattressRoom: {
-    title: "Mattress Room",
-    color: "#2c3e50",
-    body: "mattress room fire exit pillows mattress whaariki vacuum blow up",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>In the mattress room there is a picture on the left as you walk into the mattress room of how you should leave this space. Please ensure its left in this manner.</li>
-        <li>Under no circumstances is there to be any sleeping in the mattress room. It's a fire exit and must be clear at all times.</li>
-        <li>The fire exit door should not be used unless for emergencies. There is a photo to the left as you enter the Mattress room that shows how you should leave the Mattress Room when finished.</li>
-        <li>Pillows are on the walls.</li>
-        <li>The Topper/Mattress Wall and mattress are in the middle of the room.</li>
-        <li>Whaariki are to the back wall.</li>
-        <li>6 treacle tables are stored to the back.</li>
-        <li>Vacuum is stacked at the back wall.</li>
-        <li>Blow up mattresses stack in the gap next to it.</li>
-      </ul>
-    ),
-  },
-  lights: {
-    title: "Lights",
-    color: "#2c3e50",
-    body: "lights wharenui mahau ariki room toilets dining outside",
-    content: () => (
-      <div>
-        <h4 style={{ color: "#555", marginTop: "0px", marginBottom: "8px" }}>Wharenui</h4>
-        <p style={{ color: "#555", lineHeight: 1.7, margin: "0 0 12px 0" }}>The light switch for the internal lights is located to the left of the entrance door.</p>
-
-        <h4 style={{ color: "#555", marginTop: "12px", marginBottom: "8px" }}>Wharenui mahau lights (for nighttime)</h4>
-        <ul style={{ lineHeight: 1.8, color: "#555", margin: "0 0 12px 0", paddingLeft: "20px" }}>
-          <li>Turn on at nighttime only.</li>
-          <li>Use the main key that opens the toilets and wharenui and open the Ariki room which is the 1<sup>st</sup> door to the left as you enter the wharenui.</li>
-          <li>Look on the wall and you'll see a Dial. Turn the Dial to On. The lights will turn on around the mahau.</li>
-          <li>Exit the Ariki room and make sure it is locked.</li>
-          <li>In the morning ensure to turn off these lights.</li>
-        </ul>
-
-        <h4 style={{ color: "#555", marginTop: "12px", marginBottom: "8px" }}>Mattress Room</h4>
-        <p style={{ color: "#555", lineHeight: 1.7, margin: "0 0 12px 0" }}>The light switch is on the right side as you enter the Mattress room or the back wall by the Fire Alarm.</p>
-
-        <h4 style={{ color: "#555", marginTop: "12px", marginBottom: "8px" }}>Toilets</h4>
-        <p style={{ color: "#555", lineHeight: 1.7, margin: "0 0 12px 0" }}>These switch on automatically when a person enters the toilet. They will turn off after a period of time.</p>
-
-        <h4 style={{ color: "#555", marginTop: "12px", marginBottom: "8px" }}>Dining Room</h4>
-        <p style={{ color: "#555", lineHeight: 1.7, margin: "0 0 12px 0" }}>Light switch is located in the kitchen to the left of the storage/dishes room between the Main Switch Board and the door.</p>
-
-        <h4 style={{ color: "#555", marginTop: "12px", marginBottom: "8px" }}>Outside and Front Gate Lights</h4>
-        <p style={{ color: "#555", lineHeight: 1.7, margin: "0" }}>Light switch is located in the kitchen to the left of the storage/dishes room between the Main Switch Board and the door.</p>
-      </div>
-    ),
-  },
-  parking: {
-    title: "Parking",
-    color: "#2c3e50",
-    body: "parking front carpark back carpark road",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>3 Areas to park.</li>
-        <li>Front Carpark at the Front of the Paa.</li>
-        <li>Back Carpark behind the Wharenui and Kitchen.</li>
-        <li>On the road.</li>
-      </ul>
-    ),
-  },
-  pigBins: {
-    title: "Pig Bins",
-    color: "#2c3e50",
-    body: "pig bins blue loading dock food scraps composting",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>There are large Blue pig bins at the back loading dock. Please ensure you only have food scraps in the bin. We will use these scraps in our new composting system.</li>
-        <li>Place the Bins to the left of the Loading Dock.</li>
-      </ul>
-    ),
-  },
-  recyclingBins: {
-    title: "Recycling Bins",
-    color: "#2c3e50",
-    body: "recycling bins limited rubbish bags",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>There is a limited amount of recycling bins. Please fill these bins and then place any extra in rubbish bags.</li>
-      </ul>
-    ),
-  },
-  rubbish: {
-    title: "Rubbish",
-    color: "#2c3e50",
-    body: "rubbish hirer remove cost skip grey rack pig bins",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>It is the responsibility of the hirer to remove the rubbish from the paa. However, if you require us to remove the rubbish there is a cost. For some people do hire a skip to get rid of the rubbish. We can provide you details for this.</li>
-        <li>Stack all of the rubbish bags on the grey rack on the loading dock.</li>
-        <li>We do have pig bins which you can use for kai which we use in our composting system.</li>
-      </ul>
-    ),
-  },
-  showers: {
-    title: "Showers",
-    color: "#2c3e50",
-    body: "showers gas toilets dial hot water cold chairperson",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>The Showers use gas which is located at the back of the main toilets. If the Water goes cold, check the Dial which way it's pointing and point it to the opposite side. Then turn on the gas bottle you've pointed the dial to and you should have hot water. Any issues please call The Paa Committee Chairperson 0212749600.</li>
-      </ul>
-    ),
-  },
-  smoking: {
-    title: "Smoking",
-    color: "#2c3e50",
-    body: "smoking permitted green toilets loading dock",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>Smoking is only permitted by the back Green toilets to the back of the loading dock.</li>
-      </ul>
-    ),
-  },
-  tables: {
-    title: "Tables",
-    color: "#2c3e50",
-    body: "tables wharenui dining room trolleys stage",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>Wharenui tables must stay in the Wharenui. No Dining room tables to be used in the Wharenui.</li>
-        <li>Wharekai tables are stacked on the trolleys and placed in front of the stage.</li>
-      </ul>
-    ),
-  },
-  toilets: {
-    title: "Toilets",
-    color: "#2c3e50",
-    body: "toilets sets events main green back front visitors",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>There are 3 sets of toilets that can be used during larger events.</li>
-        <li>The main toilets are to the left of the Wharenui.</li>
-        <li>There are green toilets at the back of the loading dock. These toilets will only be opened for large events. This area is also used for Smoking and Vaping.</li>
-        <li>The final is the front toilets. Due to be completed in November 2025 these will be used mainly for our visitors who come onto the Paa.</li>
-      </ul>
-    ),
-  },
-  trolleys: {
-    title: "Trolleys",
-    color: "#2c3e50",
-    body: "trolleys kitchen floor dishes stacked clean",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>All of the kitchen trolleys must be removed from the kitchen floor and placed in the area where the dishes are stacked on final clean.</li>
-        <li>Ensure these are wiped down and clear of any kai or rubbish.</li>
-      </ul>
-    ),
-  },
-  vacuum: {
-    title: "Vacuum",
-    color: "#2c3e50",
-    body: "vacuum mattress room wharenui backpack final clean",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>The Vacuum is located in the Mattress room of the wharenui. Please use this to do a final clean before exiting the Wharenui.</li>
-        <li>It's a backpack style so easy to use.</li>
-        <li>Please ensure the Vacuum is returned to its proper place.</li>
-      </ul>
-    ),
-  },
-  wifi: {
-    title: "WiFi",
-    color: "#2c3e50",
-    body: "wifi router kitchen shelf password reception wharenui",
-    content: () => (
-      <ul style={{ lineHeight: 1.8, color: "#555", margin: 0, paddingLeft: "20px" }}>
-        <li>The WiFi Router is located in the Kitchen on the shelf.</li>
-        <li>WiFi password is "NgaaTaieRua23"</li>
-        <li>Reception doesn't extend to the Wharenui.</li>
-      </ul>
-    ),
-  },
-};
-
-const FALLBACK_GROUP_MEMBERS = {
-  equipment: ["aircon", "bakersOven", "brattPan", "chairs", "chiller", "combiOvens", "deepFryer", "defibrillator", "dishWasher", "dishes", "freezers", "fridges", "gas", "grillTops", "hangiCookers", "hotBoxes", "hotWater", "microwave"],
-  cleaning: ["cleanDining", "cleanKitchen", "cleanToilets", "cleanWharenui", "cleanEquipment"],
-  facilities: ["evacuation", "firstAid", "flag", "floors", "linen", "loadingDock", "mattressRoom", "lights", "parking", "pigBins", "recyclingBins", "rubbish", "showers", "smoking", "tables", "toilets", "trolleys", "vacuum", "wifi"],
-};
+// Used only until the arrival guide's content has been migrated into the
+// CMS (see database/migration_arrival_content.sql), or if the content
+// service is unreachable. Once the CMS has items placed on "arrival",
+// those are used instead — fully editable/addable from the admin Content
+// Manager, same as every other page, including attaching a video.
+const FALLBACK_ITEMS = [
+  { id: "aircon", title: "Airconditioning", category: "equipment", body: "Wharenui\nThe remote for the air conditioning is located on the right side of the 4th pillar when looking inside from the front entrance.\n\nDining Room / Reitu\nThe remote is located on the wall. If you come in from the Reitu carving entrance it is on the left wall below the mural. If you come in from the side entrance it's on your right side." },
+  { id: "bakersOven", title: "Bakers Oven", category: "equipment", body: "• Ensure the Oven is turned on the wall.\n• Ensure the Gas Fan is turned on. The Gas Fan makes the Gas Flow.\n• Open the door of the oven until flat.\n• Locate the Gas light flap and open it.\n• Turn the oven on until you see the green light.\n• Press and turn the Dial to the Pilot light. Keep your finger on the Dial and then press the Lighter button about 10 times.\n• Look through the light port you will see a blue flame. It's very light but you can see it.\n• If it doesn't appear keep your finger on the dial and press the Lighter Button another 5 times. If it doesn't light up a blue flame keep trying until you see the flame.\n• When the flame is lit the oven is now active. Turn the dial to the far left to start in full ignition mode.\n• To turn off, turn the Dial to the far right and turn the temperature dial to off." },
+  { id: "brattPan", title: "Bratt Pan", category: "equipment", body: "• Ensure the Bratt pan is turned on the wall.\n• Ensure the Gas Fan is turned on. The Gas Fan makes the Gas Flow.\n• Press the button to fill the Bratt pan with water.\n• When the Bratt pan is full turn, the temperature dials up to its required temperature." },
+  { id: "chairs", title: "Chairs", category: "equipment", body: "• Wharenui Chairs are stacked to the far left of the Wharenui.\n• Outside chairs are stacked under the awning.\n• Forms and stacked chairs are under the marae.\n• Dining Chairs are stacked on the stage, 5 high and 2 rows all the way across." },
+  { id: "chiller", title: "Chiller", category: "equipment", body: "• To use the Chiller, you must use the step ladder to the left of the Chiller and switch the Chiller on by looking on top of the chiller and turning on the switch.\n• Upon final clean ensure all food is removed.\n• Give the chiller a quick mop on exit and switch off from the wall." },
+  { id: "combiOvens", title: "Combi Ovens", category: "equipment", body: "• Watch this space. There will be some instructions on how to cook using the Combi ovens if you don't already know. Ensure to run a quick clean when you finish. Trays are to the right of the Combi Ovens on the bench." },
+  { id: "deepFryer", title: "Deep Fryer", category: "equipment", body: "• It takes about 20 Litres of oil to use this, Fryer. To start do the same instructions as for the Bakers Oven." },
+  { id: "defibrillator", title: "Defibrillator", category: "equipment", body: "• Located to the right of the Wharenui. Please follow the instructions. Inform the Paa Committee Chairperson if it's been used." },
+  { id: "cleanDining", title: "Clean – Final Dining Hall", category: "cleaning", body: "• Close all windows.\n• Close Curtains.\n• Ensure all chairs are stacked away. 5 chairs high, 2 rows across the stage\n• The 2 Table Trolleys and 1 Chair Trolley positioned in front of the stage.\n• Sweep the floors with the brush and dustpan.\n• Close all doors. Don't allow anyone to go on the floors.\n• From the Loading Dock there are 2 Green Mop Buckets and 2 Mops. Use these only for the Dining Hall. The cleaning products are to the left of the hot water Urn. If you want to get hot water out of the taps you must make sure the Gas Button is turned on. This allows the Gas to flow and heat the water.\n• Mop the Floor as usual.\n• When finished poor the water outside down the drain. Ring out the Mops and hang back up on the wall of the Loading Dock." },
+  { id: "cleanKitchen", title: "Clean – Final Kitchen", category: "cleaning", body: "• The Kitchen should be the final thing you do before exiting.\n• Close all windows.\n• Ensure all rubbish is removed. You're responsible for removing your rubbish unless prior approval with the Paa Committee Chairperson as there is an extra cost.\n• All Trolleys are put away in the backroom with the dishes.\n• All Food is removed.\n• All Fridges are emptied and turned off.\n• All Bins are cleaned and stacked to the right side of the Exit door inside.\n• Dishes have been put away.\n• Tea towels have been placed in the Washing machine and turned on.\n• Combi ovens have been put on clean mode.\n• All Stainless-steel benches are wiped down.\n• Dishwasher unit is emptied and racks put away.\n• Ensure you're the last to exit the kitchen. Don't allow anyone to go on the floors.\n• Urn. If you want to get hot water out of the taps you must make sure the Gas Button is turned on. This allows the Gas to flow and heat the water. Turn off when you have the hot water.\n• Mop the Floor ensuring you cover the entire floor. Make a track so that you'll mop all the way out to the exit door. Close the Door and lock up.\n• When finished pour the water outside down the drain. Ring out the Mops and hang back up on the wall of the Loading Dock." },
+  { id: "cleanToilets", title: "Clean – Final Toilets", category: "cleaning", body: "• Place all of the rubbish in the toilets to the outside bin. It's the responsibility of the hirer to get rid of the rubbish unless prior approval as there is an extra cost.\n• The Cleaning products are in the ladies toilets.\n• Use the paper towels and the Spray bottle labelled Bench tops to wipe down the benches.\n• Use the paper towels and the Spray bottle for the toilets.\n• Ensure all of the Lids and under the lids of the toilets are set up after cleaning.\n• Use the Window Cleaner to clean any dirty windows.\n• The Blue Mop buckets and Blue Mops are on the wall in the corner of the Dining Hall. If you come out of the toilets and head left and left again you can look on the wall to the right, and you'll see them.\n• Use the Floor cleaning product. Turn on a shower and use the hot water from there. Mop the showers and the floors.\n• Return the Mop and Buckets to original spots please.\n• Lock the Toilet doors so no one can use them." },
+  { id: "cleanWharenui", title: "Clean – Final Wharenui", category: "cleaning", body: "• Chairs to be stacked on the far left of the wharenui by the entrance of the ariki room.\n• All Rubbish must be removed.\n• Floors to be vacuum.\n• Ensure to vacuum the mattress room and return the Vacuum to the Mattress room.\n• If windows are dirty, please use the window cleaner in the toilets and paper towels to clean." },
+  { id: "cleanEquipment", title: "Cleaning Equipment", category: "cleaning", body: "• Wharenui – Vacuum, Brushes and Brooms are in the Mattress Room.\n• Toilets – Cleaning chemicals are in the ladies toilet. Brooms are next to the disability toilets. Mops and Buckets are on the back wall of the Wharekai Reitu.\n• Kitchen – All cleaning chemicals are on the bench next to the Urn. All mops, buckets and brooms are on the back loading dock." },
+  { id: "dishWasher", title: "Dish Washer", category: "equipment", body: "• Turn on the power for the dishwasher.\n• Then press the Power on the dishwasher.\n• Slide in a rack of dirty dishes and close hood.\n• Press Start.\n• Wait till finished then lift hood and remove the rack.\n• For the final clean ensure all of the Racks are put away below the benches and the Dishwasher hood is raised." },
+  { id: "dishes", title: "Dishes", category: "equipment", body: "• The backroom has labels for where each dish must return to.\n• Cutlery and Cups are on the trolley with drawers.\n• Ensure every dish is put away on your final clean." },
+  { id: "freezers", title: "Freezers", category: "equipment", body: "• Press the button on the top of the freezer to turn on.\n• Remove all kai from Freezer on final clean and turn off the Freezer." },
+  { id: "fridges", title: "Fridges", category: "equipment", body: "• Press the button on the top of the Fridges to turn on.\n• Remove all kai from Freezer on final clean and turn off the Fridge." },
+  { id: "gas", title: "Gas", category: "equipment", body: "• There are 2 areas where our gas bottles are located. 1 is at the back of the kitchen and the other is at the back of the new toilets.\n• If the gas runs out, turn the dial to the other gas bottle and open up the value. Close the Value of the gas bottle that has run out.\n• Important: In the kitchen, you must switch the Gas switch on (located below the power buttons for the Combi Ovens). This controls the flow of Gas. Without it switched on your gas cookers will not work and no Hot water will come out of the taps.\n• When not in use turn off the Gas switch." },
+  { id: "grillTops", title: "Grill Tops", category: "equipment", body: "• Switch on the Gas Switch.\n• Turn on the Gas dial and light with the Gas Lighter located on the shelf above the GrilTops." },
+  { id: "hangiCookers", title: "Hangi Cookers", category: "equipment", body: "• Hangi Cookers should have a connection directly to the wall gas outlet." },
+  { id: "hotBoxes", title: "Hot Boxes", category: "equipment", body: "• Hot boxes used to keep your bulk kai warm.\n• Just turn on and turn off as needed.\n• Make sure on your final clean to give it a wipe out and switch off." },
+  { id: "hotWater", title: "Hot Water", category: "equipment", body: "• For immediate hot water use the Urn on the Wall.\n• There maybe in some cases a plug in Urn available to you.\n• Hot water from the taps you must make sure you turn the Gas Switch 1*." },
+  { id: "microwave", title: "Microwave", category: "equipment", body: "• Make sure everything is removed and switch off when not in use." },
+  { id: "evacuation", title: "Evacuation Point", category: "facilities", body: "• The Evacuation point is located in the front car park by the main road." },
+  { id: "firstAid", title: "First Aid", category: "facilities", body: "• The 1st Aid kit is located at the shelf next to the Urn." },
+  { id: "flag", title: "Flag / Kara", category: "facilities", body: "• The Flag / Kara will stay up during the whole duration of the hui/tangi/wananga." },
+  { id: "floors", title: "Floors", category: "facilities", body: "• Every floor has a different Mop and Bucket.\n• The Green mop and bucket are for the Dining hall only. Use the floor cleaner.\n• The Yellow mop and bucket are for the Kitchen only. Do spot cleans during your time and use the Yellow mop and bucket for your final exit clean. If not, the floor will come up dirty unless its dried. Also use the sjax or Jiff products for this floor.\n• The Blue mop and bucket are for the new and old toilets. Floor cleaner in Ladies Toilet." },
+  { id: "linen", title: "Linen", category: "facilities", body: "• All linen is in the Mattress Room Cupboard.\n• On exit day, use the Green Laundry bag that is located in the Cupboard to the left of the linen cupboard and fill up with all of the linen to be collected. Leave the bags in the Mattress Room for collection." },
+  { id: "loadingDock", title: "Loading Dock", category: "facilities", body: "• Do not use the Dining Room chairs outside. It ruins the chair foot rubbers.\n• No smoking on the Loading Dock.\n• On the final clean, use the hose on the wall to hose down." },
+  { id: "mattressRoom", title: "Mattress Room", category: "facilities", body: "• In the mattress room there is a picture on the left as you walk into the mattress room of how you should leave this space. Please ensure its left in this manner.\n• Under no circumstances is there to be any sleeping in the mattress room. It's a fire exit and must be clear at all times.\n• The fire exit door should not be used unless for emergencies. There is a photo to the left as you enter the Mattress room that shows how you should leave the Mattress Room when finished.\n• Pillows are on the walls.\n• The Topper/Mattress Wall and mattress are in the middle of the room.\n• Whaariki are to the back wall.\n• 6 treacle tables are stored to the back.\n• Vacuum is stacked at the back wall.\n• Blow up mattresses stack in the gap next to it." },
+  { id: "lights", title: "Lights", category: "facilities", body: "Wharenui\nThe light switch for the internal lights is located to the left of the entrance door.\n\nWharenui mahau lights (for nighttime)\n• Turn on at nighttime only.\n• Use the main key that opens the toilets and wharenui and open the Ariki room which is the 1st door to the left as you enter the wharenui.\n• Look on the wall and you'll see a Dial. Turn the Dial to On. The lights will turn on around the mahau.\n• Exit the Ariki room and make sure it is locked.\n• In the morning ensure to turn off these lights.\n\nMattress Room\nThe light switch is on the right side as you enter the Mattress room or the back wall by the Fire Alarm.\n\nToilets\nThese switch on automatically when a person enters the toilet. They will turn off after a period of time.\n\nDining Room\nLight switch is located in the kitchen to the left of the storage/dishes room between the Main Switch Board and the door.\n\nOutside and Front Gate Lights\nLight switch is located in the kitchen to the left of the storage/dishes room between the Main Switch Board and the door." },
+  { id: "parking", title: "Parking", category: "facilities", body: "• 3 Areas to park.\n• Front Carpark at the Front of the Paa.\n• Back Carpark behind the Wharenui and Kitchen.\n• On the road." },
+  { id: "pigBins", title: "Pig Bins", category: "facilities", body: "• There are large Blue pig bins at the back loading dock. Please ensure you only have food scraps in the bin. We will use these scraps in our new composting system.\n• Place the Bins to the left of the Loading Dock." },
+  { id: "recyclingBins", title: "Recycling Bins", category: "facilities", body: "• There is a limited amount of recycling bins. Please fill these bins and then place any extra in rubbish bags." },
+  { id: "rubbish", title: "Rubbish", category: "facilities", body: "• It is the responsibility of the hirer to remove the rubbish from the paa. However, if you require us to remove the rubbish there is a cost. For some people do hire a skip to get rid of the rubbish. We can provide you details for this.\n• Stack all of the rubbish bags on the grey rack on the loading dock.\n• We do have pig bins which you can use for kai which we use in our composting system." },
+  { id: "showers", title: "Showers", category: "facilities", body: "• The Showers use gas which is located at the back of the main toilets. If the Water goes cold, check the Dial which way it's pointing and point it to the opposite side. Then turn on the gas bottle you've pointed the dial to and you should have hot water. Any issues please call The Paa Committee Chairperson 0212749600." },
+  { id: "smoking", title: "Smoking", category: "facilities", body: "• Smoking is only permitted by the back Green toilets to the back of the loading dock." },
+  { id: "tables", title: "Tables", category: "facilities", body: "• Wharenui tables must stay in the Wharenui. No Dining room tables to be used in the Wharenui.\n• Wharekai tables are stacked on the trolleys and placed in front of the stage." },
+  { id: "toilets", title: "Toilets", category: "facilities", body: "• There are 3 sets of toilets that can be used during larger events.\n• The main toilets are to the left of the Wharenui.\n• There are green toilets at the back of the loading dock. These toilets will only be opened for large events. This area is also used for Smoking and Vaping.\n• The final is the front toilets. Due to be completed in November 2025 these will be used mainly for our visitors who come onto the Paa." },
+  { id: "trolleys", title: "Trolleys", category: "facilities", body: "• All of the kitchen trolleys must be removed from the kitchen floor and placed in the area where the dishes are stacked on final clean.\n• Ensure these are wiped down and clear of any kai or rubbish." },
+  { id: "vacuum", title: "Vacuum", category: "facilities", body: "• The Vacuum is located in the Mattress room of the wharenui. Please use this to do a final clean before exiting the Wharenui.\n• It's a backpack style so easy to use.\n• Please ensure the Vacuum is returned to its proper place." },
+  { id: "wifi", title: "WiFi", category: "facilities", body: "• The WiFi Router is located in the Kitchen on the shelf.\n• WiFi password is \"NgaaTaieRua23\"\n• Reception doesn't extend to the Wharenui." },
+];
 
 const GROUP_LABELS = {
   equipment: "Equipment & Appliances",
@@ -574,41 +65,34 @@ function ArrivalPage() {
   const { heading, sections } = usePageContent("arrival");
   const usingCms = sections.length > 0;
 
-  // Build a title/body/color/content lookup, and which group each id
-  // belongs to, from whichever source is active (CMS or fallback).
-  const { sectionContent, groupMembers, groupOrder } = useMemo(() => {
-    if (!usingCms) {
-      return { sectionContent: FALLBACK_SECTION_CONTENT, groupMembers: FALLBACK_GROUP_MEMBERS, groupOrder: GROUP_ORDER };
-    }
-
-    const content = {};
-    const members = {};
-    const order = [];
-
-    sections.forEach((item) => {
-      const id = String(item.id);
-      const group = GROUP_ORDER.includes(item.category) ? item.category : "facilities";
-      content[id] = {
+  // Source items from the CMS once the admin has content placed on
+  // "arrival" (see the Content Manager), falling back to the original
+  // hardcoded guide otherwise. Unrecognised categories fall under
+  // "Facilities & General" so a mis-typed category never hides an item.
+  const items = useMemo(() => {
+    if (!usingCms) return FALLBACK_ITEMS;
+    return sections.map((item) => {
+      const category = GROUP_ORDER.includes(item.category) ? item.category : "facilities";
+      return {
+        id: String(item.id),
         title: item.title,
-        color: GROUP_COLORS[group] || "#2c3e50",
+        color: GROUP_COLORS[category] || "#2c3e50",
+        category,
         body: item.body,
-        content: () => (
-          <p style={{ color: "#555", lineHeight: 1.8, margin: 0, whiteSpace: "pre-line" }}>{item.body}</p>
-        ),
+        video_url: item.video_url || null,
       };
-      if (!members[group]) {
-        members[group] = [];
-        order.push(group);
-      }
-      members[group].push(id);
     });
-
-    // Keep the three known groups first, in their usual order, then any
-    // extra groups an admin has invented via a new category name.
-    const knownFirst = [...GROUP_ORDER.filter((g) => order.includes(g)), ...order.filter((g) => !GROUP_ORDER.includes(g))];
-
-    return { sectionContent: content, groupMembers: members, groupOrder: knownFirst };
   }, [usingCms, sections]);
+
+  // Keep the three known groups first, in their usual order, then any
+  // extra groups an admin has invented via a new category name.
+  const groupOrder = useMemo(() => {
+    const seen = [];
+    items.forEach((item) => {
+      if (!seen.includes(item.category)) seen.push(item.category);
+    });
+    return [...GROUP_ORDER.filter((g) => seen.includes(g)), ...seen.filter((g) => !GROUP_ORDER.includes(g))];
+  }, [items]);
 
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedGroupHeaders, setExpandedGroupHeaders] = useState({});
@@ -628,15 +112,16 @@ function ArrivalPage() {
     }));
   };
 
-  const filteredSections = useMemo(() => {
-    const allIds = Object.keys(sectionContent);
-    if (!searchTerm.trim()) return allIds;
-    const term = searchTerm.toLowerCase();
-    return allIds.filter((id) => {
-      const section = sectionContent[id];
-      return section.title.toLowerCase().includes(term) || section.body.toLowerCase().includes(term);
+  // Split on whitespace so a search like "gas oven" matches items
+  // containing EITHER "gas" OR "oven", not just the exact phrase.
+  const filteredItems = useMemo(() => {
+    if (!searchTerm.trim()) return items;
+    const words = searchTerm.toLowerCase().split(/\s+/).filter(Boolean);
+    return items.filter((item) => {
+      const haystack = `${item.title} ${item.body || ""}`.toLowerCase();
+      return words.some((word) => haystack.includes(word));
     });
-  }, [searchTerm, sectionContent]);
+  }, [items, searchTerm]);
 
   const allGroupsExpanded = () => {
     const expanded = {};
@@ -653,7 +138,7 @@ function ArrivalPage() {
   useEffect(() => {
     if (searchTerm.trim()) {
       setExpandedGroupHeaders(allGroupsExpanded());
-      setExpandedSections({}); // Keep individual items collapsed
+      setExpandedSections({});
     } else {
       setExpandedGroupHeaders(allGroupsCollapsed());
       setExpandedSections({});
@@ -663,8 +148,8 @@ function ArrivalPage() {
 
   const handleExpandAll = () => {
     const allExpanded = {};
-    filteredSections.forEach((id) => {
-      allExpanded[id] = true;
+    filteredItems.forEach((item) => {
+      allExpanded[item.id] = true;
     });
     setExpandedSections(allExpanded);
     setExpandedGroupHeaders(allGroupsExpanded());
@@ -675,8 +160,9 @@ function ArrivalPage() {
     setExpandedGroupHeaders(allGroupsCollapsed());
   };
 
-  const CollapsibleSection = ({ id, title, color, children }) => {
+  const CollapsibleSection = ({ id, title, color, item }) => {
     const isExpanded = expandedSections[id];
+    const embedUrl = getYoutubeEmbedUrl(item.video_url);
     return (
       <section style={{ marginBottom: "16px", borderRadius: "6px", border: `1px solid ${color}20`, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
         <button
@@ -718,7 +204,22 @@ function ArrivalPage() {
         </button>
         {isExpanded && (
           <div style={{ padding: "20px", background: "#fff", borderTop: `1px solid ${color}20` }}>
-            {children}
+            {(item.body || "").split("\n\n").map((paragraph, pIdx) => (
+              <p key={pIdx} style={{ color: "#555", lineHeight: 1.7, margin: 0, marginBottom: "16px", whiteSpace: "pre-line" }}>
+                {paragraph}
+              </p>
+            ))}
+            {embedUrl && (
+              <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, marginTop: "12px", borderRadius: "6px", overflow: "hidden" }}>
+                <iframe
+                  src={embedUrl}
+                  title={`${title} video`}
+                  style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            )}
           </div>
         )}
       </section>
@@ -772,9 +273,9 @@ function ArrivalPage() {
     );
   };
 
-  const sectionsByGroup = {};
+  const itemsByGroup = {};
   groupOrder.forEach((g) => {
-    sectionsByGroup[g] = filteredSections.filter((id) => (groupMembers[g] || []).includes(id));
+    itemsByGroup[g] = filteredItems.filter((item) => item.category === g);
   });
 
   return (
@@ -789,24 +290,76 @@ function ArrivalPage() {
       </p>
 
       <div style={{ marginBottom: "32px", display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center" }}>
-        <input
-          type="text"
-          placeholder="Search sections and content..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{
-            flex: "1",
-            minWidth: "250px",
-            padding: "12px 16px",
-            fontSize: "1rem",
-            border: "2px solid #d4af37",
-            borderRadius: "6px",
-            fontFamily: "sans-serif",
-            outline: "none",
-            background: "#f5f5f5",
-            color: "#2c3e50",
-          }}
-        />
+        <div style={{ position: "relative", flex: "1", minWidth: "250px" }}>
+          <span
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              left: "16px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              fontSize: "1.15rem",
+              color: "#999",
+              pointerEvents: "none",
+            }}
+          >
+            🔍
+          </span>
+          <input
+            type="search"
+            aria-label="Search sections and content"
+            placeholder="Search for an item, e.g. Airconditioning, WiFi, Rubbish..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              width: "100%",
+              boxSizing: "border-box",
+              padding: "14px 44px",
+              fontSize: "1.05rem",
+              border: "2px solid #d4af37",
+              borderRadius: "999px",
+              fontFamily: "sans-serif",
+              outline: "none",
+              background: "#fff",
+              color: "#2c3e50",
+              boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+              transition: "box-shadow 0.2s, border-color 0.2s",
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = "#2c3e50";
+              e.target.style.boxShadow = "0 0 0 3px rgba(212,175,55,0.35)";
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = "#d4af37";
+              e.target.style.boxShadow = "0 1px 4px rgba(0,0,0,0.08)";
+            }}
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm("")}
+              aria-label="Clear search"
+              style={{
+                position: "absolute",
+                right: "12px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "#e0e0e0",
+                border: "none",
+                borderRadius: "50%",
+                width: "24px",
+                height: "24px",
+                lineHeight: "24px",
+                textAlign: "center",
+                cursor: "pointer",
+                color: "#555",
+                fontSize: "0.9rem",
+                padding: 0,
+              }}
+            >
+              ×
+            </button>
+          )}
+        </div>
         <button
           onClick={handleExpandAll}
           style={{
@@ -845,23 +398,17 @@ function ArrivalPage() {
         </button>
       </div>
 
-      {filteredSections.length === 0 ? (
+      {filteredItems.length === 0 ? (
         <div style={{ textAlign: "center", padding: "40px 20px", color: "#777", fontSize: "1.1rem" }}>
           No sections found matching "{searchTerm}"
         </div>
       ) : (
         <div>
           {groupOrder.map((groupId) =>
-            sectionsByGroup[groupId].length > 0 ? (
-              <CollapsibleGroupHeader
-                key={groupId}
-                groupId={groupId}
-                title={GROUP_LABELS[groupId] || groupId}
-              >
-                {sectionsByGroup[groupId].map((id) => (
-                  <CollapsibleSection key={id} id={id} title={sectionContent[id].title} color={sectionContent[id].color}>
-                    {sectionContent[id].content()}
-                  </CollapsibleSection>
+            itemsByGroup[groupId].length > 0 ? (
+              <CollapsibleGroupHeader key={groupId} groupId={groupId} title={GROUP_LABELS[groupId] || groupId}>
+                {itemsByGroup[groupId].map((item) => (
+                  <CollapsibleSection key={item.id} id={item.id} title={item.title} color={item.color} item={item} />
                 ))}
               </CollapsibleGroupHeader>
             ) : null

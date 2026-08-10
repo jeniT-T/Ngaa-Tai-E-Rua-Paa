@@ -1,5 +1,6 @@
 // frontend/src/pages/admin/ContentManagementPage.jsx
 import { useState, useEffect } from "react";
+import { getYoutubeEmbedUrl } from "../../utils/youtube.js";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 const ALL_ROLES = ["member", "caretaker", "admin"];
@@ -44,6 +45,7 @@ const EMPTY_FORM = {
   visibleToRoles: ["member"],
   placement: "",
   blockType: "section",
+  videoUrl: "",
 };
 
 export default function ContentManagementPage() {
@@ -147,6 +149,7 @@ export default function ContentManagementPage() {
       visibleToRoles: item.visible_to_roles,
       placement: item.placement || "",
       blockType: item.block_type || "section",
+      videoUrl: item.video_url || "",
     });
   }
 
@@ -289,6 +292,31 @@ export default function ContentManagementPage() {
           )}
 
           <div>
+            <label className="block text-sm font-medium mb-1">YouTube video URL (optional)</label>
+            <input
+              type="url"
+              placeholder="https://www.youtube.com/watch?v=..."
+              value={form.videoUrl}
+              onChange={(e) => setForm({ ...form, videoUrl: e.target.value })}
+              className="w-full border rounded px-3 py-2"
+            />
+            {form.videoUrl && !getYoutubeEmbedUrl(form.videoUrl) && (
+              <p className="text-xs text-red-600 mt-1">That doesn't look like a valid YouTube URL yet.</p>
+            )}
+            {getYoutubeEmbedUrl(form.videoUrl) && (
+              <div className="mt-2" style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: "6px", overflow: "hidden" }}>
+                <iframe
+                  src={getYoutubeEmbedUrl(form.videoUrl)}
+                  title="Video preview"
+                  style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            )}
+          </div>
+
+          <div>
             <label className="block text-sm font-medium mb-1">Visible to</label>
             <div className="flex gap-4">
               {ALL_ROLES.map((role) => (
@@ -334,6 +362,11 @@ export default function ContentManagementPage() {
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="font-medium">{item.title}</h3>
                   <div className="flex gap-1">
+                    {item.video_url && (
+                      <span className="text-xs px-2 py-1 rounded bg-red-100 text-red-800">
+                        📹 video
+                      </span>
+                    )}
                     {item.placement && (
                       <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800">
                         {item.placement} page · {item.block_type}

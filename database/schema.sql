@@ -56,6 +56,7 @@ CREATE TABLE content_items (
   placement VARCHAR(50),
   block_type VARCHAR(20) NOT NULL DEFAULT 'section'
     CHECK (block_type IN ('heading', 'section')),
+  video_url TEXT,
 
   created_by INTEGER REFERENCES users(id),
   created_at TIMESTAMP DEFAULT NOW(),
