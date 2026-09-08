@@ -164,16 +164,57 @@ marae-app/
 | `/caretaker/checklists`, `/caretaker/tutorials` | caretaker, admin |
 | `/admin`, `/admin/users`, `/admin/issues`, `/admin/content` | admin |
 
+## Setting this up for a different marae
+
+This app is built as a single-tenant system: one deployment (one database, one Docker
+Compose stack) per marae. If another marae wants their own version, they fork this repo and
+run their own copy — no code sharing or shared login between maraes. Here's everything that
+needs to change to make a fork "theirs":
+
+1. **Env vars** — copy `.env.example` to `.env` and set your own `DATABASE_URL`, `JWT_SECRET`,
+   and (when ready to send real email) `SMTP_*`/`EMAIL_FROM`. See
+   [Environment variables](#environment-variables).
+2. **Browser tab title** — `frontend/index.html`, the `<title>` tag.
+3. **Logo and favicon** — replace `frontend/public/images/logo.png` and
+   `frontend/public/favicon.svg` with your own files of the same name (same filenames means
+   no code changes needed).
+4. **Map image and pins** — `frontend/src/pages/MapPage.jsx`. Replace the imported map image,
+   then update the `MARKER_POSITIONS` array's `x`/`y` values (percentage from the top-left of
+   the image) so the numbered pins land on the right spots for your own site. The pin
+   name/description text itself is CMS-editable once the app is running (Content Manager →
+   Map).
+5. **First admin account** — there's no admin user in a fresh database, and admin accounts
+   are normally created by an existing admin. Run this once:
+   ```bash
+   docker compose exec backend node scripts/createAdmin.js "Your Name" you@example.com yourPassword123
+   ```
+   Then log in as that account and use Manage Users to create/promote any other admin or
+   caretaker accounts.
+6. **Everything else is content, not code.** Once you've got an admin account, log in and use
+   the Content Manager to write your own Home/History/Facilities/Events/Map copy, your own
+   arrival guide sections (equipment, cleaning, facilities info), and set your own colors per
+   content block. None of that needs a code change or a redeploy.
+
+Two things worth knowing about the current codebase if you're forking it:
+
+- `frontend/src/pages/ArrivalPage.jsx` ships a small set of generic `FALLBACK_ITEMS`, shown
+  only until an admin adds real arrival-guide content via the CMS. Don't add real operational
+  details (WiFi passwords, phone numbers, equipment locations) to that fallback array directly
+  in code — it's shipped in the public JS bundle. Add real content through the Content Manager
+  instead, where it lives in the database.
+- The visual theme (colors, layout) isn't a CMS setting — it's Tailwind classes throughout the
+  component files. A fork that wants a different look and feel needs to edit those directly;
+  there's no theming system yet.
+
 ## Known gaps / TODO
 
 - **History and Facilities copy is placeholder.** Swap the text in `HistoryPage.jsx` and
-  `FacilitiesPage.jsx` for the marae's real history and facility details.
+  `FacilitiesPage.jsx` for the marae's real history and facility details (or better, migrate
+  them to the CMS like the other pages).
 - **Events has no backend yet.** `/events` currently just shows a static "no events" message —
   there's no `events` table or admin UI to publish events.
-- **No admin UI for bookings yet.** `backend/routes/bookings.js` supports an admin listing
-  and approve/deny endpoint (`GET /api/bookings`, `PATCH /api/bookings/:id`), but there's no
-  frontend page for admins to review booking requests — only the requester-facing form exists.
 - **`backend/routes/checklists.js` and `backend/controllers/` are empty/unused.** Routes are
   defined inline inside each `routes/*.js` file rather than in separate controllers; the
   `controllers` folder is left over from an earlier structure and isn't required by anything.
-- **`JWT_SECRET`** isn't in `.env.example` — see Environment variables above.
+- **No multi-tenancy.** One deployment = one marae. See "Setting this up for a different
+  marae" above if that's what you need.

@@ -1,10 +1,5 @@
 -- database/migration_arrival_content.sql
--- Seeds the arrival guide's ~40 hardcoded dropdown sections into content_items
--- so admins can edit/add/remove them from the Content Manager, same as any
--- other public page. Safe to re-run: skips items that already exist (matched
--- by placement + title) so it won't create duplicates if run more than once.
 
--- Heading/intro override for the top of the arrival guide
 INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Marae Facilities & Operations Guide',
   $body$Please follow these guidelines to ensure proper use of all marae facilities. Click on any section to expand.$body$,

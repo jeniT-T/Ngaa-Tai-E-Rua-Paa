@@ -1,6 +1,8 @@
 // frontend/src/pages/MyBookingsPage.jsx
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import BookingCalendar from "../components/BookingCalendar.jsx";
+import useBookingAvailability from "../hooks/useBookingAvailability.js";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 
@@ -9,6 +11,13 @@ const BOOKING_TYPES = [
   { value: "event", label: "Event" },
   { value: "tangihanga", label: "Tangihanga" },
 ];
+
+const AREAS = [
+  { value: "general", label: "General area" },
+  { value: "paa", label: "Entire Paa" },
+];
+
+const AREA_LABELS = { general: "General area", paa: "Entire Paa" };
 
 const STATUS_STYLES = {
   pending: { label: "Pending review", bg: "#fff8e1", color: "#8a6d00" },
@@ -38,9 +47,20 @@ function EditBookingForm({ booking, onCancel, onSaved }) {
   const [startDate, setStartDate] = useState(toDateInputValue(booking.start_date));
   const [endDate, setEndDate] = useState(toDateInputValue(booking.end_date));
   const [bookingType, setBookingType] = useState(booking.booking_type);
+  const [area, setArea] = useState(booking.area || "general");
   const [purpose, setPurpose] = useState(booking.purpose);
+  const [whakapapa, setWhakapapa] = useState(booking.whakapapa ? "yes" : "no");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // Exclude this booking's own dates from the availability check, otherwise
+  // its own current dates would show up as "unavailable" to itself.
+  const { unavailableDays, loading: loadingAvailability } = useBookingAvailability(booking.id);
+
+  function handleSelectRange(nextStart, nextEnd) {
+    setStartDate(nextStart);
+    setEndDate(nextEnd);
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -51,7 +71,7 @@ function EditBookingForm({ booking, onCancel, onSaved }) {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ startDate, endDate, bookingType, purpose }),
+        body: JSON.stringify({ startDate, endDate, bookingType, area, purpose, whakapapa: whakapapa === "yes" }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to update booking");
@@ -68,6 +88,17 @@ function EditBookingForm({ booking, onCancel, onSaved }) {
       <p className="text-xs text-gray-500">
         Saving changes will send this booking back to pending for the admin to review again.
       </p>
+      <div>
+        <label className="block text-xs font-medium mb-1">
+          Availability {loadingAvailability && <span className="text-gray-400 font-normal">(loading…)</span>}
+        </label>
+        <BookingCalendar
+          unavailableDays={unavailableDays}
+          startDate={startDate}
+          endDate={endDate}
+          onSelectRange={handleSelectRange}
+        />
+      </div>
       <div className="flex gap-3">
         <div className="flex-1">
           <label className="block text-xs font-medium mb-1">Start date</label>
@@ -89,6 +120,31 @@ function EditBookingForm({ booking, onCancel, onSaved }) {
             className="w-full border rounded px-2 py-1 text-sm"
           />
         </div>
+      </div>
+      <div>
+        <label className="block text-xs font-medium mb-1">Do you whakapapa to the Paa?</label>
+        <select
+          value={whakapapa}
+          onChange={(e) => setWhakapapa(e.target.value)}
+          className="w-full border rounded px-2 py-1 text-sm"
+        >
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-xs font-medium mb-1">Which area do you need?</label>
+        <select
+          value={area}
+          onChange={(e) => setArea(e.target.value)}
+          className="w-full border rounded px-2 py-1 text-sm"
+        >
+          {AREAS.map(({ value, label }) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
       </div>
       <div>
         <label className="block text-xs font-medium mb-1">Type</label>
@@ -213,11 +269,16 @@ export default function MyBookingsPage() {
                   <p className="font-medium">
                     {toDateInputValue(booking.start_date)} → {toDateInputValue(booking.end_date)}
                   </p>
-                  <p className="text-xs text-gray-500 capitalize">{booking.booking_type}</p>
+                  <p className="text-xs text-gray-500 capitalize">
+                    {booking.booking_type} · {AREA_LABELS[booking.area] || booking.area}
+                  </p>
                 </div>
                 <StatusBadge status={booking.status} />
               </div>
               <p className="text-sm text-gray-700 whitespace-pre-line mb-2">{booking.purpose}</p>
+              <p className="text-xs text-gray-500 mb-2">
+                Whakapapa to the Paa: {booking.whakapapa ? "Yes" : "No"}
+              </p>
               {booking.admin_notes && (
                 <p className="text-xs text-gray-600 italic mb-2">
                   Note from the marae: {booking.admin_notes}

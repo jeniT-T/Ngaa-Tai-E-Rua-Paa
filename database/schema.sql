@@ -25,10 +25,20 @@ CREATE TABLE bookings (
   booking_type VARCHAR(20) NOT NULL DEFAULT 'standard'
     CHECK (booking_type IN ('standard', 'event', 'tangihanga')),
 
+  -- Which part of the marae is being requested. Regardless of which area is
+  -- chosen, booking ANY area blocks the whole property for everyone else —
+  -- there's no partial/simultaneous availability, this is purely so the
+  -- booker and admin know what was actually asked for.
+  area VARCHAR(20) NOT NULL DEFAULT 'general'
+    CHECK (area IN ('general', 'paa')),
+
   status VARCHAR(20) NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'approved', 'denied', 'cancelled')),
 
   admin_notes TEXT,
+
+  -- "Do you whakapapa to the Paa?" — asked on every booking request.
+  whakapapa BOOLEAN NOT NULL DEFAULT false,
 
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
@@ -57,6 +67,7 @@ CREATE TABLE content_items (
   block_type VARCHAR(20) NOT NULL DEFAULT 'section'
     CHECK (block_type IN ('heading', 'section')),
   video_url TEXT,
+  color VARCHAR(20),
 
   created_by INTEGER REFERENCES users(id),
   created_at TIMESTAMP DEFAULT NOW(),

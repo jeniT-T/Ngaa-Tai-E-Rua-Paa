@@ -6,14 +6,34 @@ const pool = new Pool({
 });
 
 const Booking = {
-  async create({ userId, startDate, endDate, purpose, bookingType = 'standard' }) {
+  async create({ userId, startDate, endDate, purpose, bookingType = 'standard', whakapapa = false, area = 'general' }) {
     const result = await pool.query(
-      `INSERT INTO bookings (user_id, start_date, end_date, purpose, booking_type)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO bookings (user_id, start_date, end_date, purpose, booking_type, whakapapa, area)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [userId, startDate, endDate, purpose, bookingType]
+      [userId, startDate, endDate, purpose, bookingType, whakapapa, area]
     );
     return result.rows[0];
+  },
+
+  // Date ranges for bookings that could still occupy the marae — used to
+  // gray out unavailable days on the booking calendar. 'approved' bookings
+  // are hard-blocked; 'pending' ones are returned too so the frontend can
+  // flag them as tentative without necessarily disabling them. Denied and
+  // cancelled bookings never block anything. excludeId lets an owner editing
+  // their own booking see the calendar without their own dates blocking them.
+  async findActiveRanges(excludeId) {
+    const conditions = [`status IN ('approved', 'pending')`];
+    const values = [];
+    if (excludeId) {
+      values.push(excludeId);
+      conditions.push(`id != $${values.length}`);
+    }
+    const result = await pool.query(
+      `SELECT id, start_date, end_date, status FROM bookings WHERE ${conditions.join(' AND ')} ORDER BY start_date`,
+      values
+    );
+    return result.rows;
   },
 
   async findByUser(userId) {
@@ -56,19 +76,21 @@ const Booking = {
 
   // Owner edits their own request (dates/purpose/type) and it goes back to
   // 'pending' for the admin to look at again — a "re-request" after a change.
-  async update(id, { startDate, endDate, purpose, bookingType }) {
+  async update(id, { startDate, endDate, purpose, bookingType, whakapapa, area }) {
     const result = await pool.query(
       `UPDATE bookings
        SET start_date = COALESCE($1, start_date),
            end_date = COALESCE($2, end_date),
            purpose = COALESCE($3, purpose),
            booking_type = COALESCE($4, booking_type),
+           whakapapa = COALESCE($5, whakapapa),
+           area = COALESCE($6, area),
            status = 'pending',
            admin_notes = NULL,
            updated_at = NOW()
-       WHERE id = $5
+       WHERE id = $7
        RETURNING *`,
-      [startDate, endDate, purpose, bookingType, id]
+      [startDate, endDate, purpose, bookingType, whakapapa ?? null, area ?? null, id]
     );
     return result.rows[0] || null;
   },

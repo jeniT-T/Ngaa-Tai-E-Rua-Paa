@@ -10,6 +10,8 @@ const STATUS_STYLES = {
   cancelled: "bg-gray-100 text-gray-600",
 };
 
+const AREA_LABELS = { general: "General area", paa: "Entire Paa" };
+
 function toDateLabel(dateString) {
   return dateString ? String(dateString).slice(0, 10) : "";
 }
@@ -81,7 +83,9 @@ export default function AdminBookingsPage() {
                   <p className="text-sm text-gray-500">
                     {booking.requester_name} · {booking.requester_email}
                   </p>
-                  <p className="text-xs text-gray-500 capitalize">{booking.booking_type}</p>
+                  <p className="text-xs text-gray-500 capitalize">
+                    {booking.booking_type} · {AREA_LABELS[booking.area] || booking.area}
+                  </p>
                 </div>
                 <span className={`text-xs px-2 py-1 rounded ${STATUS_STYLES[booking.status]}`}>
                   {booking.status}
@@ -89,6 +93,10 @@ export default function AdminBookingsPage() {
               </div>
 
               <p className="text-sm text-gray-700 mb-3 whitespace-pre-line">{booking.purpose}</p>
+
+              <p className="text-xs text-gray-500 mb-3">
+                Whakapapa to the Paa: <span className="font-medium">{booking.whakapapa ? "Yes" : "No"}</span>
+              </p>
 
               {booking.admin_notes && (
                 <p className="text-xs text-gray-600 italic mb-3">
