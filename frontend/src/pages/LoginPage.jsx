@@ -1,17 +1,18 @@
 // frontend/src/pages/LoginPage.jsx
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-
-const ROLE_DESTINATIONS = {
-  admin: '/admin',
-  caretaker: '/caretaker/checklists',
-  member: '/bookings',
-};
 
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // If we got here because a protected page (or the "Make a Booking" box)
+  // redirected us, go back there after logging in. Otherwise, land on the
+  // regular home page — logging in from the navbar shouldn't force anyone
+  // into a specific page.
+  const from = location.state?.from?.pathname || '/';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,8 +25,8 @@ export default function LoginPage() {
     setSubmitting(true);
 
     try {
-      const user = await login(email, password);
-      navigate(ROLE_DESTINATIONS[user.role] ?? '/');
+      await login(email, password);
+      navigate(from, { replace: true });
     } catch (err) {
       setError(err.message || 'Unable to log in. Please try again.');
     } finally {
@@ -54,9 +55,14 @@ export default function LoginPage() {
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium mb-1">
-            Password
-          </label>
+          <div className="flex items-center justify-between mb-1">
+            <label htmlFor="password" className="block text-sm font-medium">
+              Password
+            </label>
+            <Link to="/forgot-password" className="text-xs font-medium underline text-gray-600">
+              Forgot password?
+            </Link>
+          </div>
           <input
             id="password"
             type="password"
@@ -78,6 +84,13 @@ export default function LoginPage() {
           {submitting ? 'Logging in...' : 'Log in'}
         </button>
       </form>
+
+      <p className="text-sm text-gray-600 mt-4 text-center">
+        Don't have an account?{' '}
+        <Link to="/register" state={location.state} className="font-medium underline">
+          Register
+        </Link>
+      </p>
     </div>
   );
 }

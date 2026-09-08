@@ -46,6 +46,39 @@ const User = {
     );
     return result.rows[0] || null;
   },
+
+  // --- Password reset ---
+
+  async setResetToken(id, token, expiresAt) {
+    const result = await pool.query(
+      `UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE id = $3
+       RETURNING id, email, name`,
+      [token, expiresAt, id]
+    );
+    return result.rows[0] || null;
+  },
+
+  // Only matches if the token hasn't expired yet — callers don't need to
+  // separately check expiry.
+  async findByValidResetToken(token) {
+    const result = await pool.query(
+      `SELECT id, email, role, name FROM users
+       WHERE reset_token = $1 AND reset_token_expires > NOW()`,
+      [token]
+    );
+    return result.rows[0] || null;
+  },
+
+  // Sets a new password hash and clears the reset token so it can't be reused.
+  async updatePassword(id, passwordHash) {
+    const result = await pool.query(
+      `UPDATE users SET password_hash = $1, reset_token = NULL, reset_token_expires = NULL
+       WHERE id = $2
+       RETURNING id, email, role, name`,
+      [passwordHash, id]
+    );
+    return result.rows[0] || null;
+  },
 };
 
 module.exports = User;

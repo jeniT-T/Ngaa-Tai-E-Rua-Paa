@@ -21,17 +21,27 @@ services:
     command: npm run dev
     depends_on:
       - db
+      - mailpit
 
   db:
     image: postgres:16
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: marae_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+  # Open-source local SMTP catcher — the backend "sends" real emails to it,
+  # and you view them in a browser instead of them going anywhere real.
+  # Web inbox: http://localhost:8025
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "8025:8025" # web UI
+      - "1025:1025" # SMTP
 
 volumes:
   postgres_data:
