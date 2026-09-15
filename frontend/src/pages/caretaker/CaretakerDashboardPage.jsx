@@ -5,24 +5,14 @@ import { useAuth } from '../../context/AuthContext';
 // Planned features — not implemented yet, shown as placeholders.
 const PLANNED_FEATURES = [
   {
-    icon: '✅',
-    title: 'Task Manager',
-    description: 'Add, edit and delete caretaker tasks.',
-  },
-  {
     icon: '📦',
     title: 'Equipment Inventory',
     description: 'See what equipment is available and its condition/location.',
   },
   {
-    icon: '🗓️',
-    title: 'Upcoming Task Schedule',
-    description: 'View and plan upcoming scheduled tasks.',
-  },
-  {
     icon: '📆',
-    title: 'Holiday Calendar',
-    description: 'Check which public holidays fall in the coming weeks.',
+    title: 'Calendar',
+    description: 'See upcoming holidays and marae availability.',
   },
 ];
 
@@ -30,6 +20,7 @@ const PLANNED_FEATURES = [
 const AVAILABLE_LINKS = [
   { to: '/caretaker/checklists', icon: '📝', title: 'Checklists', description: 'Existing caretaker checklists.' },
   { to: '/caretaker/tutorials', icon: '🎓', title: 'Tutorials', description: 'Guides on caring for the marae.' },
+  { to: '/caretaker/schedule', icon: '🗓️', title: 'Task Schedule', description: 'View upcoming scheduled tasks for the next few weeks.' },
 ];
 
 export default function CaretakerDashboardPage() {
