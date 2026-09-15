@@ -30,6 +30,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage.jsx";
 import UnauthorizedPage from "./pages/UnauthorizedPage.jsx";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
 import UserManagementPage from "./pages/admin/UserManagementPage.jsx";
+import CaretakerDashboardPage from "./pages/caretaker/CaretakerDashboardPage.jsx";
 import ChecklistsPage from "./pages/caretaker/ChecklistsPage.jsx";
 import TutorialsPage from "./pages/caretaker/TutorialsPage.jsx";
 
@@ -149,6 +150,14 @@ function App() {
           />
 
           {/* Caretaker-only (and admin) */}
+          <Route
+            path="/caretaker"
+            element={
+              <RoleRoute allowed={["caretaker", "admin"]}>
+                <CaretakerDashboardPage />
+              </RoleRoute>
+            }
+          />
           <Route
             path="/caretaker/checklists"
             element={

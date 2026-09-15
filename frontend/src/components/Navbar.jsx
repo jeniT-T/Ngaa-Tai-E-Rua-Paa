@@ -6,7 +6,7 @@ import useArrivalAccess from "../hooks/useArrivalAccess.js";
 // Where each role's "dashboard" link should point
 const DASHBOARD_LINKS = {
   admin: { to: "/admin", label: "Admin Dashboard" },
-  caretaker: { to: "/caretaker/checklists", label: "Checklists" },
+  caretaker: { to: "/caretaker", label: "Caretaker Dashboard" },
   member: { to: "/bookings", label: "Bookings" },
 };
 
