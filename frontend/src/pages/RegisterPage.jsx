@@ -1,4 +1,3 @@
-// frontend/src/pages/RegisterPage.jsx
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -8,9 +7,6 @@ export default function RegisterPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Same idea as LoginPage: if we arrived here via a redirect (e.g. from the
-  // "Make a Booking" box, or a protected page), send them back there after
-  // registering. Otherwise land on the home page.
   const from = location.state?.from?.pathname || "/";
 
   const [name, setName] = useState("");
@@ -32,7 +28,6 @@ export default function RegisterPage() {
     setSubmitting(true);
 
     try {
-      // New registrations are always 'member' role (enforced on the backend too)
       await register({ name, email, password });
       navigate(from, { replace: true });
     } catch (err) {
@@ -43,87 +38,94 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="max-w-sm mx-auto mt-16 p-6">
-      <h1 className="text-2xl font-semibold mb-6">Register</h1>
+    <div className="min-h-screen flex items-center justify-center px-4 py-16">
+      <div className="card" style={{ maxWidth: '420px', width: '100%' }}>
+        <h1 style={{ marginBottom: '2rem', fontSize: '1.75rem' }}>Create Account</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium mb-1">
-            Name
-          </label>
-          <input
-            id="name"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            autoComplete="name"
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div>
+            <label htmlFor="name" style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+              Full Name
+            </label>
+            <input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              autoComplete="name"
+              placeholder="Your full name"
+            />
+          </div>
 
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-1">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
+          <div>
+            <label htmlFor="email" style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+              placeholder="you@example.com"
+            />
+          </div>
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium mb-1">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            autoComplete="new-password"
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
+          <div>
+            <label htmlFor="password" style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="new-password"
+              placeholder="••••••••"
+            />
+          </div>
 
-        <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1">
-            Confirm password
-          </label>
-          <input
-            id="confirmPassword"
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            autoComplete="new-password"
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
+          <div>
+            <label htmlFor="confirmPassword" style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+              Confirm Password
+            </label>
+            <input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              autoComplete="new-password"
+              placeholder="••••••••"
+            />
+          </div>
 
-        {error && <p className="text-red-600 text-sm">{error}</p>}
+          {error && (
+            <div style={{ padding: '0.75rem 1rem', backgroundColor: 'rgba(255, 59, 48, 0.1)', color: '#FF3B30', borderRadius: 'var(--radius-md)', fontSize: '0.9rem' }}>
+              {error}
+            </div>
+          )}
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full bg-black text-white rounded py-2 disabled:opacity-50"
-        >
-          {submitting ? "Registering..." : "Register"}
-        </button>
-      </form>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="btn btn-primary"
+            style={{ width: '100%', opacity: submitting ? '0.6' : '1', cursor: submitting ? 'not-allowed' : 'pointer' }}
+          >
+            {submitting ? "Creating account..." : "Register"}
+          </button>
+        </form>
 
-      <p className="text-sm text-gray-600 mt-4 text-center">
-        Already have an account?{' '}
-        <Link to="/login" state={location.state} className="font-medium underline">
-          Log in
-        </Link>
-      </p>
+        <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '1.5rem', textAlign: 'center' }}>
+          Already have an account?{' '}
+          <Link to="/login" state={location.state} style={{ fontWeight: '600', color: 'var(--primary)', textDecoration: 'none' }}>
+            Log in
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

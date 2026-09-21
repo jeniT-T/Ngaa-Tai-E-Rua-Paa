@@ -24,9 +24,6 @@ const FEATURES = [
 function HomePage() {
   const { user } = useAuth();
   const [hero, setHero] = useState(null);
-  // "Make a Booking" always means starting a new request, so it goes straight
-  // to the create form (the list of a member's existing bookings lives at
-  // /bookings, reached via the navbar instead).
   const bookingLink = user ? "/bookings/new" : "/login";
 
   useEffect(() => {
@@ -42,59 +39,47 @@ function HomePage() {
       <section
         style={{
           backgroundImage:
-            "linear-gradient(rgba(8,6,13,0.55), rgba(8,6,13,0.55)), url(/images/Front.jpg)",
+            "linear-gradient(rgba(26, 26, 26, 0.6), rgba(26, 26, 26, 0.6)), url(/images/Front.jpg)",
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
-        className="text-white px-6 py-24 text-center"
+        className="hero-section"
       >
-        <h1 className="text-4xl md:text-5xl font-semibold mb-4">
+        <h1 className="text-white">
           {hero ? hero.title : "Welcome to the Marae"}
         </h1>
-        <p className="text-lg md:text-xl max-w-xl mx-auto text-white/90 whitespace-pre-line">
+        <p className="text-white/90">
           {hero ? hero.body : "A place of connection, culture, and community."}
         </p>
       </section>
 
       {/* FEATURE BOXES */}
-      <section className="px-6 py-16 max-w-5xl mx-auto">
-        <div className="grid gap-6 md:grid-cols-3">
-          {FEATURES.map(({ to, icon, title, description }) => (
-            <Link
-              key={to}
-              to={to}
-              className="flex flex-col items-start gap-3 p-8 rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
-            >
-              <span className="text-4xl">{icon}</span>
-              <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
-              <p className="text-gray-600 leading-relaxed">{description}</p>
-              <span className="mt-auto pt-2 text-sm font-medium" style={{ color: "#0081bd" }}>
-                Learn more →
-              </span>
-            </Link>
-          ))}
-
-          {/* Booking box — styled the same, but with an accent border to draw the eye.
-              If logged out, we pass along where we actually wanted to go so
-              the login/register flow can send the user straight to the
-              booking form afterwards instead of dropping them on the home page. */}
-          <Link
-            to={bookingLink}
-            state={!user ? { from: { pathname: "/bookings/new" } } : undefined}
-            className="flex flex-col items-start gap-3 p-8 rounded-2xl border-2 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
-            style={{ borderColor: "#0081bd", background: "rgba(144, 222, 255, 0.12)" }}
-          >
-            <span className="text-4xl">📅</span>
-            <h2 className="text-xl font-semibold text-gray-900">Make a Booking</h2>
-            <p className="text-gray-600 leading-relaxed">
-              Renting the marae for a hui, wānanga, tangihanga or other event? Start your
-              booking request here.
-            </p>
-            <span className="mt-auto pt-2 text-sm font-medium" style={{ color: "#0081bd" }}>
-              {user ? "Request a booking →" : "Log in to book →"}
-            </span>
+      <section className="feature-grid">
+        {FEATURES.map(({ to, icon, title, description }) => (
+          <Link key={to} to={to} className="feature-box">
+            <span className="icon">{icon}</span>
+            <h2>{title}</h2>
+            <p>{description}</p>
+            <span className="link-text">Learn more →</span>
           </Link>
-        </div>
+        ))}
+
+        {/* Booking box — styled the same, but with an accent border to draw the eye */}
+        <Link
+          to={bookingLink}
+          state={!user ? { from: { pathname: "/bookings/new" } } : undefined}
+          className="feature-box feature-box-accent"
+        >
+          <span className="icon">📅</span>
+          <h2>Make a Booking</h2>
+          <p>
+            Renting the marae for a hui, wānanga, tangihanga or other event? Start your
+            booking request here.
+          </p>
+          <span className="link-text">
+            {user ? "Request a booking →" : "Log in to book →"}
+          </span>
+        </Link>
       </section>
     </div>
   );

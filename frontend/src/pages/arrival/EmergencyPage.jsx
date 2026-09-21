@@ -13,35 +13,89 @@ export default function EmergencyPage() {
   const items = sections.length > 0 ? sections : DEFAULT_SECTIONS;
 
   return (
-    <main className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow">
-
-        <h1 className="text-4xl font-bold mb-6 text-red-600">
-          {heading ? heading.title : "Emergency Evacuation Information"}
+    <main style={{ minHeight: "100vh", padding: "40px 20px", background: "var(--bg-secondary)" }}>
+      <div style={{
+        maxWidth: "800px",
+        margin: "0 auto",
+        background: "var(--bg-primary)",
+        borderRadius: "var(--radius-xl)",
+        boxShadow: "var(--shadow-lg)",
+        padding: "40px",
+        borderTop: "4px solid #DC2626",
+      }}>
+        <h1 style={{
+          fontSize: "2.5rem",
+          fontWeight: "700",
+          marginBottom: "16px",
+          color: "#DC2626",
+        }}>
+          🚨 {heading ? heading.title : "Emergency Evacuation Information"}
         </h1>
 
-        <p className="text-gray-700 mb-6 whitespace-pre-line">
+        <p style={{
+          fontSize: "1.05rem",
+          color: "var(--text-secondary)",
+          marginBottom: "32px",
+          lineHeight: "1.6",
+          whiteSpace: "pre-line",
+          paddingBottom: "20px",
+          borderBottom: "2px solid #FEE2E2",
+        }}>
           {heading ? heading.body : "In case of emergency, follow these evacuation points and procedures."}
         </p>
 
-        <div className="space-y-6">
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
           {items.map((item) => (
             <div
               key={item.title}
-              className={item.title === "Important" ? "bg-red-50 p-4 rounded-xl" : undefined}
+              style={{
+                padding: "20px",
+                borderRadius: "var(--radius-lg)",
+                border: item.title === "Important" ? "2px solid #DC2626" : "1px solid var(--border-light)",
+                background: item.title === "Important" ? "rgba(220, 38, 38, 0.05)" : "var(--bg-secondary)",
+              }}
             >
-              <h2 className={item.title === "Important" ? "font-semibold text-red-700" : "text-xl font-semibold"}>
-                {item.title}
+              <h2 style={{
+                fontSize: "1.2rem",
+                fontWeight: "600",
+                marginBottom: "8px",
+                color: item.title === "Important" ? "#DC2626" : "var(--text-primary)",
+              }}>
+                {item.title === "Important" ? "⚠️ " : "📍 "}{item.title}
               </h2>
-              <p className="whitespace-pre-line">{item.body}</p>
+              <p style={{
+                color: "var(--text-secondary)",
+                margin: 0,
+                lineHeight: "1.6",
+                whiteSpace: "pre-line",
+              }}>
+                {item.body}
+              </p>
             </div>
           ))}
         </div>
 
-        <Link to="/arrival" className="inline-block mt-8 text-blue-600">
-          ← Back to Arrival
+        <Link to="/arrival" style={{
+          display: "inline-block",
+          marginTop: "32px",
+          padding: "12px 24px",
+          backgroundColor: "#DC2626",
+          color: "white",
+          textDecoration: "none",
+          borderRadius: "var(--radius-lg)",
+          fontWeight: "600",
+          transition: "all 0.2s ease",
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.backgroundColor = "#991B1B";
+          e.target.style.transform = "translateY(-2px)";
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.backgroundColor = "#DC2626";
+          e.target.style.transform = "translateY(0)";
+        }}>
+          ← Back to Arrival Information
         </Link>
-
       </div>
     </main>
   );
