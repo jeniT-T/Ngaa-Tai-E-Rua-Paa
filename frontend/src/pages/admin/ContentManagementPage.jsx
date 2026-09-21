@@ -1,5 +1,6 @@
 // frontend/src/pages/admin/ContentManagementPage.jsx
 import { useState, useEffect } from "react";
+import { getYoutubeEmbedUrl } from "../../utils/youtube.js";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 const ALL_ROLES = ["member", "caretaker", "admin"];
@@ -7,16 +8,49 @@ const SUGGESTED_CATEGORIES = [
   "recipe",
   "onboarding",
   "equipment",
+  "cleaning",
   "maintenance",
   "rules",
   "health_safety",
   "general",
 ];
 
-const EMPTY_FORM = { title: "", body: "", category: "general", visibleToRoles: ["member"] };
+// Where an item can be shown. Empty string = internal content library only
+// (existing behaviour, gated by "Visible to" below). Anything else = it shows
+// up on that public/marae-info page instead, with no login required.
+// For the arrival guide specifically, "Category" doubles as which
+// collapsible group the item appears under — use "equipment", "cleaning"
+// or "facilities" (anything else falls under "Facilities & General").
+const PUBLIC_PAGES = [
+  { value: "", label: "Library only (internal)" },
+  { value: "home", label: "Home page" },
+  { value: "history", label: "History page" },
+  { value: "facilities", label: "Facilities page" },
+  { value: "events", label: "Events page" },
+  { value: "contacts", label: "Contact Us page" },
+  { value: "health-and-safety", label: "Health & Safety page" },
+  { value: "map", label: "Map page (heading/intro only)" },
+  { value: "arrival", label: "Arrival guide (main dropdown list)" },
+  { value: "arrival-gas", label: "Arrival guide → Gas page" },
+  { value: "arrival-wifi", label: "Arrival guide → WiFi page" },
+  { value: "arrival-emergency", label: "Arrival guide → Emergency page" },
+  { value: "arrival-accessibility", label: "Arrival guide → Accessibility page" },
+  { value: "arrival-rules", label: "Arrival guide → Rules & Regulations page" },
+];
+
+const EMPTY_FORM = {
+  title: "",
+  body: "",
+  category: "general",
+  visibleToRoles: ["member"],
+  placement: "",
+  blockType: "section",
+  videoUrl: "",
+};
 
 export default function ContentManagementPage() {
   const [items, setItems] = useState([]);
+  const [categories, setCategories] = useState(SUGGESTED_CATEGORIES);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [form, setForm] = useState(EMPTY_FORM);
@@ -26,6 +60,7 @@ export default function ContentManagementPage() {
 
   useEffect(() => {
     loadItems();
+    loadCategories();
   }, []);
 
   async function loadItems() {
@@ -39,6 +74,21 @@ export default function ContentManagementPage() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  // Pulls in whatever categories actually exist in the database (which may
+  // include ones an admin created on the fly), merged with the suggested
+  // list, so "move" always has the item's real current category as an option.
+  async function loadCategories() {
+    try {
+      const res = await fetch(`${API_BASE}/content/categories`, { credentials: "include" });
+      const data = await res.json();
+      if (res.ok) {
+        setCategories([...new Set([...SUGGESTED_CATEGORIES, ...data.categories])]);
+      }
+    } catch {
+      // non-critical — fall back to the suggested list
     }
   }
 
@@ -82,6 +132,7 @@ export default function ContentManagementPage() {
       }
       setForm(EMPTY_FORM);
       setEditingId(null);
+      loadCategories(); // in case a brand-new category was typed in
     } catch (err) {
       setError(err.message);
     } finally {
@@ -96,6 +147,9 @@ export default function ContentManagementPage() {
       body: item.body,
       category: item.category,
       visibleToRoles: item.visible_to_roles,
+      placement: item.placement || "",
+      blockType: item.block_type || "section",
+      videoUrl: item.video_url || "",
     });
   }
 
@@ -153,6 +207,7 @@ export default function ContentManagementPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to move");
       setItems((prev) => prev.map((i) => (i.id === item.id ? data.item : i)));
+      loadCategories(); // in case it moved into a brand-new category
     } catch (err) {
       setError(err.message);
     }
@@ -197,10 +252,68 @@ export default function ContentManagementPage() {
               className="w-full border rounded px-3 py-2"
             />
             <datalist id="category-suggestions">
-              {SUGGESTED_CATEGORIES.map((c) => (
+              {categories.map((c) => (
                 <option key={c} value={c} />
               ))}
             </datalist>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Show on public page</label>
+            <select
+              value={form.placement}
+              onChange={(e) => setForm({ ...form, placement: e.target.value })}
+              className="w-full border rounded px-3 py-2"
+            >
+              {PUBLIC_PAGES.map(({ value, label }) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Choosing a page here makes this item visible to everyone (logged in or not) on
+              that page — "Visible to" below only applies to library items.
+            </p>
+          </div>
+
+          {form.placement && (
+            <div>
+              <label className="block text-sm font-medium mb-1">Block type</label>
+              <select
+                value={form.blockType}
+                onChange={(e) => setForm({ ...form, blockType: e.target.value })}
+                className="w-full border rounded px-3 py-2"
+              >
+                <option value="section">Section (a card in the page's list)</option>
+                <option value="heading">Heading (the page's title / intro text)</option>
+              </select>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium mb-1">YouTube video URL (optional)</label>
+            <input
+              type="url"
+              placeholder="https://www.youtube.com/watch?v=..."
+              value={form.videoUrl}
+              onChange={(e) => setForm({ ...form, videoUrl: e.target.value })}
+              className="w-full border rounded px-3 py-2"
+            />
+            {form.videoUrl && !getYoutubeEmbedUrl(form.videoUrl) && (
+              <p className="text-xs text-red-600 mt-1">That doesn't look like a valid YouTube URL yet.</p>
+            )}
+            {getYoutubeEmbedUrl(form.videoUrl) && (
+              <div className="mt-2" style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: "6px", overflow: "hidden" }}>
+                <iframe
+                  src={getYoutubeEmbedUrl(form.videoUrl)}
+                  title="Video preview"
+                  style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            )}
           </div>
 
           <div>
@@ -248,13 +361,27 @@ export default function ContentManagementPage() {
               <li key={item.id} className="border rounded p-4">
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="font-medium">{item.title}</h3>
-                  <span className="text-xs px-2 py-1 rounded bg-gray-100">
-                    {item.category}
-                  </span>
+                  <div className="flex gap-1">
+                    {item.video_url && (
+                      <span className="text-xs px-2 py-1 rounded bg-red-100 text-red-800">
+                        📹 video
+                      </span>
+                    )}
+                    {item.placement && (
+                      <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800">
+                        {item.placement} page · {item.block_type}
+                      </span>
+                    )}
+                    <span className="text-xs px-2 py-1 rounded bg-gray-100">
+                      {item.category}
+                    </span>
+                  </div>
                 </div>
                 <p className="text-sm text-gray-600 whitespace-pre-line mb-2">{item.body}</p>
                 <p className="text-xs text-gray-500 mb-3">
-                  Visible to: {item.visible_to_roles.join(', ')}
+                  {item.placement
+                    ? `Public on the ${item.placement} page`
+                    : `Visible to: ${item.visible_to_roles.join(', ')}`}
                 </p>
 
                 <div className="flex flex-wrap gap-2 items-center">
@@ -271,15 +398,13 @@ export default function ContentManagementPage() {
                     Delete
                   </button>
 
-                  <select
+                  <input
+                    type="text"
+                    list="category-suggestions"
                     value={moveTarget[item.id] ?? item.category}
                     onChange={(e) => setMoveTarget((prev) => ({ ...prev, [item.id]: e.target.value }))}
-                    className="text-sm border rounded px-2 py-1"
-                  >
-                    {SUGGESTED_CATEGORIES.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
+                    className="text-sm border rounded px-2 py-1 w-36"
+                  />
                   <button onClick={() => handleMove(item)} className="text-sm border rounded px-3 py-1">
                     Move
                   </button>

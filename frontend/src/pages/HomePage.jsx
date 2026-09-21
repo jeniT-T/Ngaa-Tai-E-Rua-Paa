@@ -1,33 +1,101 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+
+const FEATURES = [
+  {
+    to: "/history",
+    icon: "🏛️",
+    title: "History of the Marae",
+    description:
+      "Learn the story of our whare, our whakapapa, and the people who have cared for this place.",
+  },
+  {
+    to: "/facilities",
+    icon: "🏠",
+    title: "Available Facilities",
+    description:
+      "See the wharenui, wharekai, accommodation and grounds available for your stay or event.",
+  },
+];
 
 function HomePage() {
-  return (
-    <div style={{ padding: "40px" }}>
-      
-      {/* HERO SECTION */}
-      <section style={{ textAlign: "center", marginBottom: "40px" }}>
-        <h1 style={{ fontSize: "2.5rem" }}>
-          Welcome to the Marae
-        </h1>
+  const { user } = useAuth();
+  const [hero, setHero] = useState(null);
+  // "Make a Booking" always means starting a new request, so it goes straight
+  // to the create form (the list of a member's existing bookings lives at
+  // /bookings, reached via the navbar instead).
+  const bookingLink = user ? "/bookings/new" : "/login";
 
-        <p style={{ fontSize: "1.2rem", color: "#555" }}>
-          A place of connection, culture, and community.
+  useEffect(() => {
+    fetch(`${API_BASE}/content/public/home`)
+      .then((res) => res.json())
+      .then((data) => setHero((data.items || []).find((i) => i.block_type === "heading") || null))
+      .catch(() => {});
+  }, []);
+
+  return (
+    <div>
+      {/* HERO SECTION */}
+      <section
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(8,6,13,0.55), rgba(8,6,13,0.55)), url(/images/Front.jpg)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+        className="text-white px-6 py-24 text-center"
+      >
+        <h1 className="text-4xl md:text-5xl font-semibold mb-4">
+          {hero ? hero.title : "Welcome to the Marae"}
+        </h1>
+        <p className="text-lg md:text-xl max-w-xl mx-auto text-white/90 whitespace-pre-line">
+          {hero ? hero.body : "A place of connection, culture, and community."}
         </p>
       </section>
 
-      {/* ACTION BUTTONS */}
-      <section className="actionButton">
-        <Link to="/arrival">
-          <button className="glButton">Visitor Information</button>
-        </Link>
+      {/* FEATURE BOXES */}
+      <section className="px-6 py-16 max-w-5xl mx-auto">
+        <div className="grid gap-6 md:grid-cols-3">
+          {FEATURES.map(({ to, icon, title, description }) => (
+            <Link
+              key={to}
+              to={to}
+              className="flex flex-col items-start gap-3 p-8 rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+            >
+              <span className="text-4xl">{icon}</span>
+              <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+              <p className="text-gray-600 leading-relaxed">{description}</p>
+              <span className="mt-auto pt-2 text-sm font-medium" style={{ color: "#0081bd" }}>
+                Learn more →
+              </span>
+            </Link>
+          ))}
 
-        <button className="glButton">Make a Booking</button>
-
-        <Link to="/rules">
-          <button className="glButton">About</button>
-        </Link>
+          {/* Booking box — styled the same, but with an accent border to draw the eye.
+              If logged out, we pass along where we actually wanted to go so
+              the login/register flow can send the user straight to the
+              booking form afterwards instead of dropping them on the home page. */}
+          <Link
+            to={bookingLink}
+            state={!user ? { from: { pathname: "/bookings/new" } } : undefined}
+            className="flex flex-col items-start gap-3 p-8 rounded-2xl border-2 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+            style={{ borderColor: "#0081bd", background: "rgba(144, 222, 255, 0.12)" }}
+          >
+            <span className="text-4xl">📅</span>
+            <h2 className="text-xl font-semibold text-gray-900">Make a Booking</h2>
+            <p className="text-gray-600 leading-relaxed">
+              Renting the marae for a hui, wānanga, tangihanga or other event? Start your
+              booking request here.
+            </p>
+            <span className="mt-auto pt-2 text-sm font-medium" style={{ color: "#0081bd" }}>
+              {user ? "Request a booking →" : "Log in to book →"}
+            </span>
+          </Link>
+        </div>
       </section>
-
     </div>
   );
 }

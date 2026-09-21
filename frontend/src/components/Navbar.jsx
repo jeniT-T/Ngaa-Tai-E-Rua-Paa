@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import useArrivalAccess from "../hooks/useArrivalAccess.js";
 
 // Where each role's "dashboard" link should point
 const DASHBOARD_LINKS = {
@@ -13,6 +14,10 @@ function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  // Only resolves to "allowed" once we know the user has current arrival
+  // access (caretaker/admin, or a member with an approved, still-current
+  // booking) — see useArrivalAccess for the shared rule.
+  const arrivalAccess = useArrivalAccess();
 
   function closeMenu() {
     setMenuOpen(false);
@@ -54,20 +59,12 @@ function Navbar() {
           Home
         </Link>
 
-        <Link to="/arrival" onClick={closeMenu}>
-          Arrival Info
+        <Link to="/events" onClick={closeMenu}>
+          Events
         </Link>
 
         <Link to="/contacts" onClick={closeMenu}>
-          Contacts
-        </Link>
-
-        <Link to="/health-and-safety" onClick={closeMenu}>
-          Health & Safety
-        </Link>
-
-        <Link to="/map" onClick={closeMenu}>
-          Map
+          Contact Us
         </Link>
 
         {/* Auth-aware section */}
@@ -76,6 +73,11 @@ function Navbar() {
             {dashboard && (
               <Link to={dashboard.to} onClick={closeMenu}>
                 {dashboard.label}
+              </Link>
+            )}
+            {arrivalAccess === "allowed" && (
+              <Link to="/arrival" onClick={closeMenu}>
+                Arrival Info
               </Link>
             )}
             <span className="navbar-user">Kia ora, {user.name}</span>

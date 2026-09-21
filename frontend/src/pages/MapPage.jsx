@@ -1,71 +1,48 @@
-import { useState } from "react";
-import mapImage from "../image/Map.png";
+import { useMemo, useState } from "react";
+import mapImage from "../image/Map.jpg";
+import usePageContent from "../hooks/usePageContent.js";
+
+// Marker positions are fixed to physical spots on the map image and aren't
+// content — but each marker's name/description IS editable from the
+// Content Manager (Map page). Admins can edit up to 6 items there (one per
+// pin, matched in order); extra items beyond 6 won't have a pin to attach
+// to. "Type" stays fixed per position since it's more of a category label
+// than free text.
+const MARKER_POSITIONS = [
+  { id: 1, type: "Entrance", x: 80, y: 61, defaultName: "Main Entrance", defaultDescription: "This is the main entrance area where visitors can enter the marae grounds." },
+  { id: 2, type: "Main Facility", x: 46, y: 68, defaultName: "Main Building", defaultDescription: "This is the main building on the map. It may be used for meetings, gatherings, or visitor activities." },
+  { id: 3, type: "Assembly area 1", x: 45, y: 16, defaultName: "Evacuation Area", defaultDescription: "This area can be used in emergency situations or natural disasters." },
+  { id: 4, type: "Walking Route", x: 55, y: 42, defaultName: "Pathway", defaultDescription: "This pathway connects the entrance, outdoor areas, and main building. Visitors can use it to navigate around the site." },
+  { id: 5, type: "Facilities", x: 18, y: 68, defaultName: "Bathroom Area", defaultDescription: "Bathroom facilities are located in this area for visitors and guests." },
+  { id: 6, type: "Open Space", x: 72, y: 35, defaultName: "Outdoor Area", defaultDescription: "This open outdoor area can be used as a waiting space or general visitor area." },
+];
 
 function MapPage() {
-  const facilities = [
-    {
-      id: 1,
-      name: "Main Entrance",
-      type: "Entrance",
-      description:
-        "This is the main entrance area where visitors can enter the marae grounds.",
-      x: 80,
-      y: 61,
-    },
-    {
-      id: 2,
-      name: "Main Building",
-      type: "Main Facility",
-      description:
-        "This is the main building on the map. It may be used for meetings, gatherings, or visitor activities.",
-      x: 46,
-      y: 68,
-    },
-    {
-      id: 3,
-      name: "Evacuation Area",
-      type: "Assembly area 1",
-      description:
-        "This area can be used in emergency situations or natural disasters.",
-      x: 45,
-      y: 16,
-    },
-    {
-      id: 4,
-      name: "Pathway",
-      type: "Walking Route",
-      description:
-        "This pathway connects the entrance, outdoor areas, and main building. Visitors can use it to navigate around the site.",
-      x: 55,
-      y: 42,
-    },
-    {
-      id: 5,
-      name: "Bathroom Area",
-      type: "Facilities",
-      description:
-        "Bathroom facilities are located in this area for visitors and guests.",
-      x: 18,
-      y: 68,
-    },
-    {
-      id: 6,
-      name: "Outdoor Area",
-      type: "Open Space",
-      description:
-        "This open outdoor area can be used as a waiting space or general visitor area.",
-      x: 72,
-      y: 35,
-    },
-  ];
+  const { heading, sections } = usePageContent("map");
 
-  const [selectedFacility, setSelectedFacility] = useState(facilities[0]);
+  const facilities = useMemo(
+    () =>
+      MARKER_POSITIONS.map((marker, index) => {
+        const override = sections[index];
+        return {
+          ...marker,
+          name: override ? override.title : marker.defaultName,
+          description: override ? override.body : marker.defaultDescription,
+        };
+      }),
+    [sections]
+  );
+
+  const [selectedId, setSelectedId] = useState(1);
+  const selectedFacility = facilities.find((f) => f.id === selectedId) || facilities[0];
 
   return (
     <div className="map-page">
       <header className="map-header">
-        <h1>Facilities</h1>
-        <p>Click on a marker to view information about each facility.</p>
+        <h1>{heading ? heading.title : "Facilities"}</h1>
+        <p style={{ whiteSpace: "pre-line" }}>
+          {heading ? heading.body : "Click on a marker to view information about each facility."}
+        </p>
       </header>
 
       <main className="map-content">
@@ -83,7 +60,7 @@ function MapPage() {
                   left: `${facility.x}%`,
                   top: `${facility.y}%`,
                 }}
-                onClick={() => setSelectedFacility(facility)}
+                onClick={() => setSelectedId(facility.id)}
                 aria-label={`View information about ${facility.name}`}
               >
                 {facility.id}
