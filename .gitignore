@@ -18,3 +18,10 @@ yarn-error.log*
 
 # VS Code
 .vscode/
+
+# Docker
+docker-compose.override.yml
+pgdata/
+postgres-data/
+*.pgdump
+*.sql.gz
