@@ -2,20 +2,72 @@
   box-sizing: border-box;
 }
 
+/* background image for caretaker page */
+:root {
+  --caretaker-page-background-image: url("../../image/Background_Caretaker.jpg");
+}
+
 .schedule-caretaker-page {
   min-height: 100vh;
 
   padding: 28px;
 
-  background: #fafafa;
+  background-image:
+    linear-gradient(rgba(250, 250, 250, 0.10), rgba(250, 250, 250, 0.10)),
+    var(--caretaker-page-background-image);
+  background-position: center;
+  background-size: cover;
+  background-attachment: fixed;
 
   color: #111827;
+}
+
+/* overall layout for calendar and tasks panels */
+.schedule-timeline {
+  width: 90%;
+
+  max-width: 1200px;
+
+  margin: auto;
+
+  display: grid;
+
+  grid-template-columns:
+    80px 1fr;
+
+  overflow: hidden;
+
+  border:
+    1px solid #e5e7eb;
+
+  border-radius: 15px;
+
+  background: white;
+}
+
+/* top panel with date navigation and priority legend */
+.schedule-top-panel {
+  width: 90%;
+
+  max-width: 1200px;
+
+  margin: 0 auto 20px;
+
+  padding: 20px 22px;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 18px;
+
+  background: rgba(255, 255, 255, 0.96);
+
+  box-shadow: 0 8px 24px rgba(17, 24, 39, 0.12);
 }
 
 .schedule-header {
   max-width: 1200px;
 
-  margin: 0 auto 18px;
+  margin: 0 0 18px;
 
   display: flex;
 
@@ -47,7 +99,7 @@
 }
 
 .schedule-date-navigation button {
-  width: 44px;
+  width: 45px;
 
   height: 44px;
 
@@ -60,14 +112,14 @@
 
   border-radius: 12px;
 
-  background: white;
+  background: rgb(242, 242, 245);
 
   color: #6b7280;
 }
 
 .schedule-date-navigation button:hover {
   background:
-    #f3f4f6;
+    #3073fa76;
 }
 
 .schedule-current-date {
@@ -83,7 +135,7 @@
 .schedule-priority-legend {
   max-width: 1200px;
 
-  margin: 0 auto 20px;
+  margin: 0;
 
   display: flex;
 
@@ -124,25 +176,6 @@
     50%;
 }
 
-.schedule-timeline {
-  max-width: 1200px;
-
-  margin: auto;
-
-  display: grid;
-
-  grid-template-columns:
-    80px 1fr;
-
-  overflow: hidden;
-
-  border:
-    1px solid #e5e7eb;
-
-  border-radius: 15px;
-
-  background: white;
-}
 
 .schedule-time-column {
   border-right:

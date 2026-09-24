@@ -54,6 +54,7 @@ function App() {
 
         <Routes>
 
+          {/* Caretaker navigation (public)*/}
           <Route path="/caretaker/calendar" element={<CalendarCaretaker />} />
           <Route path="/caretaker/schedule" element={<ScheduleCaretaker />} />
 

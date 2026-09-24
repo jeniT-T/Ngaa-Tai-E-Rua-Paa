@@ -12,18 +12,28 @@ button {
   cursor: pointer;
 }
 
+/* background image for caretaker page */
+:root {
+  --caretaker-page-background-image: url("../../image/Background_Caretaker.jpg");
+}
+
 .caretaker-calendar-page {
   min-height: 100vh;
 
   padding: 24px;
 
-  background: #f8f9fb;
+  background-image:
+    linear-gradient(rgba(248, 249, 251, 0.10), rgba(248, 249, 251, 0.10)),
+    var(--caretaker-page-background-image);
+  background-position: center;
+  background-size: cover;
+  background-attachment: fixed;
 
   color: #111827;
 }
 
 .caretaker-calendar-layout {
-  width: 100%;
+  width: 90%;
 
   max-width: 1400px;
 

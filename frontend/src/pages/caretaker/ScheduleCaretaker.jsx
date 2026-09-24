@@ -81,41 +81,43 @@ export default function ScheduleCaretaker() {
 
   return (
     <div className="schedule-caretaker-page">
-      <div className="schedule-header">
-        <div>
-          <h1>Daily Timeline</h1>
-          <p>
-            {dayTasks.length} {dayTasks.length === 1 ? "task" : "tasks"} · {completedCount} done
-          </p>
+      <div className="schedule-top-panel">
+        <div className="schedule-header">
+          <div>
+            <h1>Daily Timeline</h1>
+            <p>
+              {dayTasks.length} {dayTasks.length === 1 ? "task" : "tasks"} · {completedCount} done
+            </p>
+          </div>
+
+          <div className="schedule-date-navigation">
+            <button type="button" onClick={() => changeDate(subDays(selectedDate, 1))}>
+              <ChevronLeft size={20} />
+            </button>
+
+            <div className="schedule-current-date">{format(selectedDate, "EEE, MMM d")}</div>
+
+            <button type="button" onClick={() => changeDate(addDays(selectedDate, 1))}>
+              <ChevronRight size={20} />
+            </button>
+          </div>
         </div>
 
-        <div className="schedule-date-navigation">
-          <button type="button" onClick={() => changeDate(subDays(selectedDate, 1))}>
-            <ChevronLeft size={20} />
-          </button>
-
-          <div className="schedule-current-date">{format(selectedDate, "EEE, MMM d")}</div>
-
-          <button type="button" onClick={() => changeDate(addDays(selectedDate, 1))}>
-            <ChevronRight size={20} />
-          </button>
+        <div className="schedule-priority-legend">
+          {Object.entries(priorityStyles).map(([key, priority]) => (
+            <span
+              key={key}
+              style={{
+                color: priority.color,
+                borderColor: priority.border,
+                background: priority.background,
+              }}
+            >
+              <i style={{ background: priority.color }} />
+              {priority.name}
+            </span>
+          ))}
         </div>
-      </div>
-
-      <div className="schedule-priority-legend">
-        {Object.entries(priorityStyles).map(([key, priority]) => (
-          <span
-            key={key}
-            style={{
-              color: priority.color,
-              borderColor: priority.border,
-              background: priority.background,
-            }}
-          >
-            <i style={{ background: priority.color }} />
-            {priority.name}
-          </span>
-        ))}
       </div>
 
       <div className="schedule-timeline">
