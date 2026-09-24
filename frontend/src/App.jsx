@@ -1,3 +1,4 @@
+import { TaskProvider } from "./context/TaskContext.jsx";
 import { Routes, Route } from "react-router-dom";
 
 import { AuthProvider } from "./context/AuthContext.jsx";
@@ -33,7 +34,6 @@ import UserManagementPage from "./pages/admin/UserManagementPage.jsx";
 import CaretakerDashboardPage from "./pages/caretaker/CaretakerDashboardPage.jsx";
 import ChecklistsPage from "./pages/caretaker/ChecklistsPage.jsx";
 import TutorialsPage from "./pages/caretaker/TutorialsPage.jsx";
-import SchedulePage from "./pages/caretaker/SchedulePage.jsx";
 
 import ContentLibraryPage from "./pages/ContentLibraryPage.jsx";
 import ReportIssuePage from "./pages/ReportIssuePage.jsx";
@@ -41,14 +41,23 @@ import IssuesInboxPage from "./pages/admin/IssuesInboxPage.jsx";
 import ContentManagementPage from "./pages/admin/ContentManagementPage.jsx";
 import AdminBookingsPage from "./pages/admin/AdminBookingsPage.jsx";
 
+import CalendarCaretaker from "./pages/caretaker/CalendarCaretaker.jsx";
+import ScheduleCaretaker from "./pages/caretaker/ScheduleCaretaker.jsx";
+
 
 function App() {
   return (
     <AuthProvider>
+      <TaskProvider>
       <div>
         <Navbar />
 
         <Routes>
+
+          {/* Caretaker navigation (public)*/}
+          <Route path="/caretaker/calendar" element={<CalendarCaretaker />} />
+          <Route path="/caretaker/schedule" element={<ScheduleCaretaker />} />
+
           <Route path="/" element={<HomePage />} />
 
           {/* Arrival guide — only for logged-in users with an approved,
@@ -187,15 +196,6 @@ function App() {
               </RoleRoute>
             }
           />
-          <Route
-            path="/caretaker/schedule"
-            element={
-              <RoleRoute allowed={["caretaker", "admin"]}>
-                <SchedulePage />
-              </RoleRoute>
-            }
-          />
-
           {/* Report an issue — any logged-in user */}
           <Route
             path="/report-issue"
@@ -245,6 +245,7 @@ function App() {
           />
         </Routes>
       </div>
+      </TaskProvider>
     </AuthProvider>
   );
 }

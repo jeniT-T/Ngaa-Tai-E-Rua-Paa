@@ -117,6 +117,60 @@ function Navbar() {
           ☰
         </button>
       </div>
+
+      {/* Navigation bar */}
+      <nav className={`navbar ${menuOpen ? "show-menu" : ""}`}>
+        <Link to="/" onClick={closeMenu}>
+          Home
+        </Link>
+
+        <Link to="/events" onClick={closeMenu}>
+          Events
+        </Link>
+
+        <Link to="/contacts" onClick={closeMenu}>
+          Contact Us
+        </Link>
+
+
+        <Link to="/caretaker/calendar" onClick={closeMenu}>
+          Calendar
+        </Link>
+
+        <Link to="/caretaker/schedule" onClick={closeMenu}>
+          Schedule
+        </Link>
+
+
+        {/* Auth-aware section */}
+        {user ? (
+          <>
+            {dashboard && (
+              <Link to={dashboard.to} onClick={closeMenu}>
+                {dashboard.label}
+              </Link>
+            )}
+            {arrivalAccess === "allowed" && (
+              <Link to="/arrival" onClick={closeMenu}>
+                Arrival Info
+              </Link>
+            )}
+            <span className="navbar-user">Kia ora, {user.name}</span>
+            <button className="navbar-logout" onClick={handleLogout}>
+              Logout
+            </button>
+          </>
+        ) : (
+          <>
+            <Link to="/login" onClick={closeMenu}>
+              Login
+            </Link>
+            <Link to="/register" onClick={closeMenu}>
+              Register
+            </Link>
+          </>
+        )}
+      </nav>
     </header>
   );
 }
