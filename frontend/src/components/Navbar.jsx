@@ -67,6 +67,16 @@ function Navbar() {
           Contact Us
         </Link>
 
+
+        <Link to="/caretaker/calendar" onClick={closeMenu}>
+          Calendar
+        </Link>
+
+        <Link to="/caretaker/schedule" onClick={closeMenu}>
+          Schedule
+        </Link>
+
+
         {/* Auth-aware section */}
         {user ? (
           <>
