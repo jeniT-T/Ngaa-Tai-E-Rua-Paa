@@ -2,22 +2,34 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-const AVAILABLE_LINKS = [
-  { to: '/caretaker/checklists', title: 'Checklists', description: 'Existing caretaker checklists.' },
-  { to: '/caretaker/tutorials', title: 'Tutorials', description: 'Guides on caring for the marae.' },
-  { to: '/caretaker/schedule', title: 'Task Schedule', description: 'View upcoming scheduled tasks for the next few weeks.' },
+const FEATURES = [
+  {
+    to: '/manager/bookings',
+    title: 'Booking Requests',
+    description: 'Review pending booking requests and approve or deny them.',
+  },
+  {
+    to: '/manager/users',
+    title: 'Manage Users & Roles',
+    description: "View registered users, change a person's role, or create a caretaker/admin account directly.",
+  },
+  {
+    to: '/manager/issues',
+    title: 'Reported Issues',
+    description: 'See issues reported by users and track what still needs attention.',
+  },
 ];
 
-export default function CaretakerDashboardPage() {
+export default function ManagerDashboardPage() {
   const { user } = useAuth();
 
   return (
     <div className="px-6 py-16 max-w-5xl mx-auto">
-      <h1 className="text-3xl font-semibold text-gray-900 mb-2">Caretaker Dashboard</h1>
-      <p className="text-gray-600 mb-10">Kia ora, {user?.name}. Manage marae upkeep from here.</p>
+      <h1 className="text-3xl font-semibold text-gray-900 mb-2">Manager Dashboard</h1>
+      <p className="text-gray-600 mb-10">Welcome, {user?.name}. Manage bookings, people and issues from here.</p>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {AVAILABLE_LINKS.map(({ to, title, description }) => (
+        {FEATURES.map(({ to, title, description }) => (
           <Link
             key={to}
             to={to}

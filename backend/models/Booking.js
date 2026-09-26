@@ -1,4 +1,4 @@
-// backend/models/Booking.js
+const crypto = require('crypto');
 const { Pool } = require('pg');
 
 const pool = new Pool({
@@ -7,21 +7,26 @@ const pool = new Pool({
 
 const Booking = {
   async create({ userId, startDate, endDate, purpose, bookingType = 'standard', whakapapa = false, area = 'general' }) {
+    const guestAccessToken = crypto.randomBytes(24).toString('hex');
+
     const result = await pool.query(
-      `INSERT INTO bookings (user_id, start_date, end_date, purpose, booking_type, whakapapa, area)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO bookings (user_id, start_date, end_date, purpose, booking_type, whakapapa, area, guest_access_token)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [userId, startDate, endDate, purpose, bookingType, whakapapa, area]
+      [userId, startDate, endDate, purpose, bookingType, whakapapa, area, guestAccessToken]
     );
     return result.rows[0];
   },
 
-  // Date ranges for bookings that could still occupy the marae — used to
-  // gray out unavailable days on the booking calendar. 'approved' bookings
-  // are hard-blocked; 'pending' ones are returned too so the frontend can
-  // flag them as tentative without necessarily disabling them. Denied and
-  // cancelled bookings never block anything. excludeId lets an owner editing
-  // their own booking see the calendar without their own dates blocking them.
+  async findByGuestToken(token) {
+    const result = await pool.query(
+      `SELECT id, start_date, end_date, status, area, booking_type, purpose
+       FROM bookings WHERE guest_access_token = $1`,
+      [token]
+    );
+    return result.rows[0] || null;
+  },
+
   async findActiveRanges(excludeId) {
     const conditions = [`status IN ('approved', 'pending')`];
     const values = [];
@@ -61,8 +66,6 @@ const Booking = {
     return result.rows;
   },
 
-  // Admin decision — approve/deny (or re-open back to pending if they change
-  // their mind), optionally leaving a note for the requester.
   async updateStatus(id, status, adminNotes) {
     const result = await pool.query(
       `UPDATE bookings
@@ -74,8 +77,6 @@ const Booking = {
     return result.rows[0] || null;
   },
 
-  // Owner edits their own request (dates/purpose/type) and it goes back to
-  // 'pending' for the admin to look at again — a "re-request" after a change.
   async update(id, { startDate, endDate, purpose, bookingType, whakapapa, area }) {
     const result = await pool.query(
       `UPDATE bookings

@@ -1,7 +1,7 @@
 -- database/migration_arrival_content.sql
 
 INSERT INTO content_items (title, body, category, placement, block_type)
-SELECT 'Marae Facilities & Operations Guide',
+SELECT 'Marae Guide',
   $body$Please follow these guidelines to ensure proper use of all marae facilities. Click on any section to expand.$body$,
   'general', 'arrival', 'heading'
 WHERE NOT EXISTS (
@@ -510,3 +510,11 @@ SELECT 'WiFi',
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'WiFi'
 );
+
+-- Rename for databases that already ran this migration under the old
+-- "Arrival Info" naming, before the guide was renamed to "Marae Guide"
+-- to reflect that it covers the whole stay, not just arrival.
+UPDATE content_items
+SET title = 'Marae Guide', updated_at = NOW()
+WHERE placement = 'arrival' AND block_type = 'heading'
+  AND title = 'Marae Facilities & Operations Guide';

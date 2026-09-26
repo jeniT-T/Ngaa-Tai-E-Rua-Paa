@@ -7,9 +7,9 @@ const requireRole = require('../middleware/requireRole');
 
 const router = express.Router();
 
-router.use(requireAuth, requireRole('admin'));
+router.use(requireAuth, requireRole('manager'));
 
-const VALID_ROLES = ['member', 'caretaker', 'admin'];
+const VALID_ROLES = ['member', 'caretaker', 'manager', 'admin'];
 
 router.get('/users', async (req, res) => {
   try {
@@ -30,8 +30,8 @@ router.patch('/users/:id/role', async (req, res) => {
       return res.status(400).json({ error: `Role must be one of: ${VALID_ROLES.join(', ')}` });
     }
 
-    if (Number(id) === req.user.id && role !== 'admin') {
-      return res.status(400).json({ error: 'You cannot change your own admin role' });
+    if (Number(id) === req.user.id && role !== 'manager') {
+      return res.status(400).json({ error: 'You cannot change your own manager role' });
     }
 
     const updated = await User.updateRole(id, role);

@@ -3,11 +3,10 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import useArrivalAccess from "../hooks/useArrivalAccess.js";
 
-// Where each role's "dashboard" link should point
 const DASHBOARD_LINKS = {
   admin: { to: "/admin", label: "Admin Dashboard" },
+  manager: { to: "/manager", label: "Manager Dashboard" },
   caretaker: { to: "/caretaker", label: "Caretaker Dashboard" },
-  member: { to: "/bookings", label: "Bookings" },
 };
 
 function Navbar() {
@@ -28,6 +27,7 @@ function Navbar() {
   }
 
   const dashboard = user ? DASHBOARD_LINKS[user.role] : null;
+  const isCaretakerStaff = user && (user.role === "caretaker" || user.role === "admin");
 
   // Check if a route is active
   const isActive = (path) => {
@@ -80,8 +80,28 @@ function Navbar() {
                   onClick={closeMenu}
                   className={isActive("/arrival") ? "active" : ""}
                 >
-                  Arrival Info
+                  Marae Guide
                 </Link>
+              )}
+              {/* Caretaker's own task calendar/schedule — only shown (and only
+                  reachable, see App.jsx's RoleRoute) to caretaker/admin. */}
+              {isCaretakerStaff && (
+                <>
+                  <Link
+                    to="/caretaker/calendar"
+                    onClick={closeMenu}
+                    className={isActive("/caretaker/calendar") ? "active" : ""}
+                  >
+                    Calendar
+                  </Link>
+                  <Link
+                    to="/caretaker/schedule"
+                    onClick={closeMenu}
+                    className={isActive("/caretaker/schedule") ? "active" : ""}
+                  >
+                    Schedule
+                  </Link>
+                </>
               )}
               <span className="navbar-user">Kia ora, {user.name}</span>
               <button className="navbar-logout" onClick={handleLogout}>
@@ -117,60 +137,6 @@ function Navbar() {
           ☰
         </button>
       </div>
-
-      {/* Navigation bar */}
-      <nav className={`navbar ${menuOpen ? "show-menu" : ""}`}>
-        <Link to="/" onClick={closeMenu}>
-          Home
-        </Link>
-
-        <Link to="/events" onClick={closeMenu}>
-          Events
-        </Link>
-
-        <Link to="/contacts" onClick={closeMenu}>
-          Contact Us
-        </Link>
-
-
-        <Link to="/caretaker/calendar" onClick={closeMenu}>
-          Calendar
-        </Link>
-
-        <Link to="/caretaker/schedule" onClick={closeMenu}>
-          Schedule
-        </Link>
-
-
-        {/* Auth-aware section */}
-        {user ? (
-          <>
-            {dashboard && (
-              <Link to={dashboard.to} onClick={closeMenu}>
-                {dashboard.label}
-              </Link>
-            )}
-            {arrivalAccess === "allowed" && (
-              <Link to="/arrival" onClick={closeMenu}>
-                Arrival Info
-              </Link>
-            )}
-            <span className="navbar-user">Kia ora, {user.name}</span>
-            <button className="navbar-logout" onClick={handleLogout}>
-              Logout
-            </button>
-          </>
-        ) : (
-          <>
-            <Link to="/login" onClick={closeMenu}>
-              Login
-            </Link>
-            <Link to="/register" onClick={closeMenu}>
-              Register
-            </Link>
-          </>
-        )}
-      </nav>
     </header>
   );
 }

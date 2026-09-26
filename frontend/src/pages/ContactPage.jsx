@@ -40,7 +40,7 @@ function ContactPage() {
           textDecoration: "none",
         }}
       >
-        🛠️ Report an Issue
+        Report an Issue
       </Link>
     </div>
   );

@@ -11,8 +11,12 @@ function HealthAndSafetyPage() {
         {heading ? heading.body : "Emergency evacuation points for arriving marae users:"}
       </p>
 
-      <div style={{ border: "2px dashed #bbb", borderRadius: "16px", height: "320px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "24px", background: "#fbfbfb" }}>
-        <span style={{ color: "#888", fontSize: "1.1rem" }}>[Map placeholder image]</span>
+      <div style={{ borderRadius: "16px", overflow: "hidden", marginBottom: "24px", border: "1px solid #e1e1e1" }}>
+        <img
+          src="/images/evacuation-plan.png"
+          alt="Ngaa Tai E Rua Paa fire evacuation plan, showing exits and the front carpark assembly area"
+          style={{ width: "100%", display: "block" }}
+        />
       </div>
 
       {info.map((section) => (

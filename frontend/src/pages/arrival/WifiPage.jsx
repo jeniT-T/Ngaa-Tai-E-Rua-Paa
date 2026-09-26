@@ -23,7 +23,7 @@ export default function WifiPage() {
           marginBottom: "16px",
           color: "var(--primary)",
         }}>
-          📶 {heading ? heading.title : "WiFi Information"}
+          {heading ? heading.title : "WiFi Information"}
         </h1>
 
         {heading?.body && (
@@ -87,7 +87,7 @@ export default function WifiPage() {
           e.target.style.backgroundColor = "var(--primary)";
           e.target.style.transform = "translateY(0)";
         }}>
-          ← Back to Arrival Information
+          ← Back to Marae Guide
         </Link>
       </div>
     </main>

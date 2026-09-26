@@ -1,13 +1,7 @@
-// frontend/src/components/ArrivalAccessGate.jsx
+
 import { Link } from "react-router-dom";
 import useArrivalAccess from "../hooks/useArrivalAccess.js";
 
-// Wrap the arrival guide routes with this (inside a RoleRoute, so we already
-// know the user is logged in). Caretakers and admins always get in — they
-// work at the marae. Members only get in while they have an approved
-// booking that hasn't finished yet: from the moment it's approved, through
-// to the end date of the stay. Access logic lives in useArrivalAccess so the
-// Navbar can use the exact same rule to decide whether to show the link.
 export default function ArrivalAccessGate({ children }) {
   const status = useArrivalAccess();
 

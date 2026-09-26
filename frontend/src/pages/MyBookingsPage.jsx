@@ -1,8 +1,9 @@
-// frontend/src/pages/MyBookingsPage.jsx
+
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import BookingCalendar from "../components/BookingCalendar.jsx";
 import useBookingAvailability from "../hooks/useBookingAvailability.js";
+import GuestAccessShare from "../components/GuestAccessShare.jsx";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 
@@ -27,7 +28,6 @@ const STATUS_STYLES = {
 };
 
 function toDateInputValue(dateString) {
-  // Postgres returns e.g. "2026-08-20T00:00:00.000Z" — trim to yyyy-mm-dd for <input type="date">
   return dateString ? String(dateString).slice(0, 10) : "";
 }
 
@@ -53,8 +53,6 @@ function EditBookingForm({ booking, onCancel, onSaved }) {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
-  // Exclude this booking's own dates from the availability check, otherwise
-  // its own current dates would show up as "unavailable" to itself.
   const { unavailableDays, loading: loadingAvailability } = useBookingAvailability(booking.id);
 
   function handleSelectRange(nextStart, nextEnd) {
@@ -286,7 +284,7 @@ export default function MyBookingsPage() {
               )}
 
               {booking.status !== "cancelled" && editingId !== booking.id && (
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <button
                     onClick={() => setEditingId(booking.id)}
                     className="text-sm border rounded px-3 py-1"
@@ -299,6 +297,12 @@ export default function MyBookingsPage() {
                   >
                     Cancel booking
                   </button>
+                </div>
+              )}
+
+              {booking.status === "approved" && (
+                <div className="mt-2">
+                  <GuestAccessShare token={booking.guest_access_token} />
                 </div>
               )}
 

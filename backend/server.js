@@ -9,6 +9,7 @@ const adminRoutes = require('./routes/admin');
 const bookingRoutes = require('./routes/bookings');
 const contentRoutes = require('./routes/content');
 const issueRoutes = require('./routes/issues');
+const checklistRoutes = require('./routes/checklists');
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/issues', issueRoutes);
+app.use('/api/checklists', checklistRoutes);
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));

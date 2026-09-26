@@ -22,8 +22,6 @@ export function TaskProvider({ children }) {
       return [];
     }
   });
-
-  // Save every change automatically
   useEffect(() => {
     localStorage.setItem(
       STORAGE_KEY,
@@ -31,7 +29,6 @@ export function TaskProvider({ children }) {
     );
   }, [tasks]);
 
-  // Add task
   const addTask = (taskData) => {
     const newTask = {
       id: crypto.randomUUID(),
@@ -46,7 +43,6 @@ export function TaskProvider({ children }) {
     ]);
   };
 
-  // Update task
   const updateTask = (taskId, changes) => {
     setTasks((previous) =>
       previous.map((task) =>
@@ -60,7 +56,6 @@ export function TaskProvider({ children }) {
     );
   };
 
-  // Complete task
   const completeTask = (taskId) => {
     setTasks((previous) =>
       previous.map((task) =>
@@ -74,7 +69,6 @@ export function TaskProvider({ children }) {
     );
   };
 
-  // Delete task
   const deleteTask = (taskId) => {
     setTasks((previous) =>
       previous.filter(

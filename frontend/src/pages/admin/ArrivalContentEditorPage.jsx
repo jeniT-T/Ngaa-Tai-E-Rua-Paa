@@ -1,12 +1,3 @@
-// frontend/src/pages/admin/ArrivalContentEditorPage.jsx
-//
-// A dedicated editor for the arrival guide's dropdown items — ported from
-// the teammate's ArrivalEditPage design (per-item color picker, grouped
-// sidebar, live video preview), but wired to the shared content_items
-// table/API instead of a separate arrival_items table, so every item here
-// is the same data the public Content Manager could also edit, and stays
-// consistent with the access-gating and CMS architecture used everywhere
-// else on the site.
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getYoutubeEmbedUrl } from "../../utils/youtube.js";
@@ -14,15 +5,15 @@ import { getYoutubeEmbedUrl } from "../../utils/youtube.js";
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 
 const GROUP_OPTIONS = [
-  { value: "equipment", label: "Equipment & Appliances" },
-  { value: "cleaning", label: "Cleaning Instructions" },
-  { value: "facilities", label: "Facilities & General Information" },
+  { value: "arrival", label: "Arrival" },
+  { value: "general", label: "General" },
+  { value: "leaving", label: "Leaving" },
 ];
 const KNOWN_GROUPS = GROUP_OPTIONS.map((g) => g.value);
 
 const EMPTY_FORM = {
   id: null,
-  groupKey: "equipment",
+  groupKey: "arrival",
   title: "",
   color: "#2c3e50",
   body: "",
@@ -78,7 +69,7 @@ export default function ArrivalContentEditorPage() {
   function startEditItem(item) {
     setForm({
       id: item.id,
-      groupKey: KNOWN_GROUPS.includes(item.category) ? item.category : "facilities",
+      groupKey: KNOWN_GROUPS.includes(item.category) ? item.category : "general",
       title: item.title,
       color: item.color || "#2c3e50",
       body: item.body || "",
@@ -92,9 +83,6 @@ export default function ArrivalContentEditorPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  // placement/blockType must always be sent explicitly — the API writes
-  // them as-given (not merged), so omitting them would clear the item off
-  // the arrival page entirely.
   async function handleSubmit(e) {
     e.preventDefault();
     setSaving(true);
@@ -305,7 +293,11 @@ export default function ArrivalContentEditorPage() {
                         >
                           {item.title}
                         </button>
-                        {item.video_url && <span style={{ fontSize: "0.85rem", marginRight: "6px" }}>📹</span>}
+                        {item.video_url && (
+                          <span style={{ fontSize: "0.75rem", marginRight: "6px", color: "#777" }}>
+                            Video
+                          </span>
+                        )}
                         <button
                           onClick={() => handleDelete(item)}
                           style={{ background: "none", border: "none", color: "#d32f2f", cursor: "pointer", fontSize: "0.85rem", marginLeft: "8px" }}

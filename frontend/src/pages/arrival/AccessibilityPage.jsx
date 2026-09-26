@@ -27,7 +27,7 @@ export default function AccessibilityPage() {
           marginBottom: "16px",
           color: "var(--primary)",
         }}>
-          ♿ {heading ? heading.title : "Accessibility Information"}
+          {heading ? heading.title : "Accessibility Information"}
         </h1>
 
         <p style={{
@@ -87,7 +87,7 @@ export default function AccessibilityPage() {
           e.target.style.backgroundColor = "var(--primary)";
           e.target.style.transform = "translateY(0)";
         }}>
-          ← Back to Arrival Information
+          ← Back to Marae Guide
         </Link>
       </div>
     </main>

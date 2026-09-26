@@ -30,19 +30,14 @@ const DEFAULT_FACILITIES = [
   },
 ];
 
-// Bigger boxes for the marae-wide info pages that live alongside the
-// facilities list — health & safety and the rules & regulations that used
-// to only be reachable from deep inside the (now booking-gated) arrival guide.
 const MORE_INFO = [
   {
     to: "/health-and-safety",
-    icon: "🩹",
     title: "Health & Safety",
     description: "Emergency procedures, first aid and safety information for anyone on site.",
   },
   {
     to: "/arrival/rules",
-    icon: "📋",
     title: "Rules & Regulations",
     description: "What's expected of everyone hiring or visiting the marae.",
   },
@@ -97,7 +92,7 @@ function FacilitiesPage() {
         to="/map"
         className="block p-6 rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 mb-8"
       >
-        <h2 className="text-lg font-semibold text-gray-900 mb-1">🗺️ Find your way around</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-1">Find your way around</h2>
         <p className="text-gray-600">
           See where everything is on an interactive map of the grounds →
         </p>
@@ -105,14 +100,13 @@ function FacilitiesPage() {
 
       {/* Health & Safety / Rules & Regulations */}
       <div className="grid gap-5 sm:grid-cols-2">
-        {MORE_INFO.map(({ to, icon, title, description }) => (
+        {MORE_INFO.map(({ to, title, description }) => (
           <Link
             key={to}
             to={to}
             className="p-8 rounded-2xl border-2 border-gray-200 bg-white shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
           >
-            <span className="text-3xl">{icon}</span>
-            <h2 className="text-xl font-semibold text-gray-900 mt-2 mb-1">{title}</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-1">{title}</h2>
             <p className="text-gray-600">{description}</p>
           </Link>
         ))}

@@ -28,7 +28,7 @@ export default function GasPage() {
           marginBottom: "16px",
           color: "var(--primary)",
         }}>
-          🍳 {heading ? heading.title : "How to Turn On the Gas"}
+          {heading ? heading.title : "How to Turn On the Gas"}
         </h1>
 
         <p style={{
@@ -109,7 +109,7 @@ export default function GasPage() {
           e.target.style.backgroundColor = "var(--primary)";
           e.target.style.transform = "translateY(0)";
         }}>
-          ← Back to Arrival Information
+          ← Back to Marae Guide
         </Link>
       </div>
     </main>

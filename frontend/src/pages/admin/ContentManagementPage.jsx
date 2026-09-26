@@ -1,4 +1,4 @@
-// frontend/src/pages/admin/ContentManagementPage.jsx
+
 import { useState, useEffect } from "react";
 import { getYoutubeEmbedUrl } from "../../utils/youtube.js";
 
@@ -7,20 +7,14 @@ const ALL_ROLES = ["member", "caretaker", "admin"];
 const SUGGESTED_CATEGORIES = [
   "recipe",
   "onboarding",
-  "equipment",
-  "cleaning",
+  "arrival",
+  "general",
+  "leaving",
   "maintenance",
   "rules",
   "health_safety",
-  "general",
 ];
 
-// Where an item can be shown. Empty string = internal content library only
-// (existing behaviour, gated by "Visible to" below). Anything else = it shows
-// up on that public/marae-info page instead, with no login required.
-// For the arrival guide specifically, "Category" doubles as which
-// collapsible group the item appears under — use "equipment", "cleaning"
-// or "facilities" (anything else falls under "Facilities & General").
 const PUBLIC_PAGES = [
   { value: "", label: "Library only (internal)" },
   { value: "home", label: "Home page" },
@@ -77,9 +71,6 @@ export default function ContentManagementPage() {
     }
   }
 
-  // Pulls in whatever categories actually exist in the database (which may
-  // include ones an admin created on the fly), merged with the suggested
-  // list, so "move" always has the item's real current category as an option.
   async function loadCategories() {
     try {
       const res = await fetch(`${API_BASE}/content/categories`, { credentials: "include" });
@@ -364,7 +355,7 @@ export default function ContentManagementPage() {
                   <div className="flex gap-1">
                     {item.video_url && (
                       <span className="text-xs px-2 py-1 rounded bg-red-100 text-red-800">
-                        📹 video
+                        Video
                       </span>
                     )}
                     {item.placement && (

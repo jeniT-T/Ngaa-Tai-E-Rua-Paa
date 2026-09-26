@@ -42,7 +42,7 @@ export default function RulesPage() {
         ))}
 
         <Link to="/arrival" className="inline-block mt-4 text-blue-600">
-          ← Back to Arrival
+          ← Back to Marae Guide
         </Link>
 
       </div>

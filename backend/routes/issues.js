@@ -1,4 +1,3 @@
-// backend/routes/issues.js
 const express = require('express');
 const Issue = require('../models/Issue');
 const requireAuth = require('../middleware/requireAuth');
@@ -6,7 +5,6 @@ const requireRole = require('../middleware/requireRole');
 
 const router = express.Router();
 
-// POST /api/issues — any logged-in user can report an issue to management
 router.post('/', requireAuth, async (req, res) => {
   try {
     const { subject, message } = req.body;
@@ -21,8 +19,7 @@ router.post('/', requireAuth, async (req, res) => {
   }
 });
 
-// GET /api/issues — admin only, view all reported issues
-router.get('/', requireAuth, requireRole('admin'), async (req, res) => {
+router.get('/', requireAuth, requireRole('manager'), async (req, res) => {
   try {
     const issues = await Issue.findAll();
     res.json({ issues });
@@ -32,8 +29,7 @@ router.get('/', requireAuth, requireRole('admin'), async (req, res) => {
   }
 });
 
-// PATCH /api/issues/:id — admin only, update status
-router.patch('/:id', requireAuth, requireRole('admin'), async (req, res) => {
+router.patch('/:id', requireAuth, requireRole('manager'), async (req, res) => {
   try {
     const { status } = req.body;
     if (!['open', 'in_progress', 'resolved'].includes(status)) {

@@ -1,7 +1,4 @@
-// frontend/src/pages/caretaker/SchedulePage.jsx
-// User story 7.x: As a caretaker I want to see the schedule of tasks day by
-// day and check them off when done. Task data is placeholder until tasks
-// are backed by a database table/API.
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -166,7 +163,7 @@ function DatePickerDropdown({ selectedDate, onSelect }) {
         onClick={() => (isOpen ? setIsOpen(false) : openCalendar())}
         className="px-3 py-1.5 rounded-md text-sm border border-gray-300 text-gray-700 hover:bg-gray-50"
       >
-        📅 {selectedDate.toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' })}
+        {selectedDate.toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' })}
       </button>
 
       {isOpen && (
@@ -413,7 +410,9 @@ export default function SchedulePage() {
                       className={`absolute left-2 right-2 flex items-center justify-between text-left border-l-4 rounded-md px-2 sm:px-3 text-sm sm:text-base ${CATEGORY_STYLES[task.category]} ${completed ? 'opacity-50' : ''} ${overdue ? 'ring-2 ring-red-500' : ''}`}
                     >
                       <span className={`font-medium ${completed ? 'line-through' : ''}`}>{task.title}</span>
-                      <span className="text-base sm:text-lg leading-none">{overdue ? '⚠️' : completed ? '✅' : '⬜'}</span>
+                      <span className="text-xs sm:text-sm font-medium leading-none">
+                        {overdue ? 'Overdue' : completed ? 'Done' : ''}
+                      </span>
                     </button>
                   );
                 })}

@@ -1,4 +1,3 @@
-// frontend/src/pages/admin/IssuesInboxPage.jsx
 import { useState, useEffect } from "react";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
@@ -9,7 +8,7 @@ const STATUS_STYLES = {
   resolved: "bg-green-100 text-green-800",
 };
 
-export default function IssuesInboxPage() {
+export default function ManagerIssuesPage() {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

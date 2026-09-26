@@ -1,5 +1,5 @@
-// frontend/src/pages/admin/AdminBookingsPage.jsx
 import { useState, useEffect } from "react";
+import GuestAccessShare from "../../components/GuestAccessShare.jsx";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 
@@ -16,11 +16,11 @@ function toDateLabel(dateString) {
   return dateString ? String(dateString).slice(0, 10) : "";
 }
 
-export default function AdminBookingsPage() {
+export default function ManagerBookingsPage() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [notesDraft, setNotesDraft] = useState({}); // { [bookingId]: text }
+  const [notesDraft, setNotesDraft] = useState({}); 
 
   async function loadBookings() {
     setLoading(true);
@@ -129,6 +129,12 @@ export default function AdminBookingsPage() {
                       Deny
                     </button>
                   </div>
+                </div>
+              )}
+
+              {booking.status === "approved" && (
+                <div className="mt-2">
+                  <GuestAccessShare token={booking.guest_access_token} />
                 </div>
               )}
             </li>

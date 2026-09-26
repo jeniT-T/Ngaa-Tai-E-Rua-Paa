@@ -4,11 +4,12 @@ import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import RoleRoute from "./components/RoleRoute.jsx";
 import ArrivalAccessGate from "./components/ArrivalAccessGate.jsx";
+import HomeRoute from "./components/HomeRoute.jsx";
 
 import Navbar from "./components/Navbar.jsx";
 
-import HomePage from "./pages/HomePage.jsx";
 import ArrivalPage from "./pages/ArrivalPage.jsx";
+import GuestArrivalPage from "./pages/GuestArrivalPage.jsx";
 import ContactPage from "./pages/ContactPage.jsx";
 import HealthAndSafetyPage from "./pages/HealthAndSafetyPage.jsx";
 import HistoryPage from "./pages/HistoryPage.jsx";
@@ -30,16 +31,17 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage.jsx";
 import ResetPasswordPage from "./pages/ResetPasswordPage.jsx";
 import UnauthorizedPage from "./pages/UnauthorizedPage.jsx";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
-import UserManagementPage from "./pages/admin/UserManagementPage.jsx";
 import CaretakerDashboardPage from "./pages/caretaker/CaretakerDashboardPage.jsx";
 import ChecklistsPage from "./pages/caretaker/ChecklistsPage.jsx";
 import TutorialsPage from "./pages/caretaker/TutorialsPage.jsx";
+import ManagerDashboardPage from "./pages/manager/ManagerDashboardPage.jsx";
+import ManagerBookingsPage from "./pages/manager/ManagerBookingsPage.jsx";
+import ManagerUsersPage from "./pages/manager/ManagerUsersPage.jsx";
+import ManagerIssuesPage from "./pages/manager/ManagerIssuesPage.jsx";
 
 import ContentLibraryPage from "./pages/ContentLibraryPage.jsx";
 import ReportIssuePage from "./pages/ReportIssuePage.jsx";
-import IssuesInboxPage from "./pages/admin/IssuesInboxPage.jsx";
 import ContentManagementPage from "./pages/admin/ContentManagementPage.jsx";
-import AdminBookingsPage from "./pages/admin/AdminBookingsPage.jsx";
 
 import CalendarCaretaker from "./pages/caretaker/CalendarCaretaker.jsx";
 import ScheduleCaretaker from "./pages/caretaker/ScheduleCaretaker.jsx";
@@ -53,12 +55,32 @@ function App() {
         <Navbar />
 
         <Routes>
+          {/* Logged-out visitors see the public homepage; logged-in users
+              are redirected to their role's own dashboard (see HomeRoute /
+              ROLE_HOME) — there's no single "home" that fits every role. */}
+          <Route path="/" element={<HomeRoute />} />
 
-          {/* Caretaker navigation (public)*/}
-          <Route path="/caretaker/calendar" element={<CalendarCaretaker />} />
-          <Route path="/caretaker/schedule" element={<ScheduleCaretaker />} />
-
-          <Route path="/" element={<HomePage />} />
+          {/* Caretaker's own task calendar/schedule — gated the same as the
+              rest of the caretaker area (was previously mounted with no
+              RoleRoute at all, which would have made it reachable by anyone,
+              logged in or not; gating it here to match every other
+              caretaker-only route). */}
+          <Route
+            path="/caretaker/calendar"
+            element={
+              <RoleRoute allowed={["caretaker", "admin"]}>
+                <CalendarCaretaker />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/caretaker/schedule"
+            element={
+              <RoleRoute allowed={["caretaker", "admin"]}>
+                <ScheduleCaretaker />
+              </RoleRoute>
+            }
+          />
 
           {/* Arrival guide — only for logged-in users with an approved,
               still-current booking (caretaker/admin always allowed).
@@ -115,6 +137,12 @@ function App() {
           />
           <Route path="/arrival/rules" element={<RulesPage />} />
 
+          {/* Guest arrival access — no login required. Reached via the
+              shareable link/QR code shown on a booking, for guests who
+              aren't the account holder (see MyBookingsPage). Gated by the
+              booking's own guest_access_token, not a role. */}
+          <Route path="/arrival/guest/:token" element={<GuestArrivalPage />} />
+
           <Route path="/contacts" element={<ContactPage />} />
           <Route path="/health-and-safety" element={<HealthAndSafetyPage />} />
           <Route path="/map" element={<MapPage />} />
@@ -149,12 +177,37 @@ function App() {
             }
           />
 
-          {/* Admin: review booking requests */}
+          {/* Manager: bookings, users/roles, reported issues — everything the
+              admin used to do except content management. */}
           <Route
-            path="/admin/bookings"
+            path="/manager"
             element={
-              <RoleRoute allowed={["admin"]}>
-                <AdminBookingsPage />
+              <RoleRoute allowed={["manager"]}>
+                <ManagerDashboardPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/manager/bookings"
+            element={
+              <RoleRoute allowed={["manager"]}>
+                <ManagerBookingsPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/manager/users"
+            element={
+              <RoleRoute allowed={["manager"]}>
+                <ManagerUsersPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/manager/issues"
+            element={
+              <RoleRoute allowed={["manager"]}>
+                <ManagerIssuesPage />
               </RoleRoute>
             }
           />
@@ -206,17 +259,7 @@ function App() {
             }
           />
 
-          {/* Admin: view reported issues */}
-          <Route
-            path="/admin/issues"
-            element={
-              <RoleRoute allowed={["admin"]}>
-                <IssuesInboxPage />
-              </RoleRoute>
-            }
-          />
-
-          {/* Admin: view reported issues */}
+          {/* Admin: manage content (the only thing admin does now) */}
           <Route
             path="/admin/content"
             element={
@@ -232,14 +275,6 @@ function App() {
             element={
               <RoleRoute allowed={["admin"]}>
                 <AdminDashboardPage />
-              </RoleRoute>
-            }
-          />
-          <Route
-            path="/admin/users"
-            element={
-              <RoleRoute allowed={["admin"]}>
-                <UserManagementPage />
               </RoleRoute>
             }
           />

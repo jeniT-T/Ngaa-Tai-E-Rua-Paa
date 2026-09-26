@@ -1,15 +1,15 @@
-// frontend/src/pages/admin/UserManagementPage.jsx
 import { useState, useEffect } from "react";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
-const ROLES = ["member", "caretaker", "admin"];
+const ROLES = ["member", "caretaker", "manager", "admin"];
+const CREATABLE_ROLES = ["caretaker", "manager", "admin"];
 
-export default function UserManagementPage() {
+export default function ManagerUsersPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // New-user form state (for directly creating caretaker/admin accounts)
+  // New-user form state (for directly creating caretaker/manager/admin accounts)
   const [form, setForm] = useState({ name: "", email: "", password: "", role: "caretaker" });
   const [creating, setCreating] = useState(false);
 
@@ -79,9 +79,9 @@ export default function UserManagementPage() {
 
       {error && <p className="text-red-600 mb-4">{error}</p>}
 
-      {/* Create a caretaker/admin account directly */}
+      {/* Create a caretaker/manager/admin account directly */}
       <section className="mb-10 border rounded p-4">
-        <h2 className="text-lg font-medium mb-4">Create caretaker or admin account</h2>
+        <h2 className="text-lg font-medium mb-4">Create caretaker, manager or admin account</h2>
         <form onSubmit={handleCreateUser} className="space-y-3">
           <input
             type="text"
@@ -112,8 +112,11 @@ export default function UserManagementPage() {
             onChange={(e) => setForm({ ...form, role: e.target.value })}
             className="w-full border rounded px-3 py-2"
           >
-            <option value="caretaker">Caretaker</option>
-            <option value="admin">Admin</option>
+            {CREATABLE_ROLES.map((r) => (
+              <option key={r} value={r}>
+                {r.charAt(0).toUpperCase() + r.slice(1)}
+              </option>
+            ))}
           </select>
           <button
             type="submit"

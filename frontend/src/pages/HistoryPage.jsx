@@ -29,6 +29,19 @@ function HistoryPage() {
         {heading ? heading.title : "History of the Marae"}
       </h1>
 
+      <div className="grid grid-cols-2 gap-3 mb-8">
+        <img
+          src="/images/Top.jpg"
+          alt="Aerial view of Ngaa Tai E Rua Paa and its grounds"
+          className="rounded-xl object-cover w-full h-48"
+        />
+        <img
+          src="/images/Flag.jpg"
+          alt="The memorial and flagpoles at Ngaa Tai E Rua Paa"
+          className="rounded-xl object-cover w-full h-48"
+        />
+      </div>
+
       {!heading && (
         <p className="text-gray-500 italic mb-8">
           Placeholder content — replace with the marae's real history and whakapapa.

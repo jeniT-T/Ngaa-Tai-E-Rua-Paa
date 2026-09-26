@@ -29,7 +29,7 @@ export default function EmergencyPage() {
           marginBottom: "16px",
           color: "#DC2626",
         }}>
-          🚨 {heading ? heading.title : "Emergency Evacuation Information"}
+          {heading ? heading.title : "Emergency Evacuation Information"}
         </h1>
 
         <p style={{
@@ -61,7 +61,7 @@ export default function EmergencyPage() {
                 marginBottom: "8px",
                 color: item.title === "Important" ? "#DC2626" : "var(--text-primary)",
               }}>
-                {item.title === "Important" ? "⚠️ " : "📍 "}{item.title}
+                {item.title}
               </h2>
               <p style={{
                 color: "var(--text-secondary)",
@@ -94,7 +94,7 @@ export default function EmergencyPage() {
           e.target.style.backgroundColor = "#DC2626";
           e.target.style.transform = "translateY(0)";
         }}>
-          ← Back to Arrival Information
+          ← Back to Marae Guide
         </Link>
       </div>
     </main>
