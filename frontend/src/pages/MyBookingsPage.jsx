@@ -1,11 +1,11 @@
-
+// frontend/src/pages/MyBookingsPage.jsx
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import BookingCalendar from "../components/BookingCalendar.jsx";
 import useBookingAvailability from "../hooks/useBookingAvailability.js";
 import GuestAccessShare from "../components/GuestAccessShare.jsx";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
 
 const BOOKING_TYPES = [
   { value: "standard", label: "Standard hire" },
@@ -28,6 +28,7 @@ const STATUS_STYLES = {
 };
 
 function toDateInputValue(dateString) {
+  // Postgres returns e.g. "2026-08-20T00:00:00.000Z" — trim to yyyy-mm-dd for <input type="date">
   return dateString ? String(dateString).slice(0, 10) : "";
 }
 
@@ -53,6 +54,8 @@ function EditBookingForm({ booking, onCancel, onSaved }) {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // Exclude this booking's own dates from the availability check, otherwise
+  // its own current dates would show up as "unavailable" to itself.
   const { unavailableDays, loading: loadingAvailability } = useBookingAvailability(booking.id);
 
   function handleSelectRange(nextStart, nextEnd) {
@@ -237,7 +240,8 @@ export default function MyBookingsPage() {
         <h1 className="text-2xl font-semibold">My Bookings</h1>
         <Link
           to="/bookings/new"
-          className="text-sm bg-black text-white rounded px-4 py-2"
+          className="btn btn-primary"
+          style={{ padding: "10px 20px", fontSize: "0.9rem" }}
         >
           + Request a new booking
         </Link>

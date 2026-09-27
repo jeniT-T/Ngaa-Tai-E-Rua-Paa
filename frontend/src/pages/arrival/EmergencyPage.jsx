@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import usePageContent from "../../hooks/usePageContent.js";
+import ContentImage from "../../components/ContentImage.jsx";
 
 const DEFAULT_SECTIONS = [
   { title: "Primary Exit Point", body: "Follow marked signage to the main exit." },
@@ -32,6 +33,8 @@ export default function EmergencyPage() {
           {heading ? heading.title : "Emergency Evacuation Information"}
         </h1>
 
+        {heading && <ContentImage item={heading} />}
+
         <p style={{
           fontSize: "1.05rem",
           color: "var(--text-secondary)",
@@ -63,6 +66,7 @@ export default function EmergencyPage() {
               }}>
                 {item.title}
               </h2>
+              <ContentImage item={item} />
               <p style={{
                 color: "var(--text-secondary)",
                 margin: 0,

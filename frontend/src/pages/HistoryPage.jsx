@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import ContentImage from "../components/ContentImage.jsx";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
 
 async function loadPageContent(page, setHeading, setSections) {
   try {
@@ -29,6 +30,8 @@ function HistoryPage() {
         {heading ? heading.title : "History of the Marae"}
       </h1>
 
+      {heading && <ContentImage item={heading} />}
+
       <div className="grid grid-cols-2 gap-3 mb-8">
         <img
           src="/images/Top.jpg"
@@ -54,6 +57,7 @@ function HistoryPage() {
         {sections.length > 0 ? (
           sections.map((item) => (
             <div key={item.id}>
+              <ContentImage item={item} />
               {item.title && (
                 <h2 className="text-lg font-semibold text-gray-900 mb-1">{item.title}</h2>
               )}

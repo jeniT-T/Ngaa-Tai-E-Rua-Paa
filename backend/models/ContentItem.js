@@ -66,11 +66,13 @@ const ContentItem = {
   // sense per page) or 'section' (a card in the list below it).
   // videoUrl: optional YouTube link (ported from the arrival-items branch) —
   // rendered as an embedded video under the item's body wherever it's shown.
-  async create({ title, body, category, visibleToRoles, createdBy, placement, blockType, videoUrl }) {
+  // imageUrl: optional admin-uploaded image (see POST /api/content/upload) —
+  // a relative "/uploads/<filename>" path, rendered above the item's body.
+  async create({ title, body, category, visibleToRoles, createdBy, placement, blockType, videoUrl, imageUrl }) {
     const result = await pool.query(
       `INSERT INTO content_items
-         (title, body, category, visible_to_roles, created_by, placement, block_type, video_url)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         (title, body, category, visible_to_roles, created_by, placement, block_type, video_url, image_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
       [
         title,
@@ -81,6 +83,7 @@ const ContentItem = {
         placement || null,
         blockType || 'section',
         videoUrl || null,
+        imageUrl || null,
       ]
     );
     return result.rows[0];
@@ -89,9 +92,10 @@ const ContentItem = {
   // Note: placement is always written as-given (not COALESCEd) — the route
   // layer always resolves it to either a page slug or null before calling
   // this, so admins can explicitly move an item back to "library only".
-  // videoUrl is likewise written as-given (not COALESCEd), so an admin can
-  // clear a previously-set video by submitting an empty value.
-  async update(id, { title, body, category, visibleToRoles, placement, blockType, videoUrl }) {
+  // videoUrl and imageUrl are likewise written as-given (not COALESCEd), so
+  // an admin can clear a previously-set video/image by submitting an empty
+  // value.
+  async update(id, { title, body, category, visibleToRoles, placement, blockType, videoUrl, imageUrl }) {
     const result = await pool.query(
       `UPDATE content_items SET
          title = COALESCE($1, title),
@@ -101,10 +105,11 @@ const ContentItem = {
          placement = $5,
          block_type = COALESCE($6, block_type),
          video_url = $7,
+         image_url = $8,
          updated_at = NOW()
-       WHERE id = $8
+       WHERE id = $9
        RETURNING *`,
-      [title, body, category, visibleToRoles, placement, blockType, videoUrl, id]
+      [title, body, category, visibleToRoles, placement, blockType, videoUrl, imageUrl, id]
     );
     return result.rows[0] || null;
   },
@@ -127,8 +132,8 @@ const ContentItem = {
 
     const result = await pool.query(
       `INSERT INTO content_items
-         (title, body, category, visible_to_roles, created_by, placement, block_type, video_url)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         (title, body, category, visible_to_roles, created_by, placement, block_type, video_url, image_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
       [
         `${original.title} (Copy)`,
@@ -139,6 +144,7 @@ const ContentItem = {
         original.placement,
         original.block_type,
         original.video_url,
+        original.image_url,
       ]
     );
     return result.rows[0];

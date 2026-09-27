@@ -1,8 +1,16 @@
-
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import BookingCalendar from "../components/BookingCalendar.jsx";
-import useBookingAvailability from "../hooks/useBookingAvailability.js";
+// frontend/src/pages/manager/ManagerNewBookingPage.jsx
+//
+// Lets a manager create a booking on behalf of a customer who booked by
+// phone or in person, rather than through the customer's own account. This
+// reuses the exact same POST /api/bookings endpoint the self-serve
+// BookingRequestPage.jsx uses — the only difference is a manager may also
+// send `userId` (whose account the booking is filed under) and `status`
+// (so it can be marked approved immediately instead of sitting in the
+// pending queue). See backend/routes/bookings.js for that logic.
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import BookingCalendar from "../../components/BookingCalendar.jsx";
+import useBookingAvailability from "../../hooks/useBookingAvailability.js";
 
 const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
 
@@ -17,18 +25,33 @@ const AREAS = [
   { value: "paa", label: "Entire Paa" },
 ];
 
-export default function BookingRequestPage() {
+export default function ManagerNewBookingPage() {
+  const navigate = useNavigate();
+
+  const [users, setUsers] = useState(null);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [userId, setUserId] = useState("");
+
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [bookingType, setBookingType] = useState("standard");
   const [area, setArea] = useState("general");
   const [purpose, setPurpose] = useState("");
   const [whakapapa, setWhakapapa] = useState("");
+  const [markApproved, setMarkApproved] = useState(true);
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
 
   const { unavailableDays, loading: loadingAvailability } = useBookingAvailability();
+
+  useEffect(() => {
+    fetch(`${API_BASE}/admin/users`, { credentials: "include" })
+      .then((res) => res.json())
+      .then((data) => setUsers(data.users || []))
+      .catch(() => setUsers([]))
+      .finally(() => setLoadingUsers(false));
+  }, []);
 
   function handleSelectRange(nextStart, nextEnd) {
     setStartDate(nextStart);
@@ -39,8 +62,12 @@ export default function BookingRequestPage() {
     e.preventDefault();
     setError("");
 
+    if (!userId) {
+      setError("Choose which customer this booking is for");
+      return;
+    }
     if (whakapapa !== "yes" && whakapapa !== "no") {
-      setError("Please tell us whether you whakapapa to the Paa");
+      setError("Please select whether they whakapapa to the Paa");
       return;
     }
 
@@ -51,24 +78,21 @@ export default function BookingRequestPage() {
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          userId: Number(userId),
           startDate,
           endDate,
           bookingType,
           area,
           purpose,
           whakapapa: whakapapa === "yes",
+          status: markApproved ? "approved" : "pending",
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to submit booking request");
+      if (!res.ok) throw new Error(data.error || "Failed to create booking");
 
-      setSuccess(true);
-      setStartDate("");
-      setEndDate("");
-      setBookingType("standard");
-      setArea("general");
-      setPurpose("");
-      setWhakapapa("");
+      // Back to the bookings list so the manager can see it land there.
+      navigate("/manager/bookings");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -78,21 +102,46 @@ export default function BookingRequestPage() {
 
   return (
     <div className="p-8 max-w-md mx-auto">
-      <h1 className="text-2xl font-semibold mb-2">Request a Booking</h1>
+      <h1 className="text-2xl font-semibold mb-2">Make a Booking for a Customer</h1>
       <p className="text-gray-600 mb-6">
-        Tell us about your hui, event or stay and we'll get back to you to confirm.
+        For a hui, event or stay someone arranged by phone or in person, rather than through
+        their own account.
       </p>
 
-      {success && (
-        <div className="mb-4 text-green-700 bg-green-50 border border-green-200 rounded p-3">
-          <p>Thanks — your booking request has been sent. We'll email you once it's been reviewed.</p>
-          <Link to="/bookings" className="underline font-medium">
-            View my bookings →
-          </Link>
-        </div>
-      )}
-
       <form onSubmit={handleSubmit} className="space-y-3">
+        <div>
+          <label htmlFor="userId" className="block text-sm font-medium mb-1">
+            Customer
+          </label>
+          {loadingUsers ? (
+            <p className="text-sm text-gray-400">Loading customers...</p>
+          ) : (
+            <select
+              id="userId"
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              required
+              className="w-full border rounded px-3 py-2"
+            >
+              <option value="" disabled>
+                Select a customer
+              </option>
+              {users.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name} ({u.email}) — {u.role}
+                </option>
+              ))}
+            </select>
+          )}
+          <p className="text-xs text-gray-500 mt-1">
+            Don't see them?{" "}
+            <Link to="/manager/users" className="underline font-medium">
+              Create an account for them first
+            </Link>
+            , then come back here.
+          </p>
+        </div>
+
         <div className="flex gap-3">
           <div className="flex-1">
             <label htmlFor="startDate" className="block text-sm font-medium mb-1">
@@ -136,7 +185,7 @@ export default function BookingRequestPage() {
 
         <div>
           <label htmlFor="whakapapa" className="block text-sm font-medium mb-1">
-            Do you whakapapa to the Paa?
+            Do they whakapapa to the Paa?
           </label>
           <select
             id="whakapapa"
@@ -155,7 +204,7 @@ export default function BookingRequestPage() {
 
         <div>
           <label htmlFor="area" className="block text-sm font-medium mb-1">
-            Which area do you need?
+            Which area do they need?
           </label>
           <select
             id="area"
@@ -169,10 +218,6 @@ export default function BookingRequestPage() {
               </option>
             ))}
           </select>
-          <p className="text-xs text-gray-500 mt-1">
-            Booking either area reserves the whole Paa for your dates — the marae doesn't take
-            two bookings for overlapping dates, even if they're for different areas.
-          </p>
         </div>
 
         <div>
@@ -208,6 +253,20 @@ export default function BookingRequestPage() {
           />
         </div>
 
+        <div className="flex items-start gap-2 pt-1">
+          <input
+            id="markApproved"
+            type="checkbox"
+            checked={markApproved}
+            onChange={(e) => setMarkApproved(e.target.checked)}
+            className="mt-1"
+          />
+          <label htmlFor="markApproved" className="text-sm">
+            Approve immediately — the customer already confirmed this with you. Untick to leave it
+            pending in the booking queue instead.
+          </label>
+        </div>
+
         {error && <p className="text-red-600 text-sm">{error}</p>}
 
         <button
@@ -215,7 +274,7 @@ export default function BookingRequestPage() {
           disabled={submitting}
           className="bg-black text-white rounded px-4 py-2 disabled:opacity-50"
         >
-          {submitting ? "Submitting..." : "Submit request"}
+          {submitting ? "Creating..." : "Create booking"}
         </button>
       </form>
     </div>

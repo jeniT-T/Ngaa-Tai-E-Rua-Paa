@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import ContentImage from "../components/ContentImage.jsx";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
 
 const DEFAULT_FACILITIES = [
   {
@@ -30,6 +31,9 @@ const DEFAULT_FACILITIES = [
   },
 ];
 
+// Bigger boxes for the marae-wide info pages that live alongside the
+// facilities list — health & safety and the rules & regulations that used
+// to only be reachable from deep inside the (now booking-gated) arrival guide.
 const MORE_INFO = [
   {
     to: "/health-and-safety",
@@ -59,7 +63,7 @@ function FacilitiesPage() {
   }, []);
 
   const facilities = sections.length > 0
-    ? sections.map((s) => ({ title: s.title, description: s.body }))
+    ? sections.map((s) => ({ title: s.title, description: s.body, image_url: s.image_url }))
     : DEFAULT_FACILITIES;
 
   return (
@@ -67,6 +71,7 @@ function FacilitiesPage() {
       <h1 className="text-3xl font-semibold text-gray-900 mb-4">
         {heading ? heading.title : "Available Facilities"}
       </h1>
+      {heading && <ContentImage item={heading} />}
       {heading?.body ? (
         <p className="text-gray-600 mb-8 whitespace-pre-line">{heading.body}</p>
       ) : (
@@ -75,22 +80,27 @@ function FacilitiesPage() {
         </p>
       )}
 
+      {/* These 6 aren't clickable, so a light gray sets them apart from the
+          three link boxes below (Map, Health & Safety, Rules & Regulations),
+          which get a slightly darker gray. */}
       <div className="grid gap-5 sm:grid-cols-2 mb-12">
-        {facilities.map(({ title, description }) => (
+        {facilities.map(({ title, description, image_url }) => (
           <div
             key={title}
-            className="p-6 rounded-xl border border-gray-200 bg-white shadow-sm"
+            className="p-6 rounded-xl border border-gray-200 bg-gray-50 shadow-sm"
           >
+            {image_url && <ContentImage item={{ title, image_url }} />}
             <h2 className="text-lg font-semibold text-gray-900 mb-2">{title}</h2>
             <p className="text-gray-600 leading-relaxed">{description}</p>
           </div>
         ))}
       </div>
 
-      {/* Map */}
+      {/* Map — one of the three clickable boxes, so a slightly darker gray
+          than the 6 non-clickable facility boxes above. */}
       <Link
         to="/map"
-        className="block p-6 rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 mb-8"
+        className="block p-6 rounded-xl border border-gray-200 bg-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 mb-8"
       >
         <h2 className="text-lg font-semibold text-gray-900 mb-1">Find your way around</h2>
         <p className="text-gray-600">
@@ -98,13 +108,14 @@ function FacilitiesPage() {
         </p>
       </Link>
 
-      {/* Health & Safety / Rules & Regulations */}
+      {/* Health & Safety / Rules & Regulations — the other two clickable
+          boxes, same slightly-darker gray as the Map box above. */}
       <div className="grid gap-5 sm:grid-cols-2">
         {MORE_INFO.map(({ to, title, description }) => (
           <Link
             key={to}
             to={to}
-            className="p-8 rounded-2xl border-2 border-gray-200 bg-white shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+            className="p-8 rounded-2xl border-2 border-gray-200 bg-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
           >
             <h2 className="text-xl font-semibold text-gray-900 mb-1">{title}</h2>
             <p className="text-gray-600">{description}</p>

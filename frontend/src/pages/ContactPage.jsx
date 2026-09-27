@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import usePageContent from "../hooks/usePageContent.js";
+import ContentImage from "../components/ContentImage.jsx";
 
 const DEFAULT_CONTACTS = [
   { title: "Marae Host", body: "Name: Waren\nPhone: (placeholder)" },
@@ -13,6 +14,7 @@ function ContactPage() {
   return (
     <div style={{ padding: "40px", maxWidth: "700px", margin: "0 auto", textAlign: "left" }}>
       <h1>{heading ? heading.title : "Contact Information"}</h1>
+      {heading && <ContentImage item={heading} />}
       <p style={{ marginBottom: "24px", color: "#555", whiteSpace: "pre-line" }}>
         {heading
           ? heading.body
@@ -22,6 +24,7 @@ function ContactPage() {
       <div style={{ display: "grid", gap: "20px", marginBottom: "24px" }}>
         {contacts.map((c) => (
           <div key={c.title} style={{ padding: "20px", border: "1px solid #ddd", borderRadius: "12px" }}>
+            {c.image_url && <ContentImage item={c} />}
             <h2 style={{ margin: "0 0 8px" }}>{c.title}</h2>
             <p style={{ margin: 0, whiteSpace: "pre-line" }}>{c.body}</p>
           </div>

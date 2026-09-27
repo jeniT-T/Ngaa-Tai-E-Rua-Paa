@@ -1,3 +1,4 @@
+// backend/models/Booking.js
 const crypto = require('crypto');
 const { Pool } = require('pg');
 
@@ -6,18 +7,28 @@ const pool = new Pool({
 });
 
 const Booking = {
-  async create({ userId, startDate, endDate, purpose, bookingType = 'standard', whakapapa = false, area = 'general' }) {
+  // status: defaults to 'pending' (the normal self-serve request flow) but a
+  // manager creating a booking on a customer's behalf can pass 'approved'
+  // directly — see POST /api/bookings, where only a manager is allowed to
+  // set this at all.
+  async create({ userId, startDate, endDate, purpose, bookingType = 'standard', whakapapa = false, area = 'general', status = 'pending' }) {
+    // Unguessable per-booking token — this is what lets guests who aren't
+    // the account holder reach arrival info via a shared link/QR code with
+    // no login of their own. See GET /api/bookings/guest/:token.
     const guestAccessToken = crypto.randomBytes(24).toString('hex');
 
     const result = await pool.query(
-      `INSERT INTO bookings (user_id, start_date, end_date, purpose, booking_type, whakapapa, area, guest_access_token)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO bookings (user_id, start_date, end_date, purpose, booking_type, whakapapa, area, guest_access_token, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
-      [userId, startDate, endDate, purpose, bookingType, whakapapa, area, guestAccessToken]
+      [userId, startDate, endDate, purpose, bookingType, whakapapa, area, guestAccessToken, status]
     );
     return result.rows[0];
   },
 
+  // Looked up by the public "share this booking's arrival info" link/QR
+  // code — deliberately returns nothing about the account holder (no name,
+  // no email, no user_id) since anyone with the link can call this.
   async findByGuestToken(token) {
     const result = await pool.query(
       `SELECT id, start_date, end_date, status, area, booking_type, purpose
@@ -27,6 +38,12 @@ const Booking = {
     return result.rows[0] || null;
   },
 
+  // Date ranges for bookings that could still occupy the marae — used to
+  // gray out unavailable days on the booking calendar. 'approved' bookings
+  // are hard-blocked; 'pending' ones are returned too so the frontend can
+  // flag them as tentative without necessarily disabling them. Denied and
+  // cancelled bookings never block anything. excludeId lets an owner editing
+  // their own booking see the calendar without their own dates blocking them.
   async findActiveRanges(excludeId) {
     const conditions = [`status IN ('approved', 'pending')`];
     const values = [];
@@ -66,6 +83,8 @@ const Booking = {
     return result.rows;
   },
 
+  // Admin decision — approve/deny (or re-open back to pending if they change
+  // their mind), optionally leaving a note for the requester.
   async updateStatus(id, status, adminNotes) {
     const result = await pool.query(
       `UPDATE bookings
@@ -77,6 +96,8 @@ const Booking = {
     return result.rows[0] || null;
   },
 
+  // Owner edits their own request (dates/purpose/type) and it goes back to
+  // 'pending' for the admin to look at again — a "re-request" after a change.
   async update(id, { startDate, endDate, purpose, bookingType, whakapapa, area }) {
     const result = await pool.query(
       `UPDATE bookings

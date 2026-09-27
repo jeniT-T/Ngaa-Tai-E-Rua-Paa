@@ -3,10 +3,14 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import useArrivalAccess from "../hooks/useArrivalAccess.js";
 
+// Where each role's "dashboard" link should point — kept in sync with
+// ROLE_HOME in HomeRoute.jsx, which sends a logged-in user here from "/".
 const DASHBOARD_LINKS = {
   admin: { to: "/admin", label: "Admin Dashboard" },
   manager: { to: "/manager", label: "Manager Dashboard" },
   caretaker: { to: "/caretaker", label: "Caretaker Dashboard" },
+  // Members have no separate dashboard — "Home" (above) already shows them
+  // their booking status alongside the normal public homepage.
 };
 
 function Navbar() {
@@ -34,10 +38,14 @@ function Navbar() {
     return location.pathname === path || location.pathname.startsWith(path + "/");
   };
 
+  // "Events" used to live here too — it's now one of the three "Explore"
+  // boxes on the homepage instead (see HomePage.jsx), so it's been dropped
+  // from the navbar to avoid listing it twice. "Contact Us" is dropped too,
+  // but only for the caretaker role — they work inside the product all day
+  // and don't need it, whereas members/admin/logged-out visitors still do.
   const navLinks = [
     { to: "/", label: "Home" },
-    { to: "/events", label: "Events" },
-    { to: "/contacts", label: "Contact Us" },
+    ...(user?.role === "caretaker" ? [] : [{ to: "/contacts", label: "Contact Us" }]),
   ];
 
   return (
@@ -74,7 +82,10 @@ function Navbar() {
                   {dashboard.label}
                 </Link>
               )}
-              {arrivalAccess === "allowed" && (
+              {/* Caretakers don't need the Marae Guide link — that's for the
+                  people hiring the marae, not the staff running it. Still
+                  shown to admin/member as before. */}
+              {arrivalAccess === "allowed" && user?.role !== "caretaker" && (
                 <Link
                   to="/arrival"
                   onClick={closeMenu}
@@ -100,6 +111,13 @@ function Navbar() {
                     className={isActive("/caretaker/schedule") ? "active" : ""}
                   >
                     Schedule
+                  </Link>
+                  <Link
+                    to="/caretaker/manage-content"
+                    onClick={closeMenu}
+                    className={isActive("/caretaker/manage-content") ? "active" : ""}
+                  >
+                    Manage Content
                   </Link>
                 </>
               )}

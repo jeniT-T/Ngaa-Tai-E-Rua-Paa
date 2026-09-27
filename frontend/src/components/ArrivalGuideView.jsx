@@ -1,7 +1,34 @@
-
+// frontend/src/components/ArrivalGuideView.jsx
+//
+// The actual arrival-guide UI (search, category groups, collapsible items).
+// Pulled out of ArrivalPage so the exact same view can be reused by the
+// guest-link page (GuestArrivalPage) — the content itself has always been
+// served from an unauthenticated endpoint, only the *route* differs in how
+// it decides whether to show this.
+//
+// Arrival Information Architecture (three phases of a stay):
+//   1. Arrival — what you need to know when you show up (safety, parking, wifi)
+//   2. General — equipment & facilities used during the stay
+//   3. Leaving — checkout / final-clean tasks
+//
+// An item's group comes directly from its `category` in the CMS (an admin
+// sets this when creating/editing the item — see ContentManagementPage).
+// Anything with an unrecognized category falls back to "General" rather than
+// being hidden, so nothing silently disappears if a category typo slips in.
 import { useState, useMemo, useEffect } from "react";
+import { Link } from "react-router-dom";
 import usePageContent from "../hooks/usePageContent.js";
 import { getYoutubeEmbedUrl } from "../utils/youtube.js";
+import RecipeStepGallery from "./RecipeStepGallery.jsx";
+import ContentImage from "./ContentImage.jsx";
+import GuestAccessShare from "./GuestAccessShare.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
+import useMyActiveBooking from "../hooks/useMyActiveBooking.js";
+
+// Content whose source document included step photos we want to show
+// alongside the text — see RecipeStepGallery.jsx for why this is matched
+// by title rather than a generic "content item has images" feature.
+const TITLES_WITH_STEP_IMAGES = new Set(["Combi Oven: Scrambled Eggs"]);
 
 const CATEGORY_GROUPS = {
   arrival: {
@@ -61,6 +88,14 @@ export default function ArrivalGuideView() {
   const { heading, sections } = usePageContent("arrival");
   const usingCms = sections.length > 0;
 
+  // Only ever populated for a logged-in member with an active approved
+  // booking — null for caretaker/admin (they don't have a personal booking
+  // to share) and for the unauthenticated guest-link view of this same
+  // component (no user, see GuestArrivalPage.jsx), so the "For your stay"
+  // box below simply doesn't render there.
+  const { user } = useAuth();
+  const { booking: activeBooking } = useMyActiveBooking();
+
   const items = useMemo(() => {
     if (!usingCms) return FALLBACK_ITEMS;
     return sections.map((item) => {
@@ -71,6 +106,7 @@ export default function ArrivalGuideView() {
         category,
         body: item.body,
         video_url: item.video_url || null,
+        image_url: item.image_url || null,
       };
     });
   }, [usingCms, sections]);
@@ -204,6 +240,7 @@ export default function ArrivalGuideView() {
             background: "var(--bg-primary)",
             borderTop: `1px solid ${categoryInfo.color}20`,
           }}>
+            <ContentImage item={item} />
             {(item.body || "").split("\n\n").map((paragraph, pIdx) => (
               <p key={pIdx} style={{
                 color: "var(--text-secondary)",
@@ -215,6 +252,7 @@ export default function ArrivalGuideView() {
                 {paragraph}
               </p>
             ))}
+            {TITLES_WITH_STEP_IMAGES.has(item.title) && <RecipeStepGallery />}
             {embedUrl && (
               <div style={{
                 position: "relative",
@@ -336,6 +374,7 @@ export default function ArrivalGuideView() {
         }}>
           {heading ? heading.title : "Marae Guide"}
         </h1>
+        {heading && <ContentImage item={heading} />}
         <p style={{
           fontSize: "1rem",
           color: "var(--text-secondary)",
@@ -346,6 +385,46 @@ export default function ArrivalGuideView() {
           {heading?.body || "Welcome! Here's everything you need to know for your stay — organized by arrival, general use, and leaving."}
         </p>
       </div>
+
+      {/* For your stay — share link/QR code for this booking, and the
+          Opening & Closing checklist. Only shown to the member who actually
+          has an active approved booking (caretaker/admin already have their
+          own editable checklist page; the guest-link view has no logged-in
+          user at all, see the note on activeBooking above). */}
+      {user?.role === "member" && activeBooking && (
+        <div style={{
+          marginBottom: "32px",
+          padding: "20px",
+          background: "var(--bg-tertiary)",
+          borderRadius: "var(--radius-lg)",
+          border: "1px solid var(--border-light)",
+        }}>
+          <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "4px", color: "var(--text-primary)" }}>
+            For your stay
+          </h2>
+          <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", marginBottom: "12px" }}>
+            Share this guide with others on your booking, or see what the opening &amp; closing
+            checklist covers.
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "flex-start" }}>
+            <GuestAccessShare token={activeBooking.guest_access_token} />
+            <Link
+              to="/checklists"
+              className="btn btn-outline"
+              style={{ padding: "8px 14px", fontSize: "0.85rem" }}
+            >
+              View Opening &amp; Closing Checklist
+            </Link>
+            <Link
+              to="/tutorials"
+              className="btn btn-outline"
+              style={{ padding: "8px 14px", fontSize: "0.85rem" }}
+            >
+              View Tutorials
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Search Bar */}
       <div style={{

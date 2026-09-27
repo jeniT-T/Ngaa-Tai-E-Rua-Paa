@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import mapImage from "../image/Map.jpg";
 import usePageContent from "../hooks/usePageContent.js";
+import ContentImage from "../components/ContentImage.jsx";
 
 // Marker positions are fixed to physical spots on the map image and aren't
 // content — but each marker's name/description IS editable from the
@@ -28,6 +29,7 @@ function MapPage() {
           ...marker,
           name: override ? override.title : marker.defaultName,
           description: override ? override.body : marker.defaultDescription,
+          image_url: override?.image_url || null,
         };
       }),
     [sections]
@@ -40,6 +42,7 @@ function MapPage() {
     <div className="map-page">
       <header className="map-header">
         <h1>{heading ? heading.title : "Facilities"}</h1>
+        {heading && <ContentImage item={heading} />}
         <p style={{ whiteSpace: "pre-line" }}>
           {heading ? heading.body : "Click on a marker to view information about each facility."}
         </p>
@@ -75,6 +78,8 @@ function MapPage() {
           <h2>{selectedFacility.name}</h2>
 
           <span className="map-type">{selectedFacility.type}</span>
+
+          <ContentImage item={selectedFacility} alt={selectedFacility.name} />
 
           <p className="map-description">{selectedFacility.description}</p>
 

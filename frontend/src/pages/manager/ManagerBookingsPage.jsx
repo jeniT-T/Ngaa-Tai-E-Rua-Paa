@@ -1,7 +1,13 @@
+// frontend/src/pages/manager/ManagerBookingsPage.jsx
+//
+// Approve/deny booking requests — moved here from the old admin bookings
+// page now that this responsibility belongs to the manager role (backend
+// route is unchanged: GET/PATCH /api/bookings, still requireRole('manager')).
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import GuestAccessShare from "../../components/GuestAccessShare.jsx";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
 
 const STATUS_STYLES = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -20,7 +26,7 @@ export default function ManagerBookingsPage() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [notesDraft, setNotesDraft] = useState({}); 
+  const [notesDraft, setNotesDraft] = useState({}); // { [bookingId]: text }
 
   async function loadBookings() {
     setLoading(true);
@@ -59,7 +65,15 @@ export default function ManagerBookingsPage() {
 
   return (
     <div className="p-8 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-2">Booking Requests</h1>
+      <div className="flex justify-between items-start gap-4 mb-2">
+        <h1 className="text-2xl font-semibold">Booking Requests</h1>
+        <Link
+          to="/manager/bookings/new"
+          className="text-sm border rounded px-3 py-1.5 whitespace-nowrap"
+        >
+          + New booking for a customer
+        </Link>
+      </div>
       <p className="text-sm text-gray-500 mb-6">
         Review, approve, or deny booking requests. The requester gets emailed automatically
         when you make a decision.

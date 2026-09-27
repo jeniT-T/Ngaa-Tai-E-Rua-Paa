@@ -722,7 +722,8 @@ select option:checked {
 .hero-section {
   background-size: cover;
   background-position: center;
-  padding: 6rem var(--spacing-lg);
+  /* ~50% taller than the original 6rem, per request */
+  padding: 9rem var(--spacing-lg);
   text-align: center;
   color: var(--text-inverse);
   position: relative;

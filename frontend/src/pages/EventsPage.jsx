@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import ContentImage from "../components/ContentImage.jsx";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
 
 async function loadPageContent(page, setHeading, setSections) {
   try {
@@ -26,10 +27,11 @@ function EventsPage() {
   }, []);
 
   return (
-    <div className="px-6 py-16 max-w-3xl mx-auto text-center">
+    <div className="px-6 py-16 max-w-4xl mx-auto text-center">
       <h1 className="text-3xl font-semibold text-gray-900 mb-4">
         {heading ? heading.title : "Events"}
       </h1>
+      {heading && <ContentImage item={heading} />}
       {heading?.body && (
         <p className="text-gray-600 mb-6 whitespace-pre-line">{heading.body}</p>
       )}
@@ -37,13 +39,18 @@ function EventsPage() {
       {loading ? (
         <p className="text-gray-400">Loading...</p>
       ) : sections.length > 0 ? (
-        <div className="grid gap-5 sm:grid-cols-2 text-left">
+        // One event per row, in a bigger box — an admin's uploaded photo
+        // (see ContentImage.jsx, from the image-upload feature) already
+        // shows here automatically when a section has one; this just gives
+        // it more room to be seen than the old 2-per-row grid did.
+        <div className="grid gap-6 text-left">
           {sections.map((item) => (
             <div
               key={item.id}
-              className="p-6 rounded-xl border border-gray-200 bg-white shadow-sm"
+              className="p-8 rounded-2xl border border-gray-200 bg-white shadow-sm"
             >
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">{item.title}</h2>
+              <ContentImage item={item} style={{ maxHeight: "420px" }} />
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">{item.title}</h2>
               <p className="text-gray-600 leading-relaxed whitespace-pre-line">{item.body}</p>
             </div>
           ))}

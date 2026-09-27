@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import usePageContent from "../../hooks/usePageContent.js";
+import ContentImage from "../../components/ContentImage.jsx";
 
 const DEFAULT_SECTIONS = [{ title: "WiFi Instructions", body: "WiFi instructions will go here." }];
 
@@ -25,6 +26,8 @@ export default function WifiPage() {
         }}>
           {heading ? heading.title : "WiFi Information"}
         </h1>
+
+        {heading && <ContentImage item={heading} />}
 
         {heading?.body && (
           <p style={{
@@ -56,6 +59,7 @@ export default function WifiPage() {
                   {item.title}
                 </h2>
               )}
+              <ContentImage item={item} />
               <p style={{
                 color: "var(--text-secondary)",
                 lineHeight: "1.6",

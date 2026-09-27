@@ -1,8 +1,9 @@
-
+// frontend/src/pages/admin/ContentManagementPage.jsx
 import { useState, useEffect } from "react";
 import { getYoutubeEmbedUrl } from "../../utils/youtube.js";
+import { resolveImageUrl } from "../../utils/media.js";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
 const ALL_ROLES = ["member", "caretaker", "admin"];
 const SUGGESTED_CATEGORIES = [
   "recipe",
@@ -15,6 +16,17 @@ const SUGGESTED_CATEGORIES = [
   "health_safety",
 ];
 
+// Where an item can be shown. Empty string = internal content library only
+// (existing behaviour, gated by "Visible to" below). Anything else = it shows
+// up on that public/marae-info page instead, with no login required.
+// For the arrival guide specifically, "Category" doubles as which
+// collapsible group the item appears under — use "arrival", "general" or
+// "leaving" (anything else falls back to "general"). See ArrivalGuideView.jsx.
+//
+// This list is also what makes "every page is editable" concrete: it's
+// every public page the app has, and choosing one here + saving a heading
+// or section is the whole mechanism — there's no separate "page editor" per
+// page, it's the same form for all of them.
 const PUBLIC_PAGES = [
   { value: "", label: "Library only (internal)" },
   { value: "home", label: "Home page" },
@@ -30,7 +42,9 @@ const PUBLIC_PAGES = [
   { value: "arrival-emergency", label: "Arrival guide → Emergency page" },
   { value: "arrival-accessibility", label: "Arrival guide → Accessibility page" },
   { value: "arrival-rules", label: "Arrival guide → Rules & Regulations page" },
+  { value: "caretaker-tutorials", label: "Caretaker Tutorials page" },
 ];
+const PAGE_GROUPS = PUBLIC_PAGES.filter((p) => p.value);
 
 const EMPTY_FORM = {
   title: "",
@@ -40,7 +54,78 @@ const EMPTY_FORM = {
   placement: "",
   blockType: "section",
   videoUrl: "",
+  imageUrl: "",
 };
+
+// One item's card — the same rendering + actions whether it's shown under a
+// page group or under the library list below.
+function ContentItemCard({ item, categories, moveValue, onMoveChange, onModify, onCopy, onDelete, onMove }) {
+  const imageSrc = resolveImageUrl(item.image_url);
+
+  return (
+    <li className="border rounded p-4">
+      <div className="flex justify-between items-start mb-2 gap-3">
+        <h3 className="font-medium">{item.title}</h3>
+        <div className="flex gap-1 flex-wrap justify-end">
+          {item.image_url && (
+            <span className="text-xs px-2 py-1 rounded bg-green-100 text-green-800">Image</span>
+          )}
+          {item.video_url && (
+            <span className="text-xs px-2 py-1 rounded bg-red-100 text-red-800">Video</span>
+          )}
+          {item.placement && (
+            <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800">
+              {item.placement} page · {item.block_type}
+            </span>
+          )}
+          <span className="text-xs px-2 py-1 rounded bg-gray-100">{item.category}</span>
+        </div>
+      </div>
+
+      {imageSrc && (
+        <img
+          src={imageSrc}
+          alt={item.title}
+          className="mb-2 rounded"
+          style={{ maxHeight: "140px", objectFit: "cover", width: "100%" }}
+        />
+      )}
+
+      <p className="text-sm text-gray-600 whitespace-pre-line mb-2">{item.body}</p>
+      <p className="text-xs text-gray-500 mb-3">
+        {item.placement
+          ? `Public on the ${item.placement} page`
+          : `Visible to: ${item.visible_to_roles.join(", ")}`}
+      </p>
+
+      <div className="flex flex-wrap gap-2 items-center">
+        <button onClick={() => onModify(item)} className="text-sm border rounded px-3 py-1">
+          Modify
+        </button>
+        <button onClick={() => onCopy(item)} className="text-sm border rounded px-3 py-1">
+          Copy
+        </button>
+        <button
+          onClick={() => onDelete(item.id)}
+          className="text-sm text-red-600 border border-red-200 rounded px-3 py-1"
+        >
+          Delete
+        </button>
+
+        <input
+          type="text"
+          list="category-suggestions"
+          value={moveValue}
+          onChange={(e) => onMoveChange(e.target.value)}
+          className="text-sm border rounded px-2 py-1 w-36"
+        />
+        <button onClick={() => onMove(item)} className="text-sm border rounded px-3 py-1">
+          Move
+        </button>
+      </div>
+    </li>
+  );
+}
 
 export default function ContentManagementPage() {
   const [items, setItems] = useState([]);
@@ -51,6 +136,8 @@ export default function ContentManagementPage() {
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [moveTarget, setMoveTarget] = useState({}); // { [itemId]: newCategory }
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageError, setImageError] = useState("");
 
   useEffect(() => {
     loadItems();
@@ -71,6 +158,9 @@ export default function ContentManagementPage() {
     }
   }
 
+  // Pulls in whatever categories actually exist in the database (which may
+  // include ones an admin created on the fly), merged with the suggested
+  // list, so "move" always has the item's real current category as an option.
   async function loadCategories() {
     try {
       const res = await fetch(`${API_BASE}/content/categories`, { credentials: "include" });
@@ -90,6 +180,34 @@ export default function ContentManagementPage() {
         ? prev.visibleToRoles.filter((r) => r !== role)
         : [...prev.visibleToRoles, role],
     }));
+  }
+
+  // Uploads the picked file immediately (before the item itself is saved) so
+  // the admin gets a live preview and a plain image URL to attach — the item
+  // save below is a normal JSON POST/PATCH either way, same as videoUrl.
+  async function handleImageSelect(e) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // let picking the same file again re-trigger onChange
+    if (!file) return;
+
+    setImageError("");
+    setUploadingImage(true);
+    try {
+      const body = new FormData();
+      body.append("image", file);
+      const res = await fetch(`${API_BASE}/content/upload`, {
+        method: "POST",
+        credentials: "include",
+        body,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to upload image");
+      setForm((prev) => ({ ...prev, imageUrl: data.url }));
+    } catch (err) {
+      setImageError(err.message);
+    } finally {
+      setUploadingImage(false);
+    }
   }
 
   async function handleSubmit(e) {
@@ -133,6 +251,7 @@ export default function ContentManagementPage() {
 
   function startEdit(item) {
     setEditingId(item.id);
+    setImageError("");
     setForm({
       title: item.title,
       body: item.body,
@@ -141,11 +260,14 @@ export default function ContentManagementPage() {
       placement: item.placement || "",
       blockType: item.block_type || "section",
       videoUrl: item.video_url || "",
+      imageUrl: item.image_url || "",
     });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function cancelEdit() {
     setEditingId(null);
+    setImageError("");
     setForm(EMPTY_FORM);
   }
 
@@ -204,11 +326,16 @@ export default function ContentManagementPage() {
     }
   }
 
+  const libraryItems = items.filter((i) => !i.placement);
+  const previewSrc = resolveImageUrl(form.imageUrl);
+
   return (
     <div className="p-8 max-w-3xl mx-auto">
       <h1 className="text-2xl font-semibold mb-2">Content Manager</h1>
       <p className="text-sm text-gray-500 mb-6">
-        Add, edit, move, copy, or delete content — and choose which user types can see it.
+        Add, edit, move, copy, or delete content — and choose which user types can see it. Every
+        public page in the app (including Contact Us) is edited the same way: pick it under "Show
+        on public page" below, and it replaces that page's placeholder copy immediately.
       </p>
 
       {error && <p className="text-red-600 mb-4">{error}</p>}
@@ -283,6 +410,41 @@ export default function ContentManagementPage() {
           )}
 
           <div>
+            <label className="block text-sm font-medium mb-1">Image (optional)</label>
+            {previewSrc && (
+              <img
+                src={previewSrc}
+                alt="Selected"
+                className="mb-2 rounded border"
+                style={{ maxHeight: "160px", objectFit: "cover" }}
+              />
+            )}
+            <div className="flex items-center gap-2">
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                onChange={handleImageSelect}
+                disabled={uploadingImage}
+                className="text-sm"
+              />
+              {uploadingImage && <span className="text-xs text-gray-500">Uploading...</span>}
+              {form.imageUrl && !uploadingImage && (
+                <button
+                  type="button"
+                  onClick={() => setForm((prev) => ({ ...prev, imageUrl: "" }))}
+                  className="text-xs text-red-600 border border-red-200 rounded px-2 py-1"
+                >
+                  Remove image
+                </button>
+              )}
+            </div>
+            {imageError && <p className="text-xs text-red-600 mt-1">{imageError}</p>}
+            <p className="text-xs text-gray-500 mt-1">
+              JPEG, PNG, WEBP or GIF, up to 8MB. Shown above this item's text wherever it appears.
+            </p>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium mb-1">YouTube video URL (optional)</label>
             <input
               type="url"
@@ -326,7 +488,7 @@ export default function ContentManagementPage() {
           <div className="flex gap-2">
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || uploadingImage}
               className="bg-black text-white rounded px-4 py-2 disabled:opacity-50"
             >
               {saving ? "Saving..." : editingId ? "Save changes" : "Add item"}
@@ -340,67 +502,81 @@ export default function ContentManagementPage() {
         </form>
       </section>
 
-      <section>
-        <h2 className="text-lg font-medium mb-4">Existing content</h2>
+      <section className="mb-10">
+        <h2 className="text-lg font-medium mb-1">Pages</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Every public page, grouped by what's currently on it. A page with nothing listed is
+          still showing its built-in placeholder copy — add a heading or section above (pick this
+          page under "Show on public page") to replace it.
+        </p>
         {loading ? (
           <p>Loading...</p>
-        ) : items.length === 0 ? (
-          <p className="text-gray-500">No content yet.</p>
         ) : (
-          <ul className="space-y-3">
-            {items.map((item) => (
-              <li key={item.id} className="border rounded p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-medium">{item.title}</h3>
-                  <div className="flex gap-1">
-                    {item.video_url && (
-                      <span className="text-xs px-2 py-1 rounded bg-red-100 text-red-800">
-                        Video
-                      </span>
-                    )}
-                    {item.placement && (
-                      <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800">
-                        {item.placement} page · {item.block_type}
-                      </span>
-                    )}
+          <div className="space-y-6">
+            {PAGE_GROUPS.map((page) => {
+              const pageItems = items.filter((i) => i.placement === page.value);
+              return (
+                <div key={page.value} className="border rounded p-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-medium">{page.label}</h3>
                     <span className="text-xs px-2 py-1 rounded bg-gray-100">
-                      {item.category}
+                      {pageItems.length} {pageItems.length === 1 ? "item" : "items"}
                     </span>
                   </div>
+                  {pageItems.length === 0 ? (
+                    <p className="text-sm text-gray-400 italic">
+                      Nothing here yet — this page is showing its placeholder text.
+                    </p>
+                  ) : (
+                    <ul className="space-y-3">
+                      {pageItems.map((item) => (
+                        <ContentItemCard
+                          key={item.id}
+                          item={item}
+                          categories={categories}
+                          moveValue={moveTarget[item.id] ?? item.category}
+                          onMoveChange={(value) =>
+                            setMoveTarget((prev) => ({ ...prev, [item.id]: value }))
+                          }
+                          onModify={startEdit}
+                          onCopy={handleCopy}
+                          onDelete={handleDelete}
+                          onMove={handleMove}
+                        />
+                      ))}
+                    </ul>
+                  )}
                 </div>
-                <p className="text-sm text-gray-600 whitespace-pre-line mb-2">{item.body}</p>
-                <p className="text-xs text-gray-500 mb-3">
-                  {item.placement
-                    ? `Public on the ${item.placement} page`
-                    : `Visible to: ${item.visible_to_roles.join(', ')}`}
-                </p>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
-                <div className="flex flex-wrap gap-2 items-center">
-                  <button onClick={() => startEdit(item)} className="text-sm border rounded px-3 py-1">
-                    Modify
-                  </button>
-                  <button onClick={() => handleCopy(item)} className="text-sm border rounded px-3 py-1">
-                    Copy
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    className="text-sm text-red-600 border border-red-200 rounded px-3 py-1"
-                  >
-                    Delete
-                  </button>
-
-                  <input
-                    type="text"
-                    list="category-suggestions"
-                    value={moveTarget[item.id] ?? item.category}
-                    onChange={(e) => setMoveTarget((prev) => ({ ...prev, [item.id]: e.target.value }))}
-                    className="text-sm border rounded px-2 py-1 w-36"
-                  />
-                  <button onClick={() => handleMove(item)} className="text-sm border rounded px-3 py-1">
-                    Move
-                  </button>
-                </div>
-              </li>
+      <section>
+        <h2 className="text-lg font-medium mb-1">Content Library</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Items not tied to a public page — visible only to logged-in users whose role is checked
+          under "Visible to" (recipes, onboarding guides, equipment instructions, and so on).
+        </p>
+        {loading ? (
+          <p>Loading...</p>
+        ) : libraryItems.length === 0 ? (
+          <p className="text-gray-500">No library content yet.</p>
+        ) : (
+          <ul className="space-y-3">
+            {libraryItems.map((item) => (
+              <ContentItemCard
+                key={item.id}
+                item={item}
+                categories={categories}
+                moveValue={moveTarget[item.id] ?? item.category}
+                onMoveChange={(value) => setMoveTarget((prev) => ({ ...prev, [item.id]: value }))}
+                onModify={startEdit}
+                onCopy={handleCopy}
+                onDelete={handleDelete}
+                onMove={handleMove}
+              />
             ))}
           </ul>
         )}

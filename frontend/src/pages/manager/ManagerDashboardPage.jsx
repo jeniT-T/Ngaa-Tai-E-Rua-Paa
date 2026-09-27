@@ -1,8 +1,18 @@
-
+// frontend/src/pages/manager/ManagerDashboardPage.jsx
+//
+// The manager's hub — everything that used to be the admin's job except
+// content management, which stays with admin. Managers approve/deny
+// bookings, manage users & roles (including creating caretaker/admin
+// accounts), and handle reported issues.
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 const FEATURES = [
+  {
+    to: '/manager/bookings/new',
+    title: 'Make a Booking for a Customer',
+    description: 'Create and approve a booking on behalf of someone who booked by phone or in person.',
+  },
   {
     to: '/manager/bookings',
     title: 'Booking Requests',

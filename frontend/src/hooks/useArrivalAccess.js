@@ -1,13 +1,10 @@
-// frontend/src/hooks/useArrivalAccess.js
+
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
 
-// Shared by ArrivalAccessGate (blocks the route) and the Navbar (decides
-// whether to show the "Arrival Info" link at all). Caretakers/admins always
-// have access. Members only have access from the moment a booking is
-// approved through to the end date of that booking.
+
 export default function useArrivalAccess() {
   const { user } = useAuth();
   const [status, setStatus] = useState("checking"); // checking | allowed | denied

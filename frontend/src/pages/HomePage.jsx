@@ -2,10 +2,14 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import useArrivalAccess from "../hooks/useArrivalAccess.js";
+import { resolveImageUrl } from "../utils/media.js";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
 
-const FEATURES = [
+// The "Explore" section below — the same three destinations that used to be
+// split between homepage feature boxes (History, Facilities) and a navbar
+// link (Events, see Navbar.jsx). Brought together here in one place.
+const EXPLORE = [
   {
     to: "/history",
     title: "History of the Marae",
@@ -18,6 +22,12 @@ const FEATURES = [
     description:
       "See the wharenui, wharekai, accommodation and grounds available for your stay or event.",
   },
+  {
+    to: "/events",
+    title: "Upcoming Events",
+    description:
+      "See what's coming up at the marae — hui, wānanga and community gatherings.",
+  },
 ];
 
 const STATUS_STYLES = {
@@ -27,7 +37,10 @@ const STATUS_STYLES = {
   cancelled: { label: "Cancelled", bg: "#f0f0f0", color: "#616161" },
 };
 
-
+// A member's own upcoming/current booking, if they have one — the one
+// piece of "dashboard" a regular member actually needs. Logged-out
+// visitors and members with no booking never see this section, so the
+// homepage stays identical for both.
 function MyBookingStatus() {
   const [bookings, setBookings] = useState(null);
   const arrivalAccess = useArrivalAccess();
@@ -46,6 +59,8 @@ function MyBookingStatus() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  // Show whichever booking is most relevant: the soonest one that hasn't
+  // ended yet, or failing that, the most recent one overall.
   const current = [...bookings]
     .filter((b) => new Date(b.end_date) >= today)
     .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))[0] || bookings[0];
@@ -96,13 +111,20 @@ function HomePage() {
       .catch(() => {});
   }, []);
 
+  // An admin can replace the default hero photo by uploading an image on the
+  // home page's heading item in the Content Manager — falls back to the
+  // original hardcoded photo if none has been set.
+  const heroImage = resolveImageUrl(hero?.image_url) || "/images/Front.jpg";
+
   return (
     <div>
-      {/* HERO SECTION */}
+      {/* HERO SECTION — sized up (~50% taller, see .hero-section in
+          index.css). The photo itself is admin-changeable from the Content
+          Manager (upload an image on this page's heading item) and falls
+          back to the original hardcoded photo if none has been set. */}
       <section
         style={{
-          backgroundImage:
-            "linear-gradient(rgba(26, 26, 26, 0.6), rgba(26, 26, 26, 0.6)), url(/images/Front.jpg)",
+          backgroundImage: `linear-gradient(rgba(26, 26, 26, 0.6), rgba(26, 26, 26, 0.6)), url(${heroImage})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -120,30 +142,38 @@ function HomePage() {
           that differs from what a logged-out visitor sees. */}
       {user && user.role === "member" && <MyBookingStatus />}
 
-      {/* FEATURE BOXES */}
-      <section className="feature-grid">
-        {FEATURES.map(({ to, title, description }) => (
-          <Link key={to} to={to} className="feature-box">
-            <h2>{title}</h2>
-            <p>{description}</p>
-            <span className="link-text">Learn more →</span>
-          </Link>
-        ))}
+      {/* EXPLORE — a light gray band grouping the three "learn about the
+          marae" destinations (History, Facilities, Events) that used to be
+          scattered between homepage boxes and a navbar link. */}
+      <section style={{ background: "var(--bg-secondary)", padding: "var(--spacing-2xl) 0" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 var(--spacing-lg)" }}>
+          <h2 style={{ textAlign: "center", marginBottom: "var(--spacing-xl)" }}>Explore</h2>
+          <div className="feature-grid" style={{ padding: 0 }}>
+            {EXPLORE.map(({ to, title, description }) => (
+              <Link key={to} to={to} className="feature-box">
+                <h2>{title}</h2>
+                <p>{description}</p>
+                <span className="link-text">Learn more →</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
 
-        {/* Booking box — styled the same, but with an accent border to draw the eye */}
+      {/* CTA — a slightly darker gray band with the one clear "book now"
+          prompt, replacing the old accent feature-box for this. */}
+      <section style={{
+        background: "var(--bg-tertiary)",
+        padding: "var(--spacing-2xl) var(--spacing-lg)",
+        textAlign: "center",
+      }}>
+        <h2 style={{ marginBottom: "var(--spacing-lg)" }}>Interested in hiring the marae?</h2>
         <Link
           to={bookingLink}
           state={!user ? { from: { pathname: "/bookings/new" } } : undefined}
-          className="feature-box feature-box-accent"
+          className="btn btn-primary"
         >
-          <h2>Make a Booking</h2>
-          <p>
-            Renting the marae for a hui, wānanga, tangihanga or other event? Start your
-            booking request here.
-          </p>
-          <span className="link-text">
-            {user ? "Request a booking →" : "Log in to book →"}
-          </span>
+          {user ? "Book now" : "Log in to book"}
         </Link>
       </section>
     </div>

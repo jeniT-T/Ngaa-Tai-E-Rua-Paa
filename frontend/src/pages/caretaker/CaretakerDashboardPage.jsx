@@ -1,11 +1,11 @@
-
+// frontend/src/pages/caretaker/CaretakerDashboardPage.jsx
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 const AVAILABLE_LINKS = [
-  { to: '/caretaker/checklists', title: 'Checklists', description: 'Existing caretaker checklists.' },
+  { to: '/caretaker/schedule', title: 'Task Schedule', description: 'View upcoming scheduled tasks for today.' },
   { to: '/caretaker/tutorials', title: 'Tutorials', description: 'Guides on caring for the marae.' },
-  { to: '/caretaker/schedule', title: 'Task Schedule', description: 'View upcoming scheduled tasks for the next few weeks.' },
+  { to: '/checklists', title: 'Checklists', description: 'View the opening & closing checklists.' },
 ];
 
 export default function CaretakerDashboardPage() {
@@ -16,7 +16,8 @@ export default function CaretakerDashboardPage() {
       <h1 className="text-3xl font-semibold text-gray-900 mb-2">Caretaker Dashboard</h1>
       <p className="text-gray-600 mb-10">Kia ora, {user?.name}. Manage marae upkeep from here.</p>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      {/* Stacked one on top of the other, per request — not a grid. */}
+      <div className="flex flex-col gap-6 max-w-md">
         {AVAILABLE_LINKS.map(({ to, title, description }) => (
           <Link
             key={to}

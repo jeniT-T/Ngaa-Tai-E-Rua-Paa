@@ -167,6 +167,11 @@ WHERE NOT EXISTS (
 -- Content library — Combi Oven scrambled eggs recipe.
 -- ============================================================
 
+-- Placed on the arrival guide (placement = 'arrival', category = 'general')
+-- rather than library-only, so a guest cooking during their stay can find
+-- it through the guest link too, not just logged-in members/caretakers --
+-- ContentItem.findVisibleToRole doesn't filter by placement, so this still
+-- shows up in the Content Library for logged-in roles as well.
 INSERT INTO content_items (title, body, category, visible_to_roles, placement, block_type)
 SELECT 'Combi Oven: Scrambled Eggs',
   $body$1. Turn on the Combi.
@@ -176,7 +181,7 @@ SELECT 'Combi Oven: Scrambled Eggs',
 5. Prep your eggs in the tray: spray the tray with oil, then mix all the eggs into it. Use cream or butter and milk if you don't have cream.
 6. When the Combi flashes to say it's ready, place the tray inside. There's a guide on the side you can pull out to rest the probe on, or use the rack. Close the door.
 7. When the Combi indicates it's finished, take the tray out and use the whisk to scramble the eggs. Season with salt, cheese and parsley as needed, then serve.$body$,
-  'recipe', ARRAY['member', 'caretaker', 'admin'], NULL, 'section'
+  'general', ARRAY['member', 'caretaker', 'admin'], 'arrival', 'section'
 WHERE NOT EXISTS (
-  SELECT 1 FROM content_items WHERE placement IS NULL AND category = 'recipe' AND title = 'Combi Oven: Scrambled Eggs'
+  SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Combi Oven: Scrambled Eggs'
 );

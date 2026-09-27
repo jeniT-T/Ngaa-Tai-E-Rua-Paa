@@ -1,10 +1,10 @@
 
 import { useEffect, useState } from "react";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
 
 export default function useGuestBookingAccess(token) {
-  const [status, setStatus] = useState("checking"); 
+  const [status, setStatus] = useState("checking"); // checking | allowed | denied | invalid
   const [booking, setBooking] = useState(null);
 
   useEffect(() => {

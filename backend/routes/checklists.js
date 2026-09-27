@@ -1,15 +1,43 @@
-
+// backend/routes/checklists.js
+//
+// Caretaker-authored checklists. Caretakers know the job, so they create
+// and maintain these themselves rather than admin/manager writing them —
+// admin keeps read/write access too since everything else caretaker-facing
+// (calendar, schedule) is already reachable by admin (see App.jsx).
+//
+// A member can also *view* (read-only) these once they have an approved,
+// still-current booking — same rule as Marae Guide access, see
+// useArrivalAccess.js on the frontend and ArrivalAccessGate.jsx, which gates
+// the read-only /checklists route this powers. They can't create, edit or
+// delete anything — only the GET below is opened up to them.
 const express = require('express');
 const Checklist = require('../models/Checklist');
+const Booking = require('../models/Booking');
 const requireAuth = require('../middleware/requireAuth');
 const requireRole = require('../middleware/requireRole');
 
 const router = express.Router();
 
-router.use(requireAuth, requireRole('caretaker', 'admin'));
+router.use(requireAuth);
+
+async function hasActiveApprovedBooking(userId) {
+  const bookings = await Booking.findByUser(userId);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return bookings.some((b) => b.status === 'approved' && new Date(b.end_date) >= today);
+}
+
+async function canView(req) {
+  if (['caretaker', 'admin'].includes(req.user.role)) return true;
+  if (req.user.role !== 'member') return false;
+  return hasActiveApprovedBooking(req.user.id);
+}
 
 router.get('/', async (req, res) => {
   try {
+    if (!(await canView(req))) {
+      return res.status(403).json({ error: 'Not authorized to view checklists' });
+    }
     const checklists = await Checklist.findAll();
     res.json({ checklists });
   } catch (err) {
@@ -17,6 +45,12 @@ router.get('/', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch checklists' });
   }
 });
+
+// Everything from here on (creating, editing, deleting checklists and their
+// items) stays caretaker/admin only — a member can look, not touch. This
+// only applies to routes registered below it, so the GET / above (already
+// handled and responded to by this point) is unaffected.
+router.use(requireRole('caretaker', 'admin'));
 
 router.post('/', async (req, res) => {
   try {

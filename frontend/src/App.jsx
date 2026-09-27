@@ -34,12 +34,17 @@ import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
 import CaretakerDashboardPage from "./pages/caretaker/CaretakerDashboardPage.jsx";
 import ChecklistsPage from "./pages/caretaker/ChecklistsPage.jsx";
 import TutorialsPage from "./pages/caretaker/TutorialsPage.jsx";
+import CaretakerManageContentPage from "./pages/caretaker/CaretakerManageContentPage.jsx";
+import ManageTutorialsPage from "./pages/caretaker/ManageTutorialsPage.jsx";
 import ManagerDashboardPage from "./pages/manager/ManagerDashboardPage.jsx";
 import ManagerBookingsPage from "./pages/manager/ManagerBookingsPage.jsx";
+import ManagerNewBookingPage from "./pages/manager/ManagerNewBookingPage.jsx";
 import ManagerUsersPage from "./pages/manager/ManagerUsersPage.jsx";
 import ManagerIssuesPage from "./pages/manager/ManagerIssuesPage.jsx";
 
 import ContentLibraryPage from "./pages/ContentLibraryPage.jsx";
+import ChecklistsViewPage from "./pages/ChecklistsViewPage.jsx";
+import TutorialsViewPage from "./pages/TutorialsViewPage.jsx";
 import ReportIssuePage from "./pages/ReportIssuePage.jsx";
 import ContentManagementPage from "./pages/admin/ContentManagementPage.jsx";
 
@@ -137,6 +142,35 @@ function App() {
           />
           <Route path="/arrival/rules" element={<RulesPage />} />
 
+          {/* Read-only checklist view — same access rule as the arrival
+              guide itself (member with an active approved booking, or
+              caretaker/admin). Caretakers manage the real, editable version
+              at /caretaker/checklists; this is the "look, don't touch" one. */}
+          <Route
+            path="/checklists"
+            element={
+              <RoleRoute allowed={["member", "caretaker", "admin"]}>
+                <ArrivalAccessGate>
+                  <ChecklistsViewPage />
+                </ArrivalAccessGate>
+              </RoleRoute>
+            }
+          />
+
+          {/* Read-only tutorials view — same access rule as the checklist
+              view above and the arrival guide itself. Caretakers manage the
+              real, editable version at /caretaker/manage-tutorials. */}
+          <Route
+            path="/tutorials"
+            element={
+              <RoleRoute allowed={["member", "caretaker", "admin"]}>
+                <ArrivalAccessGate>
+                  <TutorialsViewPage />
+                </ArrivalAccessGate>
+              </RoleRoute>
+            }
+          />
+
           {/* Guest arrival access — no login required. Reached via the
               shareable link/QR code shown on a booking, for guests who
               aren't the account holder (see MyBookingsPage). Gated by the
@@ -196,6 +230,14 @@ function App() {
             }
           />
           <Route
+            path="/manager/bookings/new"
+            element={
+              <RoleRoute allowed={["manager"]}>
+                <ManagerNewBookingPage />
+              </RoleRoute>
+            }
+          />
+          <Route
             path="/manager/users"
             element={
               <RoleRoute allowed={["manager"]}>
@@ -226,6 +268,26 @@ function App() {
             element={
               <RoleRoute allowed={["caretaker", "admin"]}>
                 <ChecklistsPage />
+              </RoleRoute>
+            }
+          />
+          {/* "Manage Content" hub (see Navbar.jsx) and the caretaker's own
+              tutorial content manager, mirroring the admin Content Manager's
+              style but scoped to the caretaker-tutorials placement only
+              (enforced server-side too, see backend/routes/content.js). */}
+          <Route
+            path="/caretaker/manage-content"
+            element={
+              <RoleRoute allowed={["caretaker", "admin"]}>
+                <CaretakerManageContentPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/caretaker/manage-tutorials"
+            element={
+              <RoleRoute allowed={["caretaker", "admin"]}>
+                <ManageTutorialsPage />
               </RoleRoute>
             }
           />

@@ -17,6 +17,22 @@ services:
       - "4000:4000"
     env_file:
       - .env
+    volumes:
+      # Bind-mount the source so `node --watch` (package.json's "dev" script)
+      # actually picks up code changes without a rebuild — this was missing
+      # before, so every backend edit silently needed `docker compose up
+      # --build` to take effect. The anonymous /app/node_modules volume
+      # (same trick the frontend service already uses) keeps the
+      # container's own Linux-built node_modules instead of whatever's on
+      # the host, and also means a NEW dependency (e.g. the multer package
+      # this adds) is only installed after rebuilding the image at least
+      # once — see the multer note in package.json.
+      - ./backend:/app
+      - /app/node_modules
+      # Uploaded content images (backend/uploads/, from the new content
+      # image-upload feature) live on the host through this same bind
+      # mount, so they survive a container restart/rebuild instead of
+      # being lost with the container's writable layer.
     working_dir: /app
     command: npm run dev
     depends_on:

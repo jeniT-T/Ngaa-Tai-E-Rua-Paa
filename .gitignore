@@ -25,3 +25,9 @@ pgdata/
 postgres-data/
 *.pgdump
 *.sql.gz
+
+# Admin-uploaded content images (backend/routes/content.js POST /upload) —
+# user-generated, not source; keep the folder in git via .gitkeep but not
+# its contents.
+backend/uploads/*
+!backend/uploads/.gitkeep

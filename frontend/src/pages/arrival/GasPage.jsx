@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import usePageContent from "../../hooks/usePageContent.js";
+import ContentImage from "../../components/ContentImage.jsx";
 
 const DEFAULT_SECTIONS = [
   { title: "Step 1: Locate the Gas Valve", body: "The gas valve is located outside near the kitchen area." },
@@ -30,6 +31,8 @@ export default function GasPage() {
         }}>
           {heading ? heading.title : "How to Turn On the Gas"}
         </h1>
+
+        {heading && <ContentImage item={heading} />}
 
         <p style={{
           fontSize: "1.05rem",
@@ -77,6 +80,9 @@ export default function GasPage() {
                 }}>
                   {item.title}
                 </h2>
+              </div>
+              <div style={{ margin: "0 0 0 48px" }}>
+                <ContentImage item={item} />
               </div>
               <p style={{
                 color: "var(--text-secondary)",

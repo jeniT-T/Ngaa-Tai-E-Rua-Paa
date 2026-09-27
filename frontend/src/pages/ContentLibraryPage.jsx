@@ -1,11 +1,14 @@
-// frontend/src/pages/ContentLibraryPage.jsx
+
 import { useState, useEffect } from "react";
+import RecipeStepGallery from "../components/RecipeStepGallery.jsx";
+import ContentImage from "../components/ContentImage.jsx";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
 
-// Friendly labels for the categories Iteration 3 asks for.
-// Admins can still add other categories through the CMS — anything not in
-// this list just falls back to showing its raw category value as the heading.
+
+const TITLES_WITH_STEP_IMAGES = new Set(["Combi Oven: Scrambled Eggs"]);
+
+
 const CATEGORY_LABELS = {
   recipe: "Cooking Recipes",
   onboarding: "Onboarding",
@@ -126,8 +129,10 @@ export default function ContentLibraryPage() {
             <ul className="space-y-3">
               {categoryItems.map((item) => (
                 <li key={item.id} className="border rounded p-4">
+                  <ContentImage item={item} />
                   <h3 className="font-medium mb-1">{item.title}</h3>
                   <p className="text-sm text-gray-700 whitespace-pre-line">{item.body}</p>
+                  {TITLES_WITH_STEP_IMAGES.has(item.title) && <RecipeStepGallery />}
                 </li>
               ))}
             </ul>
