@@ -316,7 +316,7 @@ export default function ManageTutorialsPage() {
               <p className="text-xs text-red-600 mt-1">That doesn't look like a valid YouTube URL yet.</p>
             )}
             {getYoutubeEmbedUrl(form.videoUrl) && (
-              <div className="mt-2" style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: "6px", overflow: "hidden" }}>
+              <div className="mt-2" style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: "var(--radius-panel)", overflow: "hidden" }}>
                 <iframe
                   src={getYoutubeEmbedUrl(form.videoUrl)}
                   title="Video preview"
@@ -332,7 +332,7 @@ export default function ManageTutorialsPage() {
             <button
               type="submit"
               disabled={saving || uploadingImage}
-              className="bg-black text-white rounded px-4 py-2 disabled:opacity-50"
+              className="btn btn-primary btn-action"
             >
               {saving ? "Saving..." : editingId ? "Save changes" : "Add tutorial"}
             </button>

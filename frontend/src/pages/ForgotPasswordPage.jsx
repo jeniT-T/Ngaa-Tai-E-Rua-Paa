@@ -27,11 +27,11 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-16">
-      <div className="card" style={{ maxWidth: '420px', width: '100%' }}>
+      <div className="card auth-card" style={{ maxWidth: '420px', width: '100%' }}>
         <h1 style={{ marginBottom: '2rem', fontSize: '1.75rem' }}>Reset Password</h1>
 
         {sent ? (
-          <div style={{ padding: '1rem', backgroundColor: 'rgba(52, 211, 153, 0.1)', color: '#047857', borderRadius: 'var(--radius-md)', border: '1px solid rgba(52, 211, 153, 0.3)' }}>
+          <div style={{ padding: '1rem', backgroundColor: '#ebfbf5', color: '#047857', borderRadius: "var(--radius-panel)", border: '1px solid rgba(52, 211, 153, 0.3)' }}>
             <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5' }}>
               If an account exists for that email, a reset link has been sent. Check your inbox
               (and spam folder) and follow the link to set a new password.
@@ -55,7 +55,7 @@ export default function ForgotPasswordPage() {
             </div>
 
             {error && (
-              <div style={{ padding: '0.75rem 1rem', backgroundColor: 'rgba(255, 59, 48, 0.1)', color: '#FF3B30', borderRadius: 'var(--radius-md)', fontSize: '0.9rem' }}>
+              <div style={{ padding: '0.75rem 1rem', backgroundColor: '#ffebea', color: '#FF3B30', borderRadius: "var(--radius-panel)", fontSize: '0.9rem' }}>
                 {error}
               </div>
             )}
@@ -64,7 +64,7 @@ export default function ForgotPasswordPage() {
               type="submit"
               disabled={submitting}
               className="btn btn-primary"
-              style={{ width: '100%', opacity: submitting ? '0.6' : '1', cursor: submitting ? 'not-allowed' : 'pointer' }}
+              style={{ width: '100%', cursor: submitting ? 'not-allowed' : 'pointer' }}
             >
               {submitting ? "Sending..." : "Send Reset Link"}
             </button>

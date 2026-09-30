@@ -258,7 +258,7 @@ function WeekView({ weekDates, selectedDate, isCompleted, toggleTask, onSelectDa
                     <button
                       key={task.id}
                       onClick={() => toggleTask(task)}
-                      className={`w-full text-left text-[11px] sm:text-xs lg:text-sm px-2 py-1 lg:px-3 lg:py-1.5 rounded border-l-2 ${CATEGORY_STYLES[task.category]} ${completed ? 'opacity-50 line-through' : ''} ${overdue ? 'ring-1 ring-red-500' : ''}`}
+                      className={`w-full text-left text-[11px] sm:text-xs lg:text-sm px-2 py-1 lg:px-3 lg:py-1.5 rounded border-l-2 ${CATEGORY_STYLES[task.category]} ${completed ? 'text-gray-500 line-through' : ''} ${overdue ? 'ring-1 ring-red-500' : ''}`}
                     >
                       {task.title}
                     </button>
@@ -407,7 +407,7 @@ export default function SchedulePage() {
                       key={task.id}
                       onClick={() => toggleTask(task)}
                       style={{ top: (task.time - HOURS[0]) * rowHeight, height: task.duration * rowHeight - 4 }}
-                      className={`absolute left-2 right-2 flex items-center justify-between text-left border-l-4 rounded-md px-2 sm:px-3 text-sm sm:text-base ${CATEGORY_STYLES[task.category]} ${completed ? 'opacity-50' : ''} ${overdue ? 'ring-2 ring-red-500' : ''}`}
+                      className={`absolute left-2 right-2 flex items-center justify-between text-left border-l-4 rounded-md px-2 sm:px-3 text-sm sm:text-base ${CATEGORY_STYLES[task.category]} ${completed ? 'text-gray-500 line-through' : ''} ${overdue ? 'ring-2 ring-red-500' : ''}`}
                     >
                       <span className={`font-medium ${completed ? 'line-through' : ''}`}>{task.title}</span>
                       <span className="text-xs sm:text-sm font-medium leading-none">

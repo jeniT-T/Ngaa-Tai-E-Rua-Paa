@@ -62,7 +62,7 @@ export default function TutorialsPage() {
                       paddingBottom: "56.25%",
                       height: 0,
                       marginTop: "16px",
-                      borderRadius: "10px",
+                      borderRadius: "var(--radius-panel)",
                       overflow: "hidden",
                     }}
                   >

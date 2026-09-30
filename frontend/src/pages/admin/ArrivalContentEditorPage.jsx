@@ -186,13 +186,13 @@ export default function ArrivalContentEditorPage() {
         <div style={{ display: "flex", gap: "8px" }}>
           <Link
             to="/admin/content"
-            style={{ display: "inline-block", padding: "10px 16px", background: "#eee", color: "#2c3e50", borderRadius: "4px", textDecoration: "none", fontWeight: "500", fontSize: "0.95rem", whiteSpace: "nowrap" }}
+            style={{ display: "inline-block", padding: "10px 16px", background: "#eee", color: "#2c3e50", borderRadius: "var(--radius-control)", textDecoration: "none", fontWeight: "500", fontSize: "0.95rem", whiteSpace: "nowrap" }}
           >
             ← Content Manager
           </Link>
           <Link
             to="/arrival"
-            style={{ display: "inline-block", padding: "10px 16px", background: "#d4af37", color: "#2c3e50", borderRadius: "4px", textDecoration: "none", fontWeight: "500", fontSize: "0.95rem", whiteSpace: "nowrap" }}
+            style={{ display: "inline-block", padding: "10px 16px", background: "#d4af37", color: "#2c3e50", borderRadius: "var(--radius-control)", textDecoration: "none", fontWeight: "500", fontSize: "0.95rem", whiteSpace: "nowrap" }}
           >
             View live page →
           </Link>
@@ -203,7 +203,7 @@ export default function ArrivalContentEditorPage() {
       </p>
 
       {error && (
-        <div style={{ background: "#fdecea", color: "#d32f2f", padding: "10px 14px", borderRadius: "4px", marginBottom: "16px", fontSize: "0.9rem" }}>
+        <div style={{ background: "#fdecea", color: "#d32f2f", padding: "10px 14px", borderRadius: "var(--radius-panel)", marginBottom: "16px", fontSize: "0.9rem" }}>
           {error}
         </div>
       )}
@@ -211,7 +211,7 @@ export default function ArrivalContentEditorPage() {
       {/* Page heading / intro */}
       <form
         onSubmit={handleHeadingSubmit}
-        style={{ background: "#fafafa", padding: "20px", borderRadius: "6px", border: "1px solid #ddd", marginBottom: "32px" }}
+        style={{ background: "#fafafa", padding: "20px", borderRadius: "var(--radius-panel)", border: "1px solid #ddd", marginBottom: "32px" }}
       >
         <h2 style={{ marginTop: 0, fontSize: "1.05rem", color: "#2c3e50" }}>Page title &amp; intro text</h2>
         <label style={{ display: "block", marginBottom: "12px" }}>
@@ -221,7 +221,7 @@ export default function ArrivalContentEditorPage() {
             value={heading.title}
             onChange={(e) => setHeading((prev) => ({ ...prev, title: e.target.value }))}
             placeholder="Marae Facilities & Operations Guide"
-            style={{ width: "100%", padding: "10px 12px", borderRadius: "4px", border: "1px solid #ccc", fontSize: "0.95rem" }}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "var(--radius-control)", border: "1px solid #ccc", fontSize: "0.95rem" }}
           />
         </label>
         <label style={{ display: "block", marginBottom: "12px" }}>
@@ -231,13 +231,13 @@ export default function ArrivalContentEditorPage() {
             value={heading.body}
             onChange={(e) => setHeading((prev) => ({ ...prev, body: e.target.value }))}
             placeholder="Please follow these guidelines to ensure proper use of all marae facilities."
-            style={{ width: "100%", padding: "10px 12px", borderRadius: "4px", border: "1px solid #ccc", fontSize: "0.95rem", fontFamily: "sans-serif", resize: "vertical" }}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: "var(--radius-control)", border: "1px solid #ccc", fontSize: "0.95rem", fontFamily: "sans-serif", resize: "vertical" }}
           />
         </label>
         <button
           type="submit"
           disabled={savingHeading}
-          style={{ padding: "8px 16px", background: savingHeading ? "#999" : "#2c3e50", color: "#fff", border: "none", borderRadius: "4px", cursor: savingHeading ? "not-allowed" : "pointer", fontWeight: "500", fontSize: "0.9rem" }}
+          style={{ padding: "8px 16px", background: savingHeading ? "#999" : "#2c3e50", color: "#fff", border: "none", borderRadius: "var(--radius-control)", cursor: savingHeading ? "not-allowed" : "pointer", fontWeight: "500", fontSize: "0.9rem" }}
         >
           {savingHeading ? "Saving..." : "Save title & intro"}
         </button>
@@ -255,7 +255,7 @@ export default function ArrivalContentEditorPage() {
               background: "#2c3e50",
               color: "#fff",
               border: "none",
-              borderRadius: "4px",
+              borderRadius: "var(--radius-control)",
               cursor: "pointer",
               fontWeight: "500",
               fontSize: "0.95rem",
@@ -282,9 +282,9 @@ export default function ArrivalContentEditorPage() {
                           alignItems: "center",
                           padding: "8px 12px",
                           marginBottom: "6px",
-                          borderRadius: "4px",
+                          borderRadius: "var(--radius-panel)",
                           border: `1px solid ${item.color || "#2c3e50"}30`,
-                          background: form.id === item.id ? `${item.color || "#2c3e50"}15` : "#fff",
+                          background: form.id === item.id ? `color-mix(in srgb, ${item.color || "#2c3e50"} 8%, white)` : "#fff",
                         }}
                       >
                         <button
@@ -315,7 +315,7 @@ export default function ArrivalContentEditorPage() {
 
         {/* Edit form */}
         <div style={{ flex: "2", minWidth: "320px" }}>
-          <form onSubmit={handleSubmit} style={{ background: "#fafafa", padding: "24px", borderRadius: "6px", border: "1px solid #ddd" }}>
+          <form onSubmit={handleSubmit} style={{ background: "#fafafa", padding: "24px", borderRadius: "var(--radius-panel)", border: "1px solid #ddd" }}>
             <h2 style={{ marginTop: 0, fontSize: "1.2rem", color: "#2c3e50" }}>{isNew ? "New Item" : `Editing: ${form.title}`}</h2>
 
             <label style={{ display: "block", marginBottom: "12px" }}>
@@ -326,7 +326,7 @@ export default function ArrivalContentEditorPage() {
                 value={form.title}
                 onChange={(e) => handleChange("title", e.target.value)}
                 placeholder="e.g. Airconditioning"
-                style={{ width: "100%", padding: "10px 12px", borderRadius: "4px", border: "1px solid #ccc", fontSize: "0.95rem" }}
+                style={{ width: "100%", padding: "10px 12px", borderRadius: "var(--radius-control)", border: "1px solid #ccc", fontSize: "0.95rem" }}
               />
             </label>
 
@@ -335,7 +335,7 @@ export default function ArrivalContentEditorPage() {
               <select
                 value={form.groupKey}
                 onChange={(e) => handleChange("groupKey", e.target.value)}
-                style={{ width: "100%", padding: "10px 12px", borderRadius: "4px", border: "1px solid #ccc", fontSize: "0.95rem" }}
+                style={{ width: "100%", padding: "10px 12px", borderRadius: "var(--radius-control)", border: "1px solid #ccc", fontSize: "0.95rem" }}
               >
                 {GROUP_OPTIONS.map((group) => (
                   <option key={group.value} value={group.value}>
@@ -351,7 +351,7 @@ export default function ArrivalContentEditorPage() {
                 type="color"
                 value={form.color}
                 onChange={(e) => handleChange("color", e.target.value)}
-                style={{ width: "60px", height: "36px", padding: "0", border: "1px solid #ccc", borderRadius: "4px", cursor: "pointer" }}
+                style={{ width: "60px", height: "36px", padding: "0", border: "1px solid #ccc", borderRadius: "var(--radius-control)", cursor: "pointer" }}
               />
             </label>
 
@@ -363,7 +363,7 @@ export default function ArrivalContentEditorPage() {
                 value={form.body}
                 onChange={(e) => handleChange("body", e.target.value)}
                 placeholder="Describe the item. Use a blank line to start a new paragraph, and lines starting with • for a list."
-                style={{ width: "100%", padding: "10px 12px", borderRadius: "4px", border: "1px solid #ccc", fontSize: "0.95rem", fontFamily: "sans-serif", resize: "vertical" }}
+                style={{ width: "100%", padding: "10px 12px", borderRadius: "var(--radius-control)", border: "1px solid #ccc", fontSize: "0.95rem", fontFamily: "sans-serif", resize: "vertical" }}
               />
             </label>
 
@@ -374,7 +374,7 @@ export default function ArrivalContentEditorPage() {
                 value={form.youtubeUrl}
                 onChange={(e) => handleChange("youtubeUrl", e.target.value)}
                 placeholder="https://www.youtube.com/watch?v=..."
-                style={{ width: "100%", padding: "10px 12px", borderRadius: "4px", border: "1px solid #ccc", fontSize: "0.95rem" }}
+                style={{ width: "100%", padding: "10px 12px", borderRadius: "var(--radius-control)", border: "1px solid #ccc", fontSize: "0.95rem" }}
               />
             </label>
             {form.youtubeUrl && !embedPreview && (
@@ -385,7 +385,7 @@ export default function ArrivalContentEditorPage() {
             {embedPreview && (
               <div style={{ marginBottom: "16px" }}>
                 <span style={{ display: "block", fontSize: "0.85rem", color: "#555", marginBottom: "4px" }}>Preview</span>
-                <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: "6px", overflow: "hidden" }}>
+                <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: "var(--radius-panel)", overflow: "hidden" }}>
                   <iframe
                     src={embedPreview}
                     title="Video preview"
@@ -406,7 +406,7 @@ export default function ArrivalContentEditorPage() {
                   background: saving ? "#999" : "#2c3e50",
                   color: "#fff",
                   border: "none",
-                  borderRadius: "4px",
+                  borderRadius: "var(--radius-control)",
                   cursor: saving ? "not-allowed" : "pointer",
                   fontWeight: "500",
                   fontSize: "0.95rem",
@@ -415,7 +415,7 @@ export default function ArrivalContentEditorPage() {
                 {saving ? "Saving..." : isNew ? "Create Item" : "Save Changes"}
               </button>
               {!isNew && (
-                <button type="button" onClick={startNewItem} style={{ padding: "10px 20px", background: "#fff", color: "#2c3e50", border: "1px solid #ccc", borderRadius: "4px", cursor: "pointer", fontWeight: "500", fontSize: "0.95rem" }}>
+                <button type="button" onClick={startNewItem} style={{ padding: "10px 20px", background: "#fff", color: "#2c3e50", border: "1px solid #ccc", borderRadius: "var(--radius-control)", cursor: "pointer", fontWeight: "500", fontSize: "0.95rem" }}>
                   Cancel
                 </button>
               )}

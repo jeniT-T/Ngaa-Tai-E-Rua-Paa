@@ -69,7 +69,7 @@ function NewChecklistForm({ onCreated }) {
       <button
         type="submit"
         disabled={saving}
-        className="bg-black text-white rounded px-4 py-2 disabled:opacity-50"
+        className="btn btn-primary btn-action"
       >
         {saving ? 'Creating...' : 'Create checklist'}
       </button>
@@ -114,7 +114,7 @@ function AddItemRow({ checklistId, onAdded }) {
       <button
         type="submit"
         disabled={saving}
-        className="text-sm border rounded px-3 py-1.5 disabled:opacity-50"
+        className="btn btn-primary btn-action"
       >
         Add
       </button>
@@ -189,7 +189,7 @@ function ChecklistCard({ checklist, onChange }) {
             className="w-full border rounded px-3 py-2 text-sm"
           />
           <div className="flex gap-2">
-            <button type="submit" className="text-sm bg-black text-white rounded px-3 py-1.5">
+            <button type="submit" className="btn btn-primary btn-action">
               Save
             </button>
             <button

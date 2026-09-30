@@ -19,7 +19,7 @@ export default function EmergencyPage() {
         maxWidth: "800px",
         margin: "0 auto",
         background: "var(--bg-primary)",
-        borderRadius: "var(--radius-xl)",
+        borderRadius: "var(--radius-panel)",
         boxShadow: "var(--shadow-lg)",
         padding: "40px",
         borderTop: "4px solid #DC2626",
@@ -53,7 +53,7 @@ export default function EmergencyPage() {
               key={item.title}
               style={{
                 padding: "20px",
-                borderRadius: "var(--radius-lg)",
+                borderRadius: "var(--radius-panel)",
                 border: item.title === "Important" ? "2px solid #DC2626" : "1px solid var(--border-light)",
                 background: item.title === "Important" ? "rgba(220, 38, 38, 0.05)" : "var(--bg-secondary)",
               }}
@@ -86,7 +86,7 @@ export default function EmergencyPage() {
           backgroundColor: "#DC2626",
           color: "white",
           textDecoration: "none",
-          borderRadius: "var(--radius-lg)",
+          borderRadius: "var(--radius-control)",
           fontWeight: "600",
           transition: "all 0.2s ease",
         }}

@@ -19,7 +19,7 @@ export default function GasPage() {
         maxWidth: "800px",
         margin: "0 auto",
         background: "var(--bg-primary)",
-        borderRadius: "var(--radius-xl)",
+        borderRadius: "var(--radius-panel)",
         boxShadow: "var(--shadow-lg)",
         padding: "40px",
       }}>
@@ -103,7 +103,7 @@ export default function GasPage() {
           backgroundColor: "var(--primary)",
           color: "white",
           textDecoration: "none",
-          borderRadius: "var(--radius-lg)",
+          borderRadius: "var(--radius-control)",
           fontWeight: "600",
           transition: "all 0.2s ease",
         }}

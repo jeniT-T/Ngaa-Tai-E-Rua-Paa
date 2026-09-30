@@ -23,7 +23,7 @@ function ContactPage() {
 
       <div style={{ display: "grid", gap: "20px", marginBottom: "24px" }}>
         {contacts.map((c) => (
-          <div key={c.title} style={{ padding: "20px", border: "1px solid #ddd", borderRadius: "12px" }}>
+          <div key={c.title} style={{ background: "var(--bg-primary)", padding: "20px", border: "1px solid #ddd", borderRadius: "var(--radius-panel)" }}>
             {c.image_url && <ContentImage item={c} />}
             <h2 style={{ margin: "0 0 8px" }}>{c.title}</h2>
             <p style={{ margin: 0, whiteSpace: "pre-line" }}>{c.body}</p>
@@ -36,7 +36,7 @@ function ContactPage() {
         style={{
           display: "inline-block",
           padding: "12px 20px",
-          borderRadius: "10px",
+          borderRadius: "var(--radius-control)",
           border: "2px solid #0081bd",
           color: "#0081bd",
           fontWeight: 600,

@@ -235,8 +235,9 @@ export default function ArrivalGuideView() {
 
     return (
       <div style={{
+        background: "var(--bg-primary)",
         marginBottom: "12px",
-        borderRadius: "var(--radius-md)",
+        borderRadius: "var(--radius-panel)",
         border: `1px solid ${categoryInfo.color}30`,
         overflow: "hidden",
         boxShadow: "var(--shadow-sm)",
@@ -247,7 +248,7 @@ export default function ArrivalGuideView() {
           style={{
             width: "100%",
             padding: "14px 16px",
-            background: `${categoryInfo.color}10`,
+            background: `color-mix(in srgb, ${categoryInfo.color} 6%, white)`,
             borderLeft: `4px solid ${categoryInfo.color}`,
             border: "none",
             textAlign: "left",
@@ -261,10 +262,10 @@ export default function ArrivalGuideView() {
             transition: "all 0.2s ease",
           }}
           onMouseEnter={(e) => {
-            e.target.style.background = `${categoryInfo.color}18`;
+            e.target.style.background = `color-mix(in srgb, ${categoryInfo.color} 9%, white)`;
           }}
           onMouseLeave={(e) => {
-            e.target.style.background = `${categoryInfo.color}10`;
+            e.target.style.background = `color-mix(in srgb, ${categoryInfo.color} 6%, white)`;
           }}
         >
           <span>{title}</span>
@@ -302,7 +303,7 @@ export default function ArrivalGuideView() {
                 paddingBottom: "56.25%",
                 height: 0,
                 marginTop: "16px",
-                borderRadius: "var(--radius-md)",
+                borderRadius: "var(--radius-panel)",
                 overflow: "hidden",
               }}>
                 <iframe
@@ -332,8 +333,9 @@ export default function ArrivalGuideView() {
 
     return (
       <div style={{
+        background: "var(--bg-primary)",
         marginBottom: "32px",
-        borderRadius: "var(--radius-lg)",
+        borderRadius: "var(--radius-panel)",
         border: `2px solid ${color}`,
         overflow: "hidden",
         boxShadow: "var(--shadow-sm)",
@@ -343,7 +345,7 @@ export default function ArrivalGuideView() {
           style={{
             width: "100%",
             padding: "18px 20px",
-            background: `${color}12`,
+            background: `color-mix(in srgb, ${color} 7%, white)`,
             border: "none",
             textAlign: "left",
             cursor: "pointer",
@@ -356,10 +358,10 @@ export default function ArrivalGuideView() {
             transition: "all 0.2s ease",
           }}
           onMouseEnter={(e) => {
-            e.target.style.background = `${color}1A`;
+            e.target.style.background = `color-mix(in srgb, ${color} 10%, white)`;
           }}
           onMouseLeave={(e) => {
-            e.target.style.background = `${color}12`;
+            e.target.style.background = `color-mix(in srgb, ${color} 7%, white)`;
           }}
         >
           <div>
@@ -439,7 +441,7 @@ export default function ArrivalGuideView() {
           marginBottom: "32px",
           padding: "20px",
           background: "var(--bg-tertiary)",
-          borderRadius: "var(--radius-lg)",
+          borderRadius: "var(--radius-panel)",
           border: "1px solid var(--border-light)",
         }}>
           <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "4px", color: "var(--text-primary)" }}>
@@ -450,18 +452,19 @@ export default function ArrivalGuideView() {
             checklist covers.
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "flex-start" }}>
-            <GuestAccessShare token={activeBooking.guest_access_token} />
+            <GuestAccessShare
+              token={activeBooking.guest_access_token}
+              buttonClassName="btn btn-outline guide-action"
+            />
             <Link
               to="/checklists"
-              className="btn btn-outline"
-              style={{ padding: "8px 14px", fontSize: "0.85rem" }}
+              className="btn btn-outline guide-action"
             >
               View Opening &amp; Closing Checklist
             </Link>
             <Link
               to="/tutorials"
-              className="btn btn-outline"
-              style={{ padding: "8px 14px", fontSize: "0.85rem" }}
+              className="btn btn-outline guide-action"
             >
               View Tutorials
             </Link>
@@ -493,7 +496,7 @@ export default function ArrivalGuideView() {
               padding: "12px 44px 12px 20px",
               fontSize: "1rem",
               border: "2px solid var(--primary)",
-              borderRadius: "var(--radius-full)",
+              borderRadius: "var(--radius-control)",
               fontFamily: "var(--sans)",
               outline: "none",
               background: "var(--bg-primary)",
@@ -569,7 +572,7 @@ export default function ArrivalGuideView() {
               background: "var(--primary)",
               color: "white",
               border: "none",
-              borderRadius: "var(--radius-lg)",
+              borderRadius: "var(--radius-control)",
               cursor: "pointer",
               fontWeight: "600",
               transition: "all 0.2s ease",
@@ -603,7 +606,7 @@ export default function ArrivalGuideView() {
         marginTop: "48px",
         padding: "20px",
         background: "var(--bg-secondary)",
-        borderRadius: "var(--radius-lg)",
+        borderRadius: "var(--radius-panel)",
         border: "1px solid var(--border-light)",
         textAlign: "center",
       }}>

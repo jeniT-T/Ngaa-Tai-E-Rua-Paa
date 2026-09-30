@@ -31,7 +31,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-16">
-      <div className="card" style={{ maxWidth: '420px', width: '100%' }}>
+      <div className="card auth-card" style={{ maxWidth: '420px', width: '100%' }}>
         <h1 style={{ marginBottom: '2rem', fontSize: '1.75rem' }}>Log in</h1>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -71,7 +71,7 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div style={{ padding: '0.75rem 1rem', backgroundColor: 'rgba(255, 59, 48, 0.1)', color: '#FF3B30', borderRadius: 'var(--radius-md)', fontSize: '0.9rem' }}>
+            <div style={{ padding: '0.75rem 1rem', backgroundColor: '#ffebea', color: '#FF3B30', borderRadius: "var(--radius-panel)", fontSize: '0.9rem' }}>
               {error}
             </div>
           )}
@@ -80,7 +80,7 @@ export default function LoginPage() {
             type="submit"
             disabled={submitting}
             className="btn btn-primary"
-            style={{ width: '100%', opacity: submitting ? '0.6' : '1', cursor: submitting ? 'not-allowed' : 'pointer' }}
+            style={{ width: '100%', cursor: submitting ? 'not-allowed' : 'pointer' }}
           >
             {submitting ? 'Logging in...' : 'Log in'}
           </button>

@@ -12,22 +12,12 @@ button {
   cursor: pointer;
 }
 
-/* background image for caretaker page */
-:root {
-  --caretaker-page-background-image: url("../../image/Background_Caretaker.jpg");
-}
-
 .caretaker-calendar-page {
   min-height: 100vh;
 
   padding: 24px;
 
-  background-image:
-    linear-gradient(rgba(248, 249, 251, 0.10), rgba(248, 249, 251, 0.10)),
-    var(--caretaker-page-background-image);
-  background-position: center;
-  background-size: cover;
-  background-attachment: fixed;
+  background: transparent;
 
   color: #111827;
 }
@@ -56,7 +46,7 @@ button {
   border:
     1px solid #e5e7eb;
 
-  border-radius: 18px;
+  border-radius: var(--radius-panel);
 
   box-shadow:
     0 2px 8px
@@ -104,7 +94,7 @@ button {
   border: none;
 
   background:
-    transparent;
+    var(--bg-primary);
 
   color: #6366f1;
 
@@ -137,11 +127,10 @@ button {
 
   border: none;
 
-  border-radius:
-    8px;
+  border-radius: var(--radius-control);
 
   background:
-    transparent;
+    var(--bg-primary);
 
   color: #6b7280;
 }
@@ -201,10 +190,10 @@ button {
   border:
     2px solid transparent;
 
-  border-radius: 14px;
+  border-radius: var(--radius-control);
 
   background:
-    transparent;
+    var(--bg-primary);
 
   color: #111827;
 
@@ -313,7 +302,7 @@ button {
 
   border: none;
 
-  border-radius: 16px;
+  border-radius: var(--radius-control);
 
   background:
     #6366f1;
@@ -401,8 +390,7 @@ button {
   border:
     1px solid;
 
-  border-radius:
-    15px;
+  border-radius: var(--radius-panel);
 
   transition:
     0.15s ease;
@@ -432,7 +420,7 @@ button {
   border: none;
 
   background:
-    transparent;
+    var(--bg-primary);
 
   color: inherit;
 
@@ -501,7 +489,8 @@ button {
 /* COMPLETED TASK */
 
 .task-completed {
-  opacity: 0.68;
+  opacity: 1;
+  color: #6b7280;
 
   background:
     #f9fafb !important;
@@ -543,16 +532,10 @@ button {
   padding:
     15px;
 
-  border-radius:
-    10px;
+  border-radius: var(--radius-panel);
 
   background:
-    rgba(
-      255,
-      255,
-      255,
-      0.7
-    );
+    #ffffff;
 }
 
 .task-notes strong {
@@ -647,8 +630,7 @@ strong {
   padding:
     8px 13px;
 
-  border-radius:
-    8px;
+  border-radius: var(--radius-control);
 
   font-size:
     13px;
@@ -718,7 +700,8 @@ strong {
 
 .task-actions
 button:disabled {
-  opacity: 0.4;
+  opacity: 1;
+  color: #6b7280;
 
   cursor:
     not-allowed;
@@ -777,8 +760,7 @@ button:disabled:hover {
   padding:
     25px;
 
-  border-radius:
-    18px;
+  border-radius: var(--radius-panel);
 
   background:
     white;
@@ -831,11 +813,10 @@ button:disabled:hover {
 
   border: none;
 
-  border-radius:
-    8px;
+  border-radius: var(--radius-panel);
 
   background:
-    transparent;
+    var(--bg-primary);
 
   color:
     #6b7280;
@@ -882,8 +863,7 @@ button:disabled:hover {
     1px solid
     #d1d5db;
 
-  border-radius:
-    9px;
+  border-radius: var(--radius-control);
 
   background:
     white;
@@ -944,8 +924,7 @@ textarea:focus {
   padding:
     10px 12px;
 
-  border-radius:
-    8px;
+  border-radius: var(--radius-panel);
 
   background:
     #f9fafb;
@@ -985,8 +964,7 @@ textarea:focus {
     1px solid
     #e5e7eb;
 
-  border-radius:
-    8px;
+  border-radius: var(--radius-control);
 
   background:
     white;
@@ -1043,8 +1021,7 @@ textarea:focus {
   padding:
     9px 11px;
 
-  border-radius:
-    7px;
+  border-radius: var(--radius-panel);
 
   background:
     #fef2f2;
@@ -1074,8 +1051,7 @@ textarea:focus {
   padding:
     10px 16px;
 
-  border-radius:
-    9px;
+  border-radius: var(--radius-control);
 
   font-weight:
     600;
@@ -1157,8 +1133,7 @@ textarea:focus {
   padding:
     30px;
 
-  border-radius:
-    18px;
+  border-radius: var(--radius-panel);
 
   background:
     white;
@@ -1264,8 +1239,7 @@ button {
   padding:
     10px 16px;
 
-  border-radius:
-    9px;
+  border-radius: var(--radius-control);
 
   font-size:
     14px;
@@ -1368,8 +1342,7 @@ button {
   .tasks-panel {
     padding: 16px;
 
-    border-radius:
-      13px;
+    border-radius: var(--radius-panel);
   }
 
   .calendar-header h2,
@@ -1382,8 +1355,7 @@ button {
     height:
       48px;
 
-    border-radius:
-      10px;
+    border-radius: var(--radius-control);
 
     font-size:
       14px;

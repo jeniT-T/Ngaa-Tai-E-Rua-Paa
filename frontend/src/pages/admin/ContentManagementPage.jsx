@@ -465,7 +465,7 @@ export default function ContentManagementPage() {
               <p className="text-xs text-red-600 mt-1">That doesn't look like a valid YouTube URL yet.</p>
             )}
             {getYoutubeEmbedUrl(form.videoUrl) && (
-              <div className="mt-2" style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: "6px", overflow: "hidden" }}>
+              <div className="mt-2" style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: "var(--radius-panel)", overflow: "hidden" }}>
                 <iframe
                   src={getYoutubeEmbedUrl(form.videoUrl)}
                   title="Video preview"
@@ -497,7 +497,7 @@ export default function ContentManagementPage() {
             <button
               type="submit"
               disabled={saving || uploadingImage}
-              className="bg-black text-white rounded px-4 py-2 disabled:opacity-50"
+              className="btn btn-primary btn-action"
             >
               {saving ? "Saving..." : editingId ? "Save changes" : "Add item"}
             </button>
@@ -513,7 +513,7 @@ export default function ContentManagementPage() {
       <section className="mb-10">
         <h2 className="text-lg font-medium mb-1">Pages</h2>
         <p className="text-sm text-gray-500 mb-4">
-          Every public page, grouped by what's currently on it. A page with nothing listed is
+          Select a page heading to expand or collapse its content. A page with nothing listed is
           still showing its built-in placeholder copy — add a heading or section above (pick this
           page under "Show on public page") to replace it.
         </p>
@@ -524,13 +524,14 @@ export default function ContentManagementPage() {
             {PAGE_GROUPS.map((page) => {
               const pageItems = items.filter((i) => i.placement === page.value);
               return (
-                <div key={page.value} className="border rounded p-4">
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="font-medium">{page.label}</h3>
-                    <span className="text-xs px-2 py-1 rounded bg-gray-100">
+                <details key={page.value} className="content-page-group">
+                  <summary className="content-page-summary">
+                    <span className="content-page-title">{page.label}</span>
+                    <span className="content-page-count">
                       {pageItems.length} {pageItems.length === 1 ? "item" : "items"}
                     </span>
-                  </div>
+                  </summary>
+                  <div className="content-page-items">
                   {pageItems.length === 0 ? (
                     <p className="text-sm text-gray-400 italic">
                       Nothing here yet — this page is showing its placeholder text.
@@ -554,15 +555,22 @@ export default function ContentManagementPage() {
                       ))}
                     </ul>
                   )}
-                </div>
+                  </div>
+                </details>
               );
             })}
           </div>
         )}
       </section>
 
-      <section>
-        <h2 className="text-lg font-medium mb-1">Content Library</h2>
+      <details className="content-page-group">
+        <summary className="content-page-summary">
+          <span className="content-page-title">Content Library</span>
+          <span className="content-page-count">
+            {loading ? "Loading..." : `${libraryItems.length} ${libraryItems.length === 1 ? "item" : "items"}`}
+          </span>
+        </summary>
+        <div className="content-page-items">
         <p className="text-sm text-gray-500 mb-4">
           Items not tied to a public page — visible only to logged-in users whose role is checked
           under "Visible to" (recipes, onboarding guides, equipment instructions, and so on).
@@ -588,7 +596,8 @@ export default function ContentManagementPage() {
             ))}
           </ul>
         )}
-      </section>
+        </div>
+      </details>
     </div>
   );
 }

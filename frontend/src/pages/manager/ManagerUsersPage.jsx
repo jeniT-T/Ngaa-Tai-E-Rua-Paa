@@ -121,7 +121,7 @@ export default function ManagerUsersPage() {
           <button
             type="submit"
             disabled={creating}
-            className="bg-black text-white rounded px-4 py-2 disabled:opacity-50"
+            className="btn btn-primary btn-action"
           >
             {creating ? "Creating..." : "Create account"}
           </button>
@@ -129,17 +129,18 @@ export default function ManagerUsersPage() {
       </section>
 
       {/* Existing users, with role dropdown to promote/demote */}
-      <section>
-        <h2 className="text-lg font-medium mb-4">Existing users</h2>
+      <section className="existing-users-panel" aria-labelledby="existing-users-title">
+        <h2 id="existing-users-title" className="text-lg font-medium mb-4">Existing users</h2>
         {loading ? (
           <p>Loading users...</p>
         ) : (
-          <table className="w-full border-collapse">
+          <div className="existing-users-scroll" role="region" aria-label="Existing users table" tabIndex={0}>
+          <table className="existing-users-table">
             <thead>
               <tr className="text-left border-b">
-                <th className="py-2">Name</th>
-                <th className="py-2">Email</th>
-                <th className="py-2">Role</th>
+                <th scope="col">Name</th>
+                <th scope="col">Email</th>
+                <th scope="col">Role</th>
               </tr>
             </thead>
             <tbody>
@@ -149,6 +150,7 @@ export default function ManagerUsersPage() {
                   <td className="py-2">{u.email}</td>
                   <td className="py-2">
                     <select
+                      aria-label={`Role for ${u.name || u.email}`}
                       value={u.role}
                       onChange={(e) => handleRoleChange(u.id, e.target.value)}
                       className="border rounded px-2 py-1"
@@ -164,6 +166,7 @@ export default function ManagerUsersPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </section>
     </div>

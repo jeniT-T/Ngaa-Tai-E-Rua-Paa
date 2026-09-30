@@ -13,7 +13,7 @@ function HealthAndSafetyPage() {
         {heading ? heading.body : "Emergency evacuation points for arriving marae users:"}
       </p>
 
-      <div style={{ borderRadius: "16px", overflow: "hidden", marginBottom: "24px", border: "1px solid #e1e1e1" }}>
+      <div style={{ borderRadius: "var(--radius-panel)", overflow: "hidden", marginBottom: "24px", border: "1px solid #e1e1e1" }}>
         <img
           src="/images/evacuation-plan.png"
           alt="Ngaa Tai E Rua Paa fire evacuation plan, showing exits and the front carpark assembly area"
@@ -22,7 +22,7 @@ function HealthAndSafetyPage() {
       </div>
 
       {info.map((section) => (
-        <div key={section.title} style={{ padding: "24px", background: "#f9f9f9", borderRadius: "12px", border: "1px solid #e1e1e1", marginBottom: "16px" }}>
+        <div key={section.title} style={{ padding: "24px", background: "#f9f9f9", borderRadius: "var(--radius-panel)", border: "1px solid #e1e1e1", marginBottom: "16px" }}>
           <ContentImage item={section} />
           <h2 style={{ marginTop: 0 }}>{section.title}</h2>
           <p style={{ color: "#555", lineHeight: 1.7, whiteSpace: "pre-line" }}>{section.body}</p>

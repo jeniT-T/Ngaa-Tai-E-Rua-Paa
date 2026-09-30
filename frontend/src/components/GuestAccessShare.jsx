@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 
-export default function GuestAccessShare({ token }) {
+export default function GuestAccessShare({ token, buttonClassName = "booking-action text-sm border rounded px-3 py-1" }) {
   const [open, setOpen] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState(null);
   const [qrError, setQrError] = useState(false);
@@ -37,7 +37,7 @@ export default function GuestAccessShare({ token }) {
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="text-sm border rounded px-3 py-1">
+      <button onClick={() => setOpen(true)} className={buttonClassName}>
         Share the marae guide with guests
       </button>
     );
@@ -57,7 +57,7 @@ export default function GuestAccessShare({ token }) {
           onFocus={(e) => e.target.select()}
           className="flex-1 text-xs border rounded px-2 py-1 bg-white"
         />
-        <button onClick={handleCopy} className="text-xs border rounded px-2 py-1 whitespace-nowrap">
+        <button onClick={handleCopy} className="booking-action guest-share-action text-xs border rounded px-2 py-1 whitespace-nowrap">
           {copied ? "Copied!" : "Copy link"}
         </button>
       </div>
@@ -71,7 +71,7 @@ export default function GuestAccessShare({ token }) {
       ) : (
         <p className="text-xs text-gray-400">Generating QR code...</p>
       )}
-      <button onClick={() => setOpen(false)} className="text-xs text-gray-500 underline mt-2">
+      <button onClick={() => setOpen(false)} className="booking-action guest-share-action text-xs text-gray-500 underline mt-2 px-2 py-1">
         Hide
       </button>
     </div>

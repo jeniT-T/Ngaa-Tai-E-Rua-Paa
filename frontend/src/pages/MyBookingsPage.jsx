@@ -176,11 +176,11 @@ function EditBookingForm({ booking, onCancel, onSaved }) {
         <button
           type="submit"
           disabled={saving}
-          className="text-sm bg-black text-white rounded px-3 py-1 disabled:opacity-50"
+          className="booking-action booking-action-primary text-sm bg-black text-white rounded px-3 py-1 disabled:bg-gray-200 disabled:text-gray-600 disabled:cursor-not-allowed"
         >
           {saving ? "Saving..." : "Save & re-request"}
         </button>
-        <button type="button" onClick={onCancel} className="text-sm border rounded px-3 py-1">
+        <button type="button" onClick={onCancel} className="booking-action text-sm border rounded px-3 py-1">
           Cancel edit
         </button>
       </div>
@@ -235,7 +235,7 @@ export default function MyBookingsPage() {
   }
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
+    <div className="my-bookings-page p-8 max-w-2xl mx-auto">
       <div className="flex justify-between items-center mb-2">
         <h1 className="text-2xl font-semibold">My Bookings</h1>
         <Link
@@ -291,13 +291,13 @@ export default function MyBookingsPage() {
                 <div className="flex gap-2 flex-wrap">
                   <button
                     onClick={() => setEditingId(booking.id)}
-                    className="text-sm border rounded px-3 py-1"
+                    className="booking-action text-sm border rounded px-3 py-1"
                   >
                     Edit / re-request
                   </button>
                   <button
                     onClick={() => handleCancel(booking.id)}
-                    className="text-sm text-red-600 border border-red-200 rounded px-3 py-1"
+                    className="booking-action booking-action-danger text-sm text-red-600 border border-red-200 rounded px-3 py-1"
                   >
                     Cancel booking
                   </button>

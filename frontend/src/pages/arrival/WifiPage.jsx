@@ -14,7 +14,7 @@ export default function WifiPage() {
         maxWidth: "800px",
         margin: "0 auto",
         background: "var(--bg-primary)",
-        borderRadius: "var(--radius-xl)",
+        borderRadius: "var(--radius-panel)",
         boxShadow: "var(--shadow-lg)",
         padding: "40px",
       }}>
@@ -45,7 +45,7 @@ export default function WifiPage() {
           {items.map((item) => (
             <section key={item.title} style={{
               padding: "20px",
-              borderRadius: "var(--radius-lg)",
+              borderRadius: "var(--radius-panel)",
               border: "1px solid var(--border-light)",
               background: "var(--bg-secondary)",
             }}>
@@ -79,7 +79,7 @@ export default function WifiPage() {
           backgroundColor: "var(--primary)",
           color: "white",
           textDecoration: "none",
-          borderRadius: "var(--radius-lg)",
+          borderRadius: "var(--radius-control)",
           fontWeight: "600",
           transition: "all 0.2s ease",
         }}

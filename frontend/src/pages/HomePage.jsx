@@ -130,10 +130,10 @@ function HomePage() {
         }}
         className="hero-section"
       >
-        <h1 className="text-white">
+        <h1>
           {hero ? hero.title : "Welcome to the Marae"}
         </h1>
-        <p className="text-white/90">
+        <p>
           {hero ? hero.body : "A place of connection, culture, and community."}
         </p>
       </section>
@@ -142,10 +142,7 @@ function HomePage() {
           that differs from what a logged-out visitor sees. */}
       {user && user.role === "member" && <MyBookingStatus />}
 
-      {/* EXPLORE — a light gray band grouping the three "learn about the
-          marae" destinations (History, Facilities, Events) that used to be
-          scattered between homepage boxes and a navbar link. */}
-      <section style={{ background: "var(--bg-secondary)", padding: "var(--spacing-2xl) 0" }}>
+      <section style={{ background: "#fbfcfc", padding: "var(--spacing-2xl) 0" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 var(--spacing-lg)" }}>
           <h2 style={{ textAlign: "center", marginBottom: "var(--spacing-xl)" }}>Explore</h2>
           <div className="feature-grid" style={{ padding: 0 }}>
@@ -160,10 +157,8 @@ function HomePage() {
         </div>
       </section>
 
-      {/* CTA — a slightly darker gray band with the one clear "book now"
-          prompt, replacing the old accent feature-box for this. */}
       <section style={{
-        background: "var(--bg-tertiary)",
+        background: "#f4f7fa",
         padding: "var(--spacing-2xl) var(--spacing-lg)",
         textAlign: "center",
       }}>
@@ -171,7 +166,7 @@ function HomePage() {
         <Link
           to={bookingLink}
           state={!user ? { from: { pathname: "/bookings/new" } } : undefined}
-          className="btn btn-primary"
+          className="btn btn-primary home-booking-button"
         >
           {user ? "Book now" : "Log in to book"}
         </Link>

@@ -272,7 +272,7 @@ export default function ManagerNewBookingPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="bg-black text-white rounded px-4 py-2 disabled:opacity-50"
+          className="bg-black text-white rounded px-4 py-2 disabled:bg-gray-200 disabled:text-gray-600 disabled:cursor-not-allowed"
         >
           {submitting ? "Creating..." : "Create booking"}
         </button>
