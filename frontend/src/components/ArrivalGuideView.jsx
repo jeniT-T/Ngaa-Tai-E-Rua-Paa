@@ -30,24 +30,59 @@ import useMyActiveBooking from "../hooks/useMyActiveBooking.js";
 // by title rather than a generic "content item has images" feature.
 const TITLES_WITH_STEP_IMAGES = new Set(["Combi Oven: Scrambled Eggs"]);
 
+// Map display names (from content manager) to internal category codes
+const CATEGORY_DISPLAY_MAP = {
+  "Arrival Guide Emergency & Safety": "arrival",
+  "Arrival Guide Getting Started": "essentials",
+  "Arrival Guide Kitchen": "kitchen",
+  "Arrival Guide Equipment": "equipment",
+  "Arrival Guide Facilities": "facilities",
+  "Arrival Guide Utilities & Climate": "maintenance",
+  "Arrival Guide Cleaning & Checkout": "cleaning",
+};
+
 const CATEGORY_GROUPS = {
   arrival: {
-    label: "Arrival",
-    description: "What to know before and when you arrive",
+    label: "🚨 Emergency & Safety",
+    description: "Emergency contacts and evacuation procedures",
     color: "#DC2626",
     priority: 1,
   },
-  general: {
-    label: "General",
-    description: "Equipment and facilities for use during your stay",
+  essentials: {
+    label: "✨ Getting Started",
+    description: "WiFi, parking, check-in essentials",
     color: "#0081BD",
     priority: 2,
   },
-  leaving: {
-    label: "Leaving",
-    description: "Checkout and final cleaning tasks",
-    color: "#EC4899",
+  kitchen: {
+    label: "🍳 Kitchen",
+    description: "Cooking equipment, appliances, dining",
+    color: "#F59E0B",
     priority: 3,
+  },
+  equipment: {
+    label: "⚙️ Equipment",
+    description: "Tools, machinery, and other equipment",
+    color: "#10B981",
+    priority: 4,
+  },
+  facilities: {
+    label: "🏛️ Facilities",
+    description: "Bathrooms, common areas, general facilities",
+    color: "#8B5CF6",
+    priority: 5,
+  },
+  maintenance: {
+    label: "🔧 Utilities & Climate",
+    description: "Heating, cooling, water, electricity",
+    color: "#06B6D4",
+    priority: 6,
+  },
+  cleaning: {
+    label: "🧹 Cleaning & Checkout",
+    description: "Cleaning instructions and final checkout",
+    color: "#EC4899",
+    priority: 7,
   },
 };
 
@@ -61,25 +96,25 @@ const FALLBACK_ITEMS = [
   {
     id: "wifi-essentials",
     title: "WiFi Information",
-    category: "arrival",
+    category: "essentials",
     body: "WiFi network details will be available here once configured.",
   },
   {
     id: "kitchen-guide",
     title: "Kitchen Equipment",
-    category: "general",
+    category: "kitchen",
     body: "Kitchen equipment guides will appear here once added.",
   },
   {
     id: "facilities-general",
     title: "General Facilities",
-    category: "general",
+    category: "facilities",
     body: "General facility information will be provided here.",
   },
   {
     id: "final-clean",
     title: "Final Clean",
-    category: "leaving",
+    category: "cleaning",
     body: "Checkout and final-clean instructions will be provided here.",
   },
 ];
@@ -99,7 +134,15 @@ export default function ArrivalGuideView() {
   const items = useMemo(() => {
     if (!usingCms) return FALLBACK_ITEMS;
     return sections.map((item) => {
-      const category = CATEGORY_GROUPS[item.category] ? item.category : "general";
+      // Map display name back to internal code if needed
+      let category = item.category;
+      if (CATEGORY_DISPLAY_MAP[item.category]) {
+        category = CATEGORY_DISPLAY_MAP[item.category];
+      }
+      // Fallback to essentials if category not recognized
+      if (!CATEGORY_GROUPS[category]) {
+        category = "essentials";
+      }
       return {
         id: String(item.id),
         title: item.title,

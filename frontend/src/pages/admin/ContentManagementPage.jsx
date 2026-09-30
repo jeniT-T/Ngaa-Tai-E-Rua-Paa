@@ -8,10 +8,13 @@ const ALL_ROLES = ["member", "caretaker", "admin"];
 const SUGGESTED_CATEGORIES = [
   "recipe",
   "onboarding",
-  "arrival",
-  "general",
-  "leaving",
-  "maintenance",
+  "Arrival Guide Emergency & Safety",
+  "Arrival Guide Getting Started",
+  "Arrival Guide Kitchen",
+  "Arrival Guide Equipment",
+  "Arrival Guide Facilities",
+  "Arrival Guide Utilities & Climate",
+  "Arrival Guide Cleaning & Checkout",
   "rules",
   "health_safety",
 ];
@@ -112,13 +115,18 @@ function ContentItemCard({ item, categories, moveValue, onMoveChange, onModify, 
           Delete
         </button>
 
-        <input
-          type="text"
-          list="category-suggestions"
+        <select
           value={moveValue}
           onChange={(e) => onMoveChange(e.target.value)}
           className="text-sm border rounded px-2 py-1 w-36"
-        />
+        >
+          <option value={item.category}>Keep as {item.category}</option>
+          {categories.filter(c => c !== item.category).map((c) => (
+            <option key={c} value={c}>
+              Move to {c}
+            </option>
+          ))}
+        </select>
         <button onClick={() => onMove(item)} className="text-sm border rounded px-3 py-1">
           Move
         </button>
@@ -362,18 +370,18 @@ export default function ContentManagementPage() {
 
           <div>
             <label className="block text-sm font-medium mb-1">Category (area)</label>
-            <input
-              type="text"
-              list="category-suggestions"
+            <select
               value={form.category}
               onChange={(e) => setForm({ ...form, category: e.target.value })}
               className="w-full border rounded px-3 py-2"
-            />
-            <datalist id="category-suggestions">
+            >
+              <option value="">Select a category...</option>
               {categories.map((c) => (
-                <option key={c} value={c} />
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
-            </datalist>
+            </select>
           </div>
 
           <div>
