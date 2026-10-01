@@ -213,7 +213,7 @@ export default function BookingRequestPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="bg-black text-white rounded px-4 py-2 disabled:bg-gray-200 disabled:text-gray-600 disabled:cursor-not-allowed"
+          className="btn btn-primary btn-action"
         >
           {submitting ? "Submitting..." : "Submit request"}
         </button>

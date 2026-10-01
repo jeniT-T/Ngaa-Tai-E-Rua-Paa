@@ -58,15 +58,15 @@ function TutorialItemCard({ item, onModify, onCopy, onDelete }) {
       <p className="text-sm text-gray-600 whitespace-pre-line mb-3">{item.body}</p>
 
       <div className="flex flex-wrap gap-2 items-center">
-        <button onClick={() => onModify(item)} className="text-sm border rounded px-3 py-1">
+        <button onClick={() => onModify(item)} className="btn btn-outline btn-action btn-compact">
           Modify
         </button>
-        <button onClick={() => onCopy(item)} className="text-sm border rounded px-3 py-1">
+        <button onClick={() => onCopy(item)} className="btn btn-outline btn-action btn-compact">
           Copy
         </button>
         <button
           onClick={() => onDelete(item.id)}
-          className="text-sm text-red-600 border border-red-200 rounded px-3 py-1"
+          className="btn btn-error btn-danger-action btn-compact"
         >
           Delete
         </button>
@@ -291,7 +291,7 @@ export default function ManageTutorialsPage() {
                 <button
                   type="button"
                   onClick={() => setForm((prev) => ({ ...prev, imageUrl: "" }))}
-                  className="text-xs text-red-600 border border-red-200 rounded px-2 py-1"
+                  className="btn btn-error btn-danger-action btn-compact"
                 >
                   Remove image
                 </button>
@@ -337,7 +337,7 @@ export default function ManageTutorialsPage() {
               {saving ? "Saving..." : editingId ? "Save changes" : "Add tutorial"}
             </button>
             {editingId && (
-              <button type="button" onClick={cancelEdit} className="border rounded px-4 py-2">
+              <button type="button" onClick={cancelEdit} className="btn btn-outline btn-action btn-compact">
                 Cancel
               </button>
             )}

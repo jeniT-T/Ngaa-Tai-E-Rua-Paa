@@ -63,7 +63,7 @@ export default function ForgotPasswordPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="btn btn-primary"
+              className="btn btn-primary btn-action"
               style={{ width: '100%', cursor: submitting ? 'not-allowed' : 'pointer' }}
             >
               {submitting ? "Sending..." : "Send Reset Link"}

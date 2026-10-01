@@ -102,15 +102,15 @@ function ContentItemCard({ item, categories, moveValue, onMoveChange, onModify, 
       </p>
 
       <div className="flex flex-wrap gap-2 items-center">
-        <button onClick={() => onModify(item)} className="text-sm border rounded px-3 py-1">
+        <button onClick={() => onModify(item)} className="btn btn-outline btn-action btn-compact">
           Modify
         </button>
-        <button onClick={() => onCopy(item)} className="text-sm border rounded px-3 py-1">
+        <button onClick={() => onCopy(item)} className="btn btn-outline btn-action btn-compact">
           Copy
         </button>
         <button
           onClick={() => onDelete(item.id)}
-          className="text-sm text-red-600 border border-red-200 rounded px-3 py-1"
+          className="btn btn-error btn-danger-action btn-compact"
         >
           Delete
         </button>
@@ -127,7 +127,7 @@ function ContentItemCard({ item, categories, moveValue, onMoveChange, onModify, 
             </option>
           ))}
         </select>
-        <button onClick={() => onMove(item)} className="text-sm border rounded px-3 py-1">
+        <button onClick={() => onMove(item)} className="btn btn-outline btn-action btn-compact">
           Move
         </button>
       </div>
@@ -440,7 +440,7 @@ export default function ContentManagementPage() {
                 <button
                   type="button"
                   onClick={() => setForm((prev) => ({ ...prev, imageUrl: "" }))}
-                  className="text-xs text-red-600 border border-red-200 rounded px-2 py-1"
+                  className="btn btn-error btn-danger-action btn-compact"
                 >
                   Remove image
                 </button>
@@ -502,7 +502,7 @@ export default function ContentManagementPage() {
               {saving ? "Saving..." : editingId ? "Save changes" : "Add item"}
             </button>
             {editingId && (
-              <button type="button" onClick={cancelEdit} className="border rounded px-4 py-2">
+              <button type="button" onClick={cancelEdit} className="btn btn-outline btn-action btn-compact">
                 Cancel
               </button>
             )}

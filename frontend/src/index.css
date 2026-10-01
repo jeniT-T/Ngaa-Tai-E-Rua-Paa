@@ -575,6 +575,23 @@ header {
   background: var(--surface-hover);
 }
 
+.btn.btn-compact {
+  padding: 8px 14px;
+  font-size: 0.875rem;
+}
+
+.btn-danger-action:not(:disabled):is(:hover, :focus-visible) {
+  background: #991B1B;
+  color: var(--text-inverse);
+  border-color: #991B1B;
+}
+
+.btn-success-action:not(:disabled):is(:hover, :focus-visible) {
+  background: #065F46;
+  color: var(--text-inverse);
+  border-color: #065F46;
+}
+
 .btn-action:not(:disabled):is(:hover, :focus-visible) {
   background: var(--primary-dark);
   color: var(--text-inverse);

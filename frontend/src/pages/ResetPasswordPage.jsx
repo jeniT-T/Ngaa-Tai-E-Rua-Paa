@@ -96,7 +96,7 @@ export default function ResetPasswordPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-black text-white rounded py-2 disabled:bg-gray-200 disabled:text-gray-600 disabled:cursor-not-allowed"
+            className="btn btn-primary btn-action w-full"
           >
             {submitting ? "Updating..." : "Update password"}
           </button>

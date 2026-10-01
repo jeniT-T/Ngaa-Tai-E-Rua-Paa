@@ -132,13 +132,13 @@ export default function ManagerBookingsPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => decide(booking.id, "approved")}
-                      className="text-sm bg-green-600 text-white rounded px-3 py-1"
+                      className="btn btn-success btn-success-action btn-compact"
                     >
                       Approve
                     </button>
                     <button
                       onClick={() => decide(booking.id, "denied")}
-                      className="text-sm bg-red-600 text-white rounded px-3 py-1"
+                      className="btn btn-error btn-danger-action btn-compact"
                     >
                       Deny
                     </button>
