@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import useArrivalAccess from "../hooks/useArrivalAccess.js";
@@ -15,10 +15,48 @@ const DASHBOARD_LINKS = {
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [compact, setCompact] = useState(false);
+  const containerRef = useRef(null);
+  const brandRef = useRef(null);
+  const navRef = useRef(null);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const arrivalAccess = useArrivalAccess();
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    let active = true;
+    function measure() {
+      if (!active) return;
+      const copy = navRef.current.cloneNode(true);
+      copy.removeAttribute("id");
+      copy.className = "navbar navbar-measure";
+      copy.setAttribute("aria-hidden", "true");
+      copy.inert = true;
+      container.appendChild(copy);
+      const style = getComputedStyle(container);
+      const available = container.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      const brand = brandRef.current;
+      const brandWidth = [...brand.children].reduce((total, child) => total + Math.max(child.scrollWidth, child.getBoundingClientRect().width), 0)
+        + parseFloat(getComputedStyle(brand).columnGap);
+      const required = brandWidth + copy.getBoundingClientRect().width + parseFloat(style.columnGap);
+      const needsMenu = required > available || window.innerWidth <= 768;
+      copy.remove();
+      setCompact(needsMenu);
+      if (!needsMenu) setMenuOpen(false);
+    }
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(container);
+    window.addEventListener("resize", measure);
+    document.fonts.ready.then(measure);
+    return () => {
+      active = false;
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [user, arrivalAccess, location.pathname]);
 
   function closeMenu() {
     setMenuOpen(false);
@@ -49,16 +87,16 @@ function Navbar() {
   ];
 
   return (
-    <header>
-      <div className="header-container">
+    <header className={compact ? "header-compact" : undefined}>
+      <div className="header-container" ref={containerRef}>
         {/* Left: Logo + Title */}
-        <div className="header-left">
+        <div className="header-left" ref={brandRef}>
           <img src="/images/logo.png" alt="Marae Logo" className="logo" />
           <h3 className="header-title">Marae System</h3>
         </div>
 
         {/* Right: Navigation */}
-        <nav className={`navbar ${menuOpen ? "show-menu" : ""}`}>
+        <nav id="main-navigation" ref={navRef} aria-label="Main navigation" className={`navbar ${menuOpen ? "show-menu" : ""}`}>
           {navLinks.map((link) => (
             <Link
               key={link.to}
@@ -151,6 +189,8 @@ function Navbar() {
           className="menu-toggle"
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label="Toggle navigation menu"
+          aria-expanded={compact && menuOpen}
+          aria-controls="main-navigation"
         >
           ☰
         </button>

@@ -483,7 +483,7 @@ export default function ArrivalGuideView() {
         <div style={{
           position: "relative",
           flex: "1",
-          minWidth: "280px",
+          minWidth: "min(280px, 100%)",
         }}>
           <input
             type="search"
