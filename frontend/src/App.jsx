@@ -10,8 +10,10 @@ import Navbar from "./components/Navbar.jsx";
 
 import ArrivalPage from "./pages/ArrivalPage.jsx";
 import GuestArrivalPage from "./pages/GuestArrivalPage.jsx";
+import GenericGuestArrivalPage from "./pages/GenericGuestArrivalPage.jsx";
+import GenericGuestAccessGate from "./components/GenericGuestAccessGate.jsx";
+import GuestAccessGate from "./components/GuestAccessGate.jsx";
 import ContactPage from "./pages/ContactPage.jsx";
-import HealthAndSafetyPage from "./pages/HealthAndSafetyPage.jsx";
 import HistoryPage from "./pages/HistoryPage.jsx";
 import FacilitiesPage from "./pages/FacilitiesPage.jsx";
 import EventsPage from "./pages/EventsPage.jsx";
@@ -23,7 +25,6 @@ import WifiPage from "./pages/arrival/WifiPage.jsx";
 import MapPage from "./pages/MapPage.jsx";
 import EmergencyPage from "./pages/arrival/EmergencyPage.jsx";
 import AccessibilityPage from "./pages/arrival/AccessibilityPage.jsx";
-import RulesPage from "./pages/arrival/RulesPage.jsx";
 
 import LoginPage from "./pages/LoginPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
@@ -47,6 +48,7 @@ import ChecklistsViewPage from "./pages/ChecklistsViewPage.jsx";
 import TutorialsViewPage from "./pages/TutorialsViewPage.jsx";
 import ReportIssuePage from "./pages/ReportIssuePage.jsx";
 import ContentManagementPage from "./pages/admin/ContentManagementPage.jsx";
+import SiteSettingsPage from "./pages/admin/SiteSettingsPage.jsx";
 
 import CalendarCaretaker from "./pages/caretaker/CalendarCaretaker.jsx";
 import ScheduleCaretaker from "./pages/caretaker/ScheduleCaretaker.jsx";
@@ -69,11 +71,15 @@ function App() {
               rest of the caretaker area (was previously mounted with no
               RoleRoute at all, which would have made it reachable by anyone,
               logged in or not; gating it here to match every other
-              caretaker-only route). */}
+              caretaker-only route). Manager is included too — there's only
+              one caretaker, and manager needs the same view (and the tasks
+              themselves are now shared via the backend, not per-browser
+              localStorage — see TaskContext.jsx). This calendar is only for
+              people working at the marae, never public. */}
           <Route
             path="/caretaker/calendar"
             element={
-              <RoleRoute allowed={["caretaker", "admin"]}>
+              <RoleRoute allowed={["caretaker", "manager", "admin"]}>
                 <CalendarCaretaker />
               </RoleRoute>
             }
@@ -81,7 +87,7 @@ function App() {
           <Route
             path="/caretaker/schedule"
             element={
-              <RoleRoute allowed={["caretaker", "admin"]}>
+              <RoleRoute allowed={["caretaker", "manager", "admin"]}>
                 <ScheduleCaretaker />
               </RoleRoute>
             }
@@ -89,7 +95,13 @@ function App() {
 
           {/* Arrival guide — only for logged-in users with an approved,
               still-current booking (caretaker/admin always allowed).
-              /arrival/rules stays public — it's linked from the Facilities page. */}
+              Health & Safety and Rules & Regulations used to be separate
+              routes (/health-and-safety, /arrival/rules) — both are now
+              rendered as sections inside ArrivalGuideView itself instead,
+              so there's no standalone route for either one any more, and
+              neither is reachable without the same access this route
+              requires (or via the guest-link view below). See the comment
+              above DEFAULT_SAFETY_SECTIONS in ArrivalGuideView.jsx. */}
           <Route
             path="/arrival"
             element={
@@ -140,7 +152,6 @@ function App() {
               </RoleRoute>
             }
           />
-          <Route path="/arrival/rules" element={<RulesPage />} />
 
           {/* Read-only checklist view — same access rule as the arrival
               guide itself (member with an active approved booking, or
@@ -177,8 +188,53 @@ function App() {
               booking's own guest_access_token, not a role. */}
           <Route path="/arrival/guest/:token" element={<GuestArrivalPage />} />
 
+          {/* Generic guest arrival access — no login, no specific booking
+              token either. Backs a non-personal QR code the client can
+              post physically around the marae itself, rather than a link
+              shared digitally for one specific booking. Only "active"
+              while an approved booking's date range covers today
+              specifically — see §24 and GenericGuestAccessGate.jsx. */}
+          <Route path="/arrival/guest" element={<GenericGuestArrivalPage />} />
+
+          {/* Guest-reachable Checklists/Tutorials — read-only, same data
+              the authenticated /checklists and /tutorials routes show,
+              extended to an actual unauthenticated guest via either guest
+              route above (per-booking token, or the generic site-wide
+              code) — see §24. */}
+          <Route
+            path="/checklists/guest/:token"
+            element={
+              <GuestAccessGate>
+                <ChecklistsViewPage />
+              </GuestAccessGate>
+            }
+          />
+          <Route
+            path="/checklists/guest"
+            element={
+              <GenericGuestAccessGate>
+                <ChecklistsViewPage />
+              </GenericGuestAccessGate>
+            }
+          />
+          <Route
+            path="/tutorials/guest/:token"
+            element={
+              <GuestAccessGate>
+                <TutorialsViewPage />
+              </GuestAccessGate>
+            }
+          />
+          <Route
+            path="/tutorials/guest"
+            element={
+              <GenericGuestAccessGate>
+                <TutorialsViewPage />
+              </GenericGuestAccessGate>
+            }
+          />
+
           <Route path="/contacts" element={<ContactPage />} />
-          <Route path="/health-and-safety" element={<HealthAndSafetyPage />} />
           <Route path="/map" element={<MapPage />} />
 
           {/* Public landing page sections */}
@@ -291,6 +347,18 @@ function App() {
               </RoleRoute>
             }
           />
+          {/* Caretaker's own view of reported issues — same page the manager
+              uses (backend GET/PATCH /api/issues now allows caretaker too,
+              see backend/routes/issues.js), so a caretaker knows what's been
+              reported and can mark it in progress/resolved themselves. */}
+          <Route
+            path="/caretaker/issues"
+            element={
+              <RoleRoute allowed={["caretaker", "admin"]}>
+                <ManagerIssuesPage />
+              </RoleRoute>
+            }
+          />
 
           {/* Content library — any logged-in user (member, caretaker, or admin) */}
           <Route
@@ -321,12 +389,24 @@ function App() {
             }
           />
 
-          {/* Admin: manage content (the only thing admin does now) */}
+          {/* Admin: manage content (the main thing admin does) */}
           <Route
             path="/admin/content"
             element={
               <RoleRoute allowed={["admin"]}>
                 <ContentManagementPage />
+              </RoleRoute>
+            }
+          />
+
+          {/* Admin: the marae's own identity — name/logo, map, booking form
+              wording — see SiteSettingsPage.jsx for why this is separate
+              from Content Manager. */}
+          <Route
+            path="/admin/settings"
+            element={
+              <RoleRoute allowed={["admin"]}>
+                <SiteSettingsPage />
               </RoleRoute>
             }
           />

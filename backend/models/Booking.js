@@ -58,6 +58,36 @@ const Booking = {
     return result.rows;
   },
 
+  // Approved bookings with enough detail (purpose/type/area, not just dates)
+  // to show on the caretaker's own task calendar/schedule — so staff can
+  // see at a glance when the marae itself is occupied by a booking, not
+  // just each other's tasks. See GET /api/bookings/calendar.
+  async findApprovedForCalendar() {
+    const result = await pool.query(
+      `SELECT id, start_date, end_date, purpose, booking_type, area
+       FROM bookings WHERE status = 'approved' ORDER BY start_date`
+    );
+    return result.rows;
+  },
+
+  // The one approved booking (if any) whose date range covers *today*
+  // specifically -- not "hasn't ended yet" like findActiveRanges/the
+  // per-token guest check below use, which also count a future approved
+  // booking as fine. Backs the generic, non-booking-specific guest QR code
+  // the client can post physically around the marae itself (as opposed to
+  // the per-booking link/QR, which is personal to one booking and shared
+  // digitally) -- see GET /api/bookings/guest-active. That generic code is
+  // only meant to work while someone is actually in residence, so this is
+  // deliberately a stricter check than the ones elsewhere in this file.
+  async findCurrentlyOnSite() {
+    const result = await pool.query(
+      `SELECT id, start_date, end_date FROM bookings
+       WHERE status = 'approved' AND start_date <= CURRENT_DATE AND end_date >= CURRENT_DATE
+       ORDER BY start_date LIMIT 1`
+    );
+    return result.rows[0] || null;
+  },
+
   async findByUser(userId) {
     const result = await pool.query(
       `SELECT * FROM bookings WHERE user_id = $1 ORDER BY created_at DESC`,

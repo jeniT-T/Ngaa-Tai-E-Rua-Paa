@@ -266,6 +266,44 @@ button {
   border-radius: 50%;
 }
 
+/* A marae booking covering this day — a solid bar under the date number,
+   deliberately distinct from the round task-urgency dots above. */
+.calendar-booking-bar {
+  width: 70%;
+
+  height: 4px;
+
+  margin-top: 4px;
+
+  border-radius: 2px;
+
+  background: #0081bd;
+}
+
+.calendar-booking-banner {
+  padding: 10px 12px;
+
+  margin-bottom: 14px;
+
+  border-radius: 8px;
+
+  background: #eff6ff;
+
+  border: 1px solid #bfdbfe;
+}
+
+.calendar-booking-banner p {
+  margin: 0;
+
+  font-size: 0.875rem;
+
+  color: #1e3a8a;
+}
+
+.calendar-booking-banner p + p {
+  margin-top: 4px;
+}
+
 /* TASK HEADER */
 
 .task-panel-header {

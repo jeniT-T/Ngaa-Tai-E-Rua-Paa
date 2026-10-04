@@ -6,7 +6,7 @@
 // /checklists, see App.jsx). Same content as the caretaker's own Tutorials
 // page (both read the "caretaker-tutorials" placement via usePageContent),
 // just presented for a guest rather than the caretaker.
-import { Link } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { useMemo, useState } from "react";
 import usePageContent from "../hooks/usePageContent.js";
 import ContentImage from "../components/ContentImage.jsx";
@@ -15,6 +15,16 @@ import { getYoutubeEmbedUrl } from "../utils/youtube.js";
 export default function TutorialsViewPage() {
   const { heading, sections, loaded } = usePageContent("caretaker-tutorials");
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Reachable from the Marae Guide (member with an active booking) or
+  // either guest route (per-booking token, or the generic site-wide QR) --
+  // see App.jsx and §24. The content fetch above was already public/
+  // unauthenticated either way; only the back-link needs to know which
+  // route got us here, same reasoning as ChecklistsViewPage.jsx.
+  const { token: guestToken } = useParams();
+  const location = useLocation();
+  const isGuest = location.pathname.startsWith("/tutorials/guest");
+  const backTo = isGuest ? (guestToken ? `/arrival/guest/${guestToken}` : "/arrival/guest") : "/arrival";
 
   const filtered = useMemo(() => {
     if (!searchTerm.trim()) return sections;
@@ -29,7 +39,7 @@ export default function TutorialsViewPage() {
     <div className="p-8 max-w-2xl mx-auto">
       <div className="flex justify-between items-start gap-4 mb-2">
         <h1 className="text-2xl font-semibold">{heading ? heading.title : "Tutorials"}</h1>
-        <Link to="/arrival" className="text-sm underline whitespace-nowrap">
+        <Link to={backTo} className="text-sm underline whitespace-nowrap">
           ← Back to Marae Guide
         </Link>
       </div>

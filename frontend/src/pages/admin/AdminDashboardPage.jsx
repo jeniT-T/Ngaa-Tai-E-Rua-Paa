@@ -8,6 +8,11 @@ const FEATURES = [
     title: 'Content Manager',
     description: 'Add, edit, move, copy or delete content anywhere on the site, including public pages.',
   },
+  {
+    to: '/admin/settings',
+    title: 'Site Settings',
+    description: "This marae's own identity — name, logo, map, and the booking form's wording.",
+  },
 ];
 
 export default function AdminDashboardPage() {

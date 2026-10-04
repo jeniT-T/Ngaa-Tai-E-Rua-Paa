@@ -37,14 +37,14 @@ const PUBLIC_PAGES = [
   { value: "facilities", label: "Facilities page" },
   { value: "events", label: "Events page" },
   { value: "contacts", label: "Contact Us page" },
-  { value: "health-and-safety", label: "Health & Safety page" },
+  { value: "health-and-safety", label: "Health & Safety (shown inside the Marae Guide)" },
   { value: "map", label: "Map page (heading/intro only)" },
   { value: "arrival", label: "Arrival guide (main dropdown list)" },
   { value: "arrival-gas", label: "Arrival guide → Gas page" },
   { value: "arrival-wifi", label: "Arrival guide → WiFi page" },
   { value: "arrival-emergency", label: "Arrival guide → Emergency page" },
   { value: "arrival-accessibility", label: "Arrival guide → Accessibility page" },
-  { value: "arrival-rules", label: "Arrival guide → Rules & Regulations page" },
+  { value: "arrival-rules", label: "Rules & Regulations (shown inside the Marae Guide)" },
   { value: "caretaker-tutorials", label: "Caretaker Tutorials page" },
 ];
 const PAGE_GROUPS = PUBLIC_PAGES.filter((p) => p.value);
@@ -368,21 +368,30 @@ export default function ContentManagementPage() {
             className="w-full border rounded px-3 py-2"
           />
 
-          <div>
-            <label className="block text-sm font-medium mb-1">Category (area)</label>
-            <select
-              value={form.category}
-              onChange={(e) => setForm({ ...form, category: e.target.value })}
-              className="w-full border rounded px-3 py-2"
-            >
-              <option value="">Select a category...</option>
-              {categories.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Category only actually does something in two cases: grouping
+              items into Arrival/General/Leaving on the Marae Guide itself
+              (placement === "arrival"), or organizing/filtering items in the
+              internal Content Library (no placement selected at all). On
+              every other public page it's saved but has zero effect on how
+              that page renders -- so it's hidden there instead of showing a
+              field that looks like it matters but doesn't. */}
+          {(form.placement === "" || form.placement === "arrival") && (
+            <div>
+              <label className="block text-sm font-medium mb-1">Category (area)</label>
+              <select
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                className="w-full border rounded px-3 py-2"
+              >
+                <option value="">Select a category...</option>
+                {categories.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium mb-1">Show on public page</label>
@@ -413,6 +422,7 @@ export default function ContentManagementPage() {
               >
                 <option value="section">Section (a card in the page's list)</option>
                 <option value="heading">Heading (the page's title / intro text)</option>
+                <option value="gallery">Gallery photo (just an image, no title/body shown)</option>
               </select>
             </div>
           )}

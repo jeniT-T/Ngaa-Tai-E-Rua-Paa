@@ -1,7 +1,9 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import useArrivalAccess from "../hooks/useArrivalAccess.js";
+import useSiteSettings from "../hooks/useSiteSettings.js";
+import { resolveImageUrl } from "../utils/media.js";
 
 // Where each role's "dashboard" link should point — kept in sync with
 // ROLE_HOME in HomeRoute.jsx, which sends a logged-in user here from "/".
@@ -23,6 +25,15 @@ function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const arrivalAccess = useArrivalAccess();
+  const { settings } = useSiteSettings();
+  const logoSrc = resolveImageUrl(settings.logo_url) || "/images/logo.png";
+
+  // The browser tab title is set once from the fixed index.html markup —
+  // this keeps it in sync with the admin-configurable site name instead,
+  // so a rebrand via Site Settings doesn't need a code/HTML edit too.
+  useEffect(() => {
+    document.title = settings.site_name;
+  }, [settings.site_name]);
 
   useLayoutEffect(() => {
     const container = containerRef.current;
@@ -56,7 +67,7 @@ function Navbar() {
       observer.disconnect();
       window.removeEventListener("resize", measure);
     };
-  }, [user, arrivalAccess, location.pathname]);
+  }, [user, arrivalAccess, location.pathname, settings.site_name]);
 
   function closeMenu() {
     setMenuOpen(false);
@@ -70,6 +81,12 @@ function Navbar() {
 
   const dashboard = user ? DASHBOARD_LINKS[user.role] : null;
   const isCaretakerStaff = user && (user.role === "caretaker" || user.role === "admin");
+  // Calendar/Schedule specifically (not Manage Content/Issues, which stay
+  // caretaker/admin-only) are also open to manager — there's only one
+  // caretaker, and manager needs the same task view (see App.jsx's
+  // RoleRoute and TaskContext.jsx, now backed by a shared table instead of
+  // per-browser localStorage).
+  const canSeeCaretakerCalendar = user && (user.role === "caretaker" || user.role === "manager" || user.role === "admin");
 
   // Check if a route is active
   const isActive = (path) => {
@@ -91,8 +108,8 @@ function Navbar() {
       <div className="header-container" ref={containerRef}>
         {/* Left: Logo + Title */}
         <div className="header-left" ref={brandRef}>
-          <img src="/images/logo.png" alt="Marae Logo" className="logo" />
-          <h3 className="header-title">Marae System</h3>
+          <img src={logoSrc} alt={`${settings.site_name} logo`} className="logo" />
+          <h3 className="header-title">{settings.site_name}</h3>
         </div>
 
         {/* Right: Navigation */}
@@ -132,9 +149,11 @@ function Navbar() {
                   Marae Guide
                 </Link>
               )}
-              {/* Caretaker's own task calendar/schedule — only shown (and only
-                  reachable, see App.jsx's RoleRoute) to caretaker/admin. */}
-              {isCaretakerStaff && (
+              {/* Caretaker's own task calendar/schedule — now also shown
+                  (and reachable, see App.jsx's RoleRoute) to manager, since
+                  there's only one caretaker and manager needs the same
+                  view. */}
+              {canSeeCaretakerCalendar && (
                 <>
                   <Link
                     to="/caretaker/calendar"
@@ -150,12 +169,26 @@ function Navbar() {
                   >
                     Schedule
                   </Link>
+                </>
+              )}
+              {/* Manage Content / Issues stay caretaker/admin-only — these
+                  are the caretaker's own content-editing tools, not shared
+                  with manager the way the calendar now is. */}
+              {isCaretakerStaff && (
+                <>
                   <Link
                     to="/caretaker/manage-content"
                     onClick={closeMenu}
                     className={isActive("/caretaker/manage-content") ? "active" : ""}
                   >
                     Manage Content
+                  </Link>
+                  <Link
+                    to="/caretaker/issues"
+                    onClick={closeMenu}
+                    className={isActive("/caretaker/issues") ? "active" : ""}
+                  >
+                    Issues
                   </Link>
                 </>
               )}

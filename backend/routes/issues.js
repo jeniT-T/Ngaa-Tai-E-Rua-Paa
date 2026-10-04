@@ -19,7 +19,17 @@ router.post('/', requireAuth, async (req, res) => {
   }
 });
 
-router.get('/', requireAuth, requireRole('manager'), async (req, res) => {
+// Caretaker can see and update these too (not just manager) — they're the
+// one who'd actually know about or fix most reported issues, so they need
+// to be aware of what's been reported, same as manager. Admin is included
+// too: the frontend route /caretaker/issues (and the caretaker dashboard
+// card linking to it) already allows admin as well as caretaker — without
+// 'admin' here, an admin visiting that page got a 403 ("Forbidden:
+// insufficient permissions") with the issues list silently falling back to
+// its "No issues reported." empty state, which is confusing rather than a
+// clear error. Keeping the backend's allowed roles matching whatever the
+// frontend route already allows avoids this class of bug.
+router.get('/', requireAuth, requireRole('manager', 'caretaker', 'admin'), async (req, res) => {
   try {
     const issues = await Issue.findAll();
     res.json({ issues });
@@ -29,7 +39,7 @@ router.get('/', requireAuth, requireRole('manager'), async (req, res) => {
   }
 });
 
-router.patch('/:id', requireAuth, requireRole('manager'), async (req, res) => {
+router.patch('/:id', requireAuth, requireRole('manager', 'caretaker', 'admin'), async (req, res) => {
   try {
     const { status } = req.body;
     if (!['open', 'in_progress', 'resolved'].includes(status)) {

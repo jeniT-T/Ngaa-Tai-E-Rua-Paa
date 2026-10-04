@@ -17,6 +17,7 @@ import {
 } from "date-fns";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTasks } from "../../context/TaskContext.jsx";
+import useActiveBookingsForCalendar from "../../hooks/useActiveBookingsForCalendar.js";
 import "./ScheduleCaretaker.css";
 
 const priorityStyles = {
@@ -39,6 +40,7 @@ export default function ScheduleCaretaker() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { tasks, addTask, updateTask, completeTask, deleteTask } = useTasks();
+  const { bookingsOnDay } = useActiveBookingsForCalendar();
 
   const selectedDate = searchParams.get("date")
     ? parseISO(searchParams.get("date"))
@@ -57,6 +59,7 @@ export default function ScheduleCaretaker() {
   }, [tasks, selectedDateString]);
 
   const completedCount = dayTasks.filter((task) => task.completed).length;
+  const dayBookings = bookingsOnDay(selectedDateString);
 
   const changeDate = (date) => {
     navigate(`/caretaker/schedule?date=${format(date, "yyyy-MM-dd")}`);
@@ -118,6 +121,16 @@ export default function ScheduleCaretaker() {
             </span>
           ))}
         </div>
+
+        {dayBookings.length > 0 && (
+          <div className="schedule-booking-banner">
+            {dayBookings.map((booking) => (
+              <p key={booking.id}>
+                <strong>Marae booking:</strong> {booking.purpose || booking.booking_type}
+              </p>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="schedule-timeline">

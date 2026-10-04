@@ -68,7 +68,7 @@ export default function ReportIssuePage() {
         <button
           type="submit"
           disabled={submitting}
-          className="bg-black text-white rounded px-4 py-2 disabled:bg-gray-200 disabled:text-gray-600 disabled:cursor-not-allowed"
+          className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {submitting ? "Sending..." : "Send"}
         </button>

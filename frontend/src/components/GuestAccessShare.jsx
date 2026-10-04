@@ -2,13 +2,25 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 
-export default function GuestAccessShare({ token, buttonClassName = "booking-action text-sm border rounded px-3 py-1" }) {
+// token: a per-booking guest_access_token (the original use -- see §3),
+// used to build a /arrival/guest/:token link. url: a fixed,
+// non-booking-specific URL instead (the generic "anyone currently on site"
+// guest link/QR -- see §24) -- pass exactly one of the two. buttonLabel/
+// description let a caller using `url` customize the copy, since it isn't
+// "for this booking" specifically.
+export default function GuestAccessShare({
+  token,
+  url,
+  buttonClassName = "booking-action text-sm border rounded px-3 py-1",
+  buttonLabel = "Share the marae guide with guests",
+  description = "Anyone with this link or QR code can view the marae guide for this booking — no account needed. Useful if others besides you are staying (e.g. a group booking).",
+}) {
   const [open, setOpen] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState(null);
   const [qrError, setQrError] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const guestUrl = `${window.location.origin}/arrival/guest/${token}`;
+  const guestUrl = url || `${window.location.origin}/arrival/guest/${token}`;
 
   useEffect(() => {
     if (!open || qrDataUrl) return;
@@ -38,17 +50,14 @@ export default function GuestAccessShare({ token, buttonClassName = "booking-act
   if (!open) {
     return (
       <button onClick={() => setOpen(true)} className={buttonClassName}>
-        Share the marae guide with guests
+        {buttonLabel}
       </button>
     );
   }
 
   return (
     <div className="border rounded-lg p-3 mt-2 bg-gray-50">
-      <p className="text-xs text-gray-600 mb-2">
-        Anyone with this link or QR code can view the marae guide for this booking — no
-        account needed. Useful if others besides you are staying (e.g. a group booking).
-      </p>
+      <p className="text-xs text-gray-600 mb-2">{description}</p>
       <div className="flex items-center gap-2 mb-3">
         <input
           type="text"

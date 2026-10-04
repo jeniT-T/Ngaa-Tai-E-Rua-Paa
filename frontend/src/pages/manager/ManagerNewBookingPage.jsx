@@ -11,22 +11,15 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import BookingCalendar from "../../components/BookingCalendar.jsx";
 import useBookingAvailability from "../../hooks/useBookingAvailability.js";
+import useSiteSettings from "../../hooks/useSiteSettings.js";
 
 const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
 
-const BOOKING_TYPES = [
-  { value: "standard", label: "Standard hire" },
-  { value: "event", label: "Event" },
-  { value: "tangihanga", label: "Tangihanga" },
-];
-
-const AREAS = [
-  { value: "general", label: "General area" },
-  { value: "paa", label: "Entire Paa" },
-];
-
 export default function ManagerNewBookingPage() {
   const navigate = useNavigate();
+  const { settings } = useSiteSettings();
+  const bookingTypes = settings.booking_types;
+  const areas = settings.booking_areas;
 
   const [users, setUsers] = useState(null);
   const [loadingUsers, setLoadingUsers] = useState(true);
@@ -34,8 +27,8 @@ export default function ManagerNewBookingPage() {
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [bookingType, setBookingType] = useState("standard");
-  const [area, setArea] = useState("general");
+  const [bookingType, setBookingType] = useState(bookingTypes[0]?.value || "");
+  const [area, setArea] = useState(areas[0]?.value || "");
   const [purpose, setPurpose] = useState("");
   const [whakapapa, setWhakapapa] = useState("");
   const [markApproved, setMarkApproved] = useState(true);
@@ -44,6 +37,13 @@ export default function ManagerNewBookingPage() {
   const [error, setError] = useState("");
 
   const { unavailableDays, loading: loadingAvailability } = useBookingAvailability();
+
+  // Computed at render time rather than synced via an effect — see the
+  // matching comment in BookingRequestPage.jsx.
+  const effectiveBookingType = bookingTypes.some((t) => t.value === bookingType)
+    ? bookingType
+    : bookingTypes[0]?.value || "";
+  const effectiveArea = areas.some((a) => a.value === area) ? area : areas[0]?.value || "";
 
   useEffect(() => {
     fetch(`${API_BASE}/admin/users`, { credentials: "include" })
@@ -66,8 +66,8 @@ export default function ManagerNewBookingPage() {
       setError("Choose which customer this booking is for");
       return;
     }
-    if (whakapapa !== "yes" && whakapapa !== "no") {
-      setError("Please select whether they whakapapa to the Paa");
+    if (settings.whakapapa_question_enabled && whakapapa !== "yes" && whakapapa !== "no") {
+      setError(`Please answer: ${settings.whakapapa_question_label}`);
       return;
     }
 
@@ -81,10 +81,10 @@ export default function ManagerNewBookingPage() {
           userId: Number(userId),
           startDate,
           endDate,
-          bookingType,
-          area,
+          bookingType: effectiveBookingType,
+          area: effectiveArea,
           purpose,
-          whakapapa: whakapapa === "yes",
+          whakapapa: settings.whakapapa_question_enabled ? whakapapa === "yes" : false,
           status: markApproved ? "approved" : "pending",
         }),
       });
@@ -183,24 +183,26 @@ export default function ManagerNewBookingPage() {
           />
         </div>
 
-        <div>
-          <label htmlFor="whakapapa" className="block text-sm font-medium mb-1">
-            Do they whakapapa to the Paa?
-          </label>
-          <select
-            id="whakapapa"
-            value={whakapapa}
-            onChange={(e) => setWhakapapa(e.target.value)}
-            required
-            className="w-full border rounded px-3 py-2"
-          >
-            <option value="" disabled>
-              Select an answer
-            </option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
-        </div>
+        {settings.whakapapa_question_enabled && (
+          <div>
+            <label htmlFor="whakapapa" className="block text-sm font-medium mb-1">
+              {settings.whakapapa_question_label.replace(/^Do you/i, "Do they")}
+            </label>
+            <select
+              id="whakapapa"
+              value={whakapapa}
+              onChange={(e) => setWhakapapa(e.target.value)}
+              required
+              className="w-full border rounded px-3 py-2"
+            >
+              <option value="" disabled>
+                Select an answer
+              </option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </div>
+        )}
 
         <div>
           <label htmlFor="area" className="block text-sm font-medium mb-1">
@@ -208,11 +210,11 @@ export default function ManagerNewBookingPage() {
           </label>
           <select
             id="area"
-            value={area}
+            value={effectiveArea}
             onChange={(e) => setArea(e.target.value)}
             className="w-full border rounded px-3 py-2"
           >
-            {AREAS.map(({ value, label }) => (
+            {areas.map(({ value, label }) => (
               <option key={value} value={value}>
                 {label}
               </option>
@@ -226,11 +228,11 @@ export default function ManagerNewBookingPage() {
           </label>
           <select
             id="bookingType"
-            value={bookingType}
+            value={effectiveBookingType}
             onChange={(e) => setBookingType(e.target.value)}
             className="w-full border rounded px-3 py-2"
           >
-            {BOOKING_TYPES.map(({ value, label }) => (
+            {bookingTypes.map(({ value, label }) => (
               <option key={value} value={value}>
                 {label}
               </option>

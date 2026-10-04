@@ -7,8 +7,19 @@ import { useState } from "react";
 
 const DAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
 
+// NOT `date.toISOString().slice(0, 10)` — every `date` here is a local
+// midnight Date (built with `new Date(year, month, day)`), and
+// toISOString() converts to UTC first. In any timezone ahead of UTC
+// (New Zealand included) that rolls local midnight back into the previous
+// UTC day, so the key for "the 3rd" came out as "the 2nd" — which is
+// exactly the "day before gets selected" bug reported against this
+// calendar. Reading the date's own local fields instead sidesteps the
+// UTC conversion entirely.
 function toDateKey(date) {
-  return date.toISOString().slice(0, 10);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function startOfMonth(date) {
@@ -128,7 +139,7 @@ export default function BookingCalendar({
                 disabled
                   ? "text-gray-300 bg-gray-50 cursor-not-allowed line-through"
                   : selected
-                  ? "bg-black text-white"
+                  ? "bg-[#0081bd] text-white"
                   : "hover:bg-gray-100",
               ].join(" ")}
             >
@@ -143,7 +154,7 @@ export default function BookingCalendar({
           <span className="w-3 h-3 rounded bg-gray-50 border inline-block" /> Unavailable
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-black inline-block" /> Selected
+          <span className="w-3 h-3 rounded bg-[#0081bd] inline-block" /> Selected
         </span>
       </div>
     </div>

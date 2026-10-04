@@ -76,7 +76,10 @@ const PUBLIC_PAGES = [
   'arrival-rules',
   'caretaker-tutorials',
 ];
-const BLOCK_TYPES = ['heading', 'section'];
+// 'gallery' is a third block type — a plain photo in a page's image strip
+// (no title/body rendered), used to convert the History page's and Health
+// & Safety page's previously hardcoded images into admin-uploadable ones.
+const BLOCK_TYPES = ['heading', 'section', 'gallery'];
 
 // A caretaker is only ever allowed to touch content placed on their own
 // tutorials page — everything else (the marketing pages, the arrival guide,

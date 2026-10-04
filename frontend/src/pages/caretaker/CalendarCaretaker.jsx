@@ -27,6 +27,7 @@ import {
 } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useTasks } from "../../context/TaskContext.jsx";
+import useActiveBookingsForCalendar from "../../hooks/useActiveBookingsForCalendar.js";
 import "./CalendarCaretaker.css";
 
 const urgencyOptions = {
@@ -39,6 +40,7 @@ const urgencyOptions = {
 export default function CalendarCaretaker() {
   const navigate = useNavigate();
   const { tasks, addTask, updateTask, completeTask, deleteTask } = useTasks();
+  const { bookingsOnDay } = useActiveBookingsForCalendar();
 
   const [today, setToday] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -84,6 +86,7 @@ export default function CalendarCaretaker() {
   }, [tasks, selectedDateString]);
 
   const completedTasks = selectedTasks.filter((task) => task.completed).length;
+  const selectedBookings = bookingsOnDay(selectedDateString);
 
   const openScheduleForDate = (date) => {
     navigate(`/caretaker/schedule?date=${format(date, "yyyy-MM-dd")}`);
@@ -181,6 +184,7 @@ export default function CalendarCaretaker() {
               const isSelected = isSameDay(day, selectedDate);
               const isOutsideMonth = !isSameMonth(day, currentMonth);
               const tasksOnDay = tasks.filter((task) => task.date === dateKey && !task.completed);
+              const hasBooking = bookingsOnDay(dateKey).length > 0;
 
               return (
                 <button
@@ -195,6 +199,12 @@ export default function CalendarCaretaker() {
                   onClick={() => openScheduleForDate(day)}
                 >
                   <span>{format(day, "d")}</span>
+
+                  {/* A marae booking covering this day — shown separately
+                      from task dots (a solid bar, not a colored dot) so
+                      it reads as "the marae itself is occupied" rather
+                      than one more task. */}
+                  {hasBooking && <div className="calendar-booking-bar" title="Marae booking" />}
 
                   {tasksOnDay.length > 0 && (
                     <div className="calendar-task-dots">
@@ -234,6 +244,16 @@ export default function CalendarCaretaker() {
               Task
             </button>
           </div>
+
+          {selectedBookings.length > 0 && (
+            <div className="calendar-booking-banner">
+              {selectedBookings.map((booking) => (
+                <p key={booking.id}>
+                  <strong>Marae booking:</strong> {booking.purpose || booking.booking_type}
+                </p>
+              ))}
+            </div>
+          )}
 
           {selectedTasks.length === 0 && (
             <div className="no-tasks">

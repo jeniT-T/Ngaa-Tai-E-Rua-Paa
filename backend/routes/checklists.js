@@ -18,6 +18,50 @@ const requireRole = require('../middleware/requireRole');
 
 const router = express.Router();
 
+// GET /api/checklists/guest/:token and GET /api/checklists/guest -- no
+// auth. Read-only, same checklist data a caretaker/admin/member with an
+// active booking already sees (opening/closing procedures -- nothing
+// sensitive about any particular person). These extend that same read-only
+// access to an actual unauthenticated guest, backing the Marae Guide's
+// guest-link flow (per-booking token, mirrors GET /api/bookings/guest/
+// :token) and the generic physical-QR flow (mirrors GET /api/bookings/
+// guest-active) -- see §24. Deliberately placed before `router.use
+// (requireAuth)` below, since these two are meant to work for anyone with
+// a valid link/QR, not just a logged-in user.
+router.get('/guest/:token', async (req, res) => {
+  try {
+    const booking = await Booking.findByGuestToken(req.params.token);
+    if (!booking) {
+      return res.status(404).json({ error: 'This link is invalid.' });
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const active = booking.status === 'approved' && new Date(booking.end_date) >= today;
+    if (!active) {
+      return res.status(403).json({ error: 'This link is no longer active.' });
+    }
+    const checklists = await Checklist.findAll();
+    res.json({ checklists });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch checklists' });
+  }
+});
+
+router.get('/guest-active', async (req, res) => {
+  try {
+    const booking = await Booking.findCurrentlyOnSite();
+    if (!booking) {
+      return res.status(403).json({ error: 'Not currently available' });
+    }
+    const checklists = await Checklist.findAll();
+    res.json({ checklists });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch checklists' });
+  }
+});
+
 router.use(requireAuth);
 
 async function hasActiveApprovedBooking(userId) {

@@ -1,29 +1,50 @@
 
-import { Link } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
 
 export default function ChecklistsViewPage() {
+  const { user } = useAuth();
+  const { token: guestToken } = useParams();
+  const location = useLocation();
+  // Reachable four ways now (see App.jsx and §24): from the caretaker
+  // dashboard (caretaker/admin), from the Marae Guide (a member with an
+  // active booking), and from either guest route (per-booking token, or
+  // the generic site-wide QR) -- guests have no `user` at all, so that's
+  // detected from the URL instead.
+  const isGuest = location.pathname.startsWith("/checklists/guest");
   const [checklists, setChecklists] = useState(null);
   const [error, setError] = useState("");
 
+  const isCaretakerStaff = user?.role === "caretaker" || user?.role === "admin";
+  const backTo = isCaretakerStaff
+    ? "/caretaker"
+    : isGuest
+      ? (guestToken ? `/arrival/guest/${guestToken}` : "/arrival/guest")
+      : "/arrival";
+  const backLabel = isCaretakerStaff ? "← Back to Caretaker Dashboard" : "← Back to Marae Guide";
+
   useEffect(() => {
-    fetch(`${API_BASE}/checklists`, { credentials: "include" })
+    const url = isGuest
+      ? (guestToken ? `${API_BASE}/checklists/guest/${guestToken}` : `${API_BASE}/checklists/guest-active`)
+      : `${API_BASE}/checklists`;
+    fetch(url, isGuest ? undefined : { credentials: "include" })
       .then(async (res) => {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Failed to load checklists");
         setChecklists(data.checklists);
       })
       .catch((err) => setError(err.message));
-  }, []);
+  }, [isGuest, guestToken]);
 
   return (
     <div className="p-8 max-w-2xl mx-auto">
       <div className="flex justify-between items-start gap-4 mb-2">
         <h1 className="text-2xl font-semibold">Opening &amp; Closing Checklists</h1>
-        <Link to="/caretaker" className="text-sm underline whitespace-nowrap">
-          ← Back to Caretaker Dashboard
+        <Link to={backTo} className="text-sm underline whitespace-nowrap">
+          {backLabel}
         </Link>
       </div>
       <p className="text-sm text-gray-500 mb-6">

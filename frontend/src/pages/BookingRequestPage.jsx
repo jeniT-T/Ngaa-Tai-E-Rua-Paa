@@ -3,25 +3,19 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import BookingCalendar from "../components/BookingCalendar.jsx";
 import useBookingAvailability from "../hooks/useBookingAvailability.js";
+import useSiteSettings from "../hooks/useSiteSettings.js";
 
 const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
 
-const BOOKING_TYPES = [
-  { value: "standard", label: "Standard hire" },
-  { value: "event", label: "Event" },
-  { value: "tangihanga", label: "Tangihanga" },
-];
-
-const AREAS = [
-  { value: "general", label: "General area" },
-  { value: "paa", label: "Entire Paa" },
-];
-
 export default function BookingRequestPage() {
+  const { settings } = useSiteSettings();
+  const bookingTypes = settings.booking_types;
+  const areas = settings.booking_areas;
+
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [bookingType, setBookingType] = useState("standard");
-  const [area, setArea] = useState("general");
+  const [bookingType, setBookingType] = useState(bookingTypes[0]?.value || "");
+  const [area, setArea] = useState(areas[0]?.value || "");
   const [purpose, setPurpose] = useState("");
   const [whakapapa, setWhakapapa] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -29,6 +23,18 @@ export default function BookingRequestPage() {
   const [success, setSuccess] = useState(false);
 
   const { unavailableDays, loading: loadingAvailability } = useBookingAvailability();
+
+  // The booking type/area options only arrive once the site-settings fetch
+  // resolves — if the current selection isn't one of the real options
+  // (e.g. a marae that doesn't offer "standard"), fall back to the first
+  // real one for display/submission rather than silently submitting
+  // something invalid. Computed at render time (not via a state-syncing
+  // effect) since it's a pure derivation of bookingTypes/areas + the
+  // current selection.
+  const effectiveBookingType = bookingTypes.some((t) => t.value === bookingType)
+    ? bookingType
+    : bookingTypes[0]?.value || "";
+  const effectiveArea = areas.some((a) => a.value === area) ? area : areas[0]?.value || "";
 
   function handleSelectRange(nextStart, nextEnd) {
     setStartDate(nextStart);
@@ -39,8 +45,8 @@ export default function BookingRequestPage() {
     e.preventDefault();
     setError("");
 
-    if (whakapapa !== "yes" && whakapapa !== "no") {
-      setError("Please tell us whether you whakapapa to the Paa");
+    if (settings.whakapapa_question_enabled && whakapapa !== "yes" && whakapapa !== "no") {
+      setError(`Please answer: ${settings.whakapapa_question_label}`);
       return;
     }
 
@@ -53,10 +59,12 @@ export default function BookingRequestPage() {
         body: JSON.stringify({
           startDate,
           endDate,
-          bookingType,
-          area,
+          bookingType: effectiveBookingType,
+          area: effectiveArea,
           purpose,
-          whakapapa: whakapapa === "yes",
+          // When the marae has switched this question off entirely (Site
+          // Settings), there's nothing to answer — always send false.
+          whakapapa: settings.whakapapa_question_enabled ? whakapapa === "yes" : false,
         }),
       });
       const data = await res.json();
@@ -65,8 +73,8 @@ export default function BookingRequestPage() {
       setSuccess(true);
       setStartDate("");
       setEndDate("");
-      setBookingType("standard");
-      setArea("general");
+      setBookingType(bookingTypes[0]?.value || "");
+      setArea(areas[0]?.value || "");
       setPurpose("");
       setWhakapapa("");
     } catch (err) {
@@ -134,24 +142,26 @@ export default function BookingRequestPage() {
           />
         </div>
 
-        <div>
-          <label htmlFor="whakapapa" className="block text-sm font-medium mb-1">
-            Do you whakapapa to the Paa?
-          </label>
-          <select
-            id="whakapapa"
-            value={whakapapa}
-            onChange={(e) => setWhakapapa(e.target.value)}
-            required
-            className="w-full border rounded px-3 py-2"
-          >
-            <option value="" disabled>
-              Select an answer
-            </option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
-        </div>
+        {settings.whakapapa_question_enabled && (
+          <div>
+            <label htmlFor="whakapapa" className="block text-sm font-medium mb-1">
+              {settings.whakapapa_question_label}
+            </label>
+            <select
+              id="whakapapa"
+              value={whakapapa}
+              onChange={(e) => setWhakapapa(e.target.value)}
+              required
+              className="w-full border rounded px-3 py-2"
+            >
+              <option value="" disabled>
+                Select an answer
+              </option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </div>
+        )}
 
         <div>
           <label htmlFor="area" className="block text-sm font-medium mb-1">
@@ -159,19 +169,19 @@ export default function BookingRequestPage() {
           </label>
           <select
             id="area"
-            value={area}
+            value={effectiveArea}
             onChange={(e) => setArea(e.target.value)}
             className="w-full border rounded px-3 py-2"
           >
-            {AREAS.map(({ value, label }) => (
+            {areas.map(({ value, label }) => (
               <option key={value} value={value}>
                 {label}
               </option>
             ))}
           </select>
           <p className="text-xs text-gray-500 mt-1">
-            Booking either area reserves the whole Paa for your dates — the marae doesn't take
-            two bookings for overlapping dates, even if they're for different areas.
+            Booking any area reserves the whole property for your dates — the marae doesn't
+            take two bookings for overlapping dates, even if they're for different areas.
           </p>
         </div>
 
@@ -181,11 +191,11 @@ export default function BookingRequestPage() {
           </label>
           <select
             id="bookingType"
-            value={bookingType}
+            value={effectiveBookingType}
             onChange={(e) => setBookingType(e.target.value)}
             className="w-full border rounded px-3 py-2"
           >
-            {BOOKING_TYPES.map(({ value, label }) => (
+            {bookingTypes.map(({ value, label }) => (
               <option key={value} value={value}>
                 {label}
               </option>

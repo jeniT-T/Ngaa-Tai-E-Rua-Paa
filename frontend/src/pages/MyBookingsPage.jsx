@@ -3,22 +3,12 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import BookingCalendar from "../components/BookingCalendar.jsx";
 import useBookingAvailability from "../hooks/useBookingAvailability.js";
+import useSiteSettings from "../hooks/useSiteSettings.js";
 import GuestAccessShare from "../components/GuestAccessShare.jsx";
+import StarRating from "../components/StarRating.jsx";
+import { isBookingComplete } from "../utils/bookingStatus.js";
 
 const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
-
-const BOOKING_TYPES = [
-  { value: "standard", label: "Standard hire" },
-  { value: "event", label: "Event" },
-  { value: "tangihanga", label: "Tangihanga" },
-];
-
-const AREAS = [
-  { value: "general", label: "General area" },
-  { value: "paa", label: "Entire Paa" },
-];
-
-const AREA_LABELS = { general: "General area", paa: "Entire Paa" };
 
 const STATUS_STYLES = {
   pending: { label: "Pending review", bg: "#fff8e1", color: "#8a6d00" },
@@ -44,11 +34,11 @@ function StatusBadge({ status }) {
   );
 }
 
-function EditBookingForm({ booking, onCancel, onSaved }) {
+function EditBookingForm({ booking, settings, onCancel, onSaved }) {
   const [startDate, setStartDate] = useState(toDateInputValue(booking.start_date));
   const [endDate, setEndDate] = useState(toDateInputValue(booking.end_date));
   const [bookingType, setBookingType] = useState(booking.booking_type);
-  const [area, setArea] = useState(booking.area || "general");
+  const [area, setArea] = useState(booking.area || settings.booking_areas[0]?.value || "");
   const [purpose, setPurpose] = useState(booking.purpose);
   const [whakapapa, setWhakapapa] = useState(booking.whakapapa ? "yes" : "no");
   const [error, setError] = useState("");
@@ -72,7 +62,14 @@ function EditBookingForm({ booking, onCancel, onSaved }) {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ startDate, endDate, bookingType, area, purpose, whakapapa: whakapapa === "yes" }),
+        body: JSON.stringify({
+          startDate,
+          endDate,
+          bookingType,
+          area,
+          purpose,
+          ...(settings.whakapapa_question_enabled ? { whakapapa: whakapapa === "yes" } : {}),
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to update booking");
@@ -122,17 +119,19 @@ function EditBookingForm({ booking, onCancel, onSaved }) {
           />
         </div>
       </div>
-      <div>
-        <label className="block text-xs font-medium mb-1">Do you whakapapa to the Paa?</label>
-        <select
-          value={whakapapa}
-          onChange={(e) => setWhakapapa(e.target.value)}
-          className="w-full border rounded px-2 py-1 text-sm"
-        >
-          <option value="yes">Yes</option>
-          <option value="no">No</option>
-        </select>
-      </div>
+      {settings.whakapapa_question_enabled && (
+        <div>
+          <label className="block text-xs font-medium mb-1">{settings.whakapapa_question_label}</label>
+          <select
+            value={whakapapa}
+            onChange={(e) => setWhakapapa(e.target.value)}
+            className="w-full border rounded px-2 py-1 text-sm"
+          >
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+      )}
       <div>
         <label className="block text-xs font-medium mb-1">Which area do you need?</label>
         <select
@@ -140,7 +139,7 @@ function EditBookingForm({ booking, onCancel, onSaved }) {
           onChange={(e) => setArea(e.target.value)}
           className="w-full border rounded px-2 py-1 text-sm"
         >
-          {AREAS.map(({ value, label }) => (
+          {settings.booking_areas.map(({ value, label }) => (
             <option key={value} value={value}>
               {label}
             </option>
@@ -154,7 +153,7 @@ function EditBookingForm({ booking, onCancel, onSaved }) {
           onChange={(e) => setBookingType(e.target.value)}
           className="w-full border rounded px-2 py-1 text-sm"
         >
-          {BOOKING_TYPES.map(({ value, label }) => (
+          {settings.booking_types.map(({ value, label }) => (
             <option key={value} value={value}>
               {label}
             </option>
@@ -176,7 +175,7 @@ function EditBookingForm({ booking, onCancel, onSaved }) {
         <button
           type="submit"
           disabled={saving}
-          className="booking-action booking-action-primary text-sm bg-black text-white rounded px-3 py-1 disabled:bg-gray-200 disabled:text-gray-600 disabled:cursor-not-allowed"
+          className="booking-action btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? "Saving..." : "Save & re-request"}
         </button>
@@ -188,20 +187,39 @@ function EditBookingForm({ booking, onCancel, onSaved }) {
   );
 }
 
-export default function MyBookingsPage() {
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
+// A guest's own review of their stay, once it's over — star rating +
+// freeform notes about the marae. Separate from (and never shown) the
+// manager's private review of the guest (see GET /api/bookings/:id/guest-review
+// in backend/routes/bookings.js, which only ever returns the guest_* half of
+// the row). Collapsed by default, loaded lazily on open.
+function GuestReviewPanel({ bookingId }) {
+  const [open, setOpen] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [notes, setNotes] = useState("");
+  const [savedAt, setSavedAt] = useState(null);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [editingId, setEditingId] = useState(null);
 
-  async function loadBookings() {
+  async function handleOpen() {
+    setOpen(true);
+    if (loaded) return;
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${API_BASE}/bookings/mine`, { credentials: "include" });
+      const res = await fetch(`${API_BASE}/bookings/${bookingId}/guest-review`, { credentials: "include" });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to load bookings");
-      setBookings(data.bookings);
+      if (!res.ok) throw new Error(data.error || "Failed to load your review");
+      if (data.review) {
+        setRating(data.review.rating || 0);
+        setNotes(data.review.notes || "");
+        setSavedAt(data.review.reviewedAt || null);
+      } else {
+        setEditing(true);
+      }
+      setLoaded(true);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -209,8 +227,132 @@ export default function MyBookingsPage() {
     }
   }
 
+  async function handleSave() {
+    if (!rating) {
+      setError("Pick a star rating first.");
+      return;
+    }
+    setError("");
+    setSaving(true);
+    try {
+      const res = await fetch(`${API_BASE}/bookings/${bookingId}/guest-review`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating, notes }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save your review");
+      setRating(data.review.rating || 0);
+      setNotes(data.review.notes || "");
+      setSavedAt(data.review.reviewedAt);
+      setEditing(false);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <button type="button" onClick={handleOpen} className="booking-action text-sm border rounded px-3 py-1">
+        Leave a review
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-2 border-t pt-3 space-y-2">
+      {loading ? (
+        <p className="text-sm text-gray-400">Loading...</p>
+      ) : editing ? (
+        <>
+          <p className="text-xs text-gray-500">How was your stay?</p>
+          <StarRating value={rating} onChange={setRating} />
+          <textarea
+            placeholder="Anything you'd like to tell us about your stay..."
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={2}
+            className="w-full border rounded px-2 py-1 text-sm"
+          />
+          {error && <p className="text-red-600 text-xs">{error}</p>}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className="text-sm border rounded px-3 py-1.5"
+            >
+              {saving ? "Saving..." : "Submit review"}
+            </button>
+            <button type="button" onClick={() => setOpen(false)} className="text-sm underline text-gray-500">
+              Close
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <p className="text-xs text-gray-500 mb-1">Your review</p>
+          <StarRating value={rating} readOnly />
+          {notes && <p className="text-sm text-gray-700 whitespace-pre-line mt-1">{notes}</p>}
+          {savedAt && (
+            <p className="text-xs text-gray-400 mt-1">
+              Submitted {new Date(savedAt).toLocaleDateString()}
+            </p>
+          )}
+          <div className="flex items-center gap-3 mt-1">
+            <button type="button" onClick={() => setEditing(true)} className="text-sm underline">
+              Edit
+            </button>
+            <button type="button" onClick={() => setOpen(false)} className="text-sm underline text-gray-500">
+              Close
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+export default function MyBookingsPage() {
+  const { settings } = useSiteSettings();
+  const typeLabels = Object.fromEntries(settings.booking_types.map((t) => [t.value, t.label]));
+  const areaLabels = Object.fromEntries(settings.booking_areas.map((a) => [a.value, a.label]));
+
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [editingId, setEditingId] = useState(null);
+
+  // A plain promise chain, not an async function called directly — every
+  // setState call below sits inside a .then()/.catch() callback (deferred
+  // to a microtask), never synchronously in this effect's own call frame.
+  // (`loading`/`error` already start at their correct values — true/"" —
+  // so there's nothing to reset synchronously before the fetch anyway.)
+  // This was previously an `async function loadBookings()` called directly
+  // from the effect, which set state synchronously before its first
+  // `await` — a pre-existing react-hooks/set-state-in-effect lint finding
+  // predating this engagement, cleaned up here alongside this round's
+  // other fixes.
   useEffect(() => {
-    loadBookings();
+    let cancelled = false;
+    fetch(`${API_BASE}/bookings/mine`, { credentials: "include" })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to load bookings");
+        if (!cancelled) setBookings(data.bookings);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function handleCancel(id) {
@@ -272,15 +414,18 @@ export default function MyBookingsPage() {
                     {toDateInputValue(booking.start_date)} → {toDateInputValue(booking.end_date)}
                   </p>
                   <p className="text-xs text-gray-500 capitalize">
-                    {booking.booking_type} · {AREA_LABELS[booking.area] || booking.area}
+                    {typeLabels[booking.booking_type] || booking.booking_type} ·{" "}
+                    {areaLabels[booking.area] || booking.area}
                   </p>
                 </div>
                 <StatusBadge status={booking.status} />
               </div>
               <p className="text-sm text-gray-700 whitespace-pre-line mb-2">{booking.purpose}</p>
-              <p className="text-xs text-gray-500 mb-2">
-                Whakapapa to the Paa: {booking.whakapapa ? "Yes" : "No"}
-              </p>
+              {settings.whakapapa_question_enabled && (
+                <p className="text-xs text-gray-500 mb-2">
+                  {settings.whakapapa_question_label} {booking.whakapapa ? "Yes" : "No"}
+                </p>
+              )}
               {booking.admin_notes && (
                 <p className="text-xs text-gray-600 italic mb-2">
                   Note from the marae: {booking.admin_notes}
@@ -310,9 +455,16 @@ export default function MyBookingsPage() {
                 </div>
               )}
 
+              {isBookingComplete(booking) && (
+                <div className="mt-2">
+                  <GuestReviewPanel bookingId={booking.id} />
+                </div>
+              )}
+
               {editingId === booking.id && (
                 <EditBookingForm
                   booking={booking}
+                  settings={settings}
                   onCancel={() => setEditingId(null)}
                   onSaved={handleSaved}
                 />

@@ -28,6 +28,11 @@ const FEATURES = [
     title: 'Reported Issues',
     description: 'See issues reported by users and track what still needs attention.',
   },
+  {
+    to: '/caretaker/calendar',
+    title: 'Caretaker Calendar',
+    description: "The same task calendar the caretaker uses, including any marae booking that's currently on.",
+  },
 ];
 
 export default function ManagerDashboardPage() {

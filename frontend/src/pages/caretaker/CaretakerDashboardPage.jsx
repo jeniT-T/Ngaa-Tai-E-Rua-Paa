@@ -6,6 +6,7 @@ const AVAILABLE_LINKS = [
   { to: '/caretaker/schedule', title: 'Task Schedule', description: 'View upcoming scheduled tasks for today.' },
   { to: '/caretaker/tutorials', title: 'Tutorials', description: 'Guides on caring for the marae.' },
   { to: '/checklists', title: 'Checklists', description: 'View the opening & closing checklists.' },
+  { to: '/caretaker/issues', title: 'Issues', description: 'See what’s been reported so repairs don’t get missed.' },
 ];
 
 export default function CaretakerDashboardPage() {

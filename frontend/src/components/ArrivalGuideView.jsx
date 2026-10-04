@@ -16,7 +16,7 @@
 // Anything with an unrecognized category falls back to "General" rather than
 // being hidden, so nothing silently disappears if a category typo slips in.
 import { useState, useMemo, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import usePageContent from "../hooks/usePageContent.js";
 import { getYoutubeEmbedUrl } from "../utils/youtube.js";
 import RecipeStepGallery from "./RecipeStepGallery.jsx";
@@ -86,6 +86,31 @@ const CATEGORY_GROUPS = {
   },
 };
 
+// Health & Safety and Rules & Regulations used to be their own standalone
+// pages (/health-and-safety, /arrival/rules), the first fully public and
+// the second gated the same way the guide itself is. Both are now folded
+// directly into the Marae Guide instead — so neither one is reachable at
+// all by someone without an approved booking (or the guest-link view of
+// this same component), and both "disappear completely" from the public
+// Facilities page, which no longer links to either. The content itself is
+// unchanged and still comes from the exact same CMS placements
+// ("health-and-safety", "arrival-rules") an admin already edits via
+// Content Manager — only where it's displayed has moved.
+const DEFAULT_SAFETY_SECTIONS = [
+  { title: "Evacuation Information", body: "Placeholder text..." },
+];
+
+const DEFAULT_RULES_SECTIONS = [
+  {
+    title: "General Rules",
+    body: "Respect the marae and all visitors\nNo shoes inside the wharenui (meeting house)\nKeep noise to a minimum during evening hours\nClean up after using shared spaces",
+  },
+  {
+    title: "Facility Time Restrictions",
+    body: "Kitchen use: 6am – 10pm\nQuiet hours: 10pm – 7am",
+  },
+];
+
 const FALLBACK_ITEMS = [
   {
     id: "emergency-contacts",
@@ -130,6 +155,26 @@ export default function ArrivalGuideView() {
   // box below simply doesn't render there.
   const { user } = useAuth();
   const { booking: activeBooking } = useMyActiveBooking();
+  // Which guest route (if any) rendered this view -- distinguishes the
+  // per-booking guest link (/arrival/guest/:token) from the generic,
+  // non-booking-specific one (/arrival/guest, no token) -- see §24. Both
+  // have no logged-in `user` at all, which is what the rest of this
+  // component already uses to tell a guest apart from a member/caretaker.
+  const { token: guestToken } = useParams();
+  const location = useLocation();
+  const isGuestRoute = location.pathname.startsWith("/arrival/guest");
+
+  // Health & Safety and Rules & Regulations content — same two CMS
+  // placements that used to back their own standalone pages, now rendered
+  // as fixed panels inside the guide (see the comment above
+  // DEFAULT_SAFETY_SECTIONS).
+  const { heading: safetyHeading, sections: safetySections, gallery: safetyGallery } =
+    usePageContent("health-and-safety");
+  const safetyInfo = safetySections.length > 0 ? safetySections : DEFAULT_SAFETY_SECTIONS;
+  const evacuationImage = safetyGallery[0];
+
+  const { heading: rulesHeading, sections: rulesSections } = usePageContent("arrival-rules");
+  const rulesInfo = rulesSections.length > 0 ? rulesSections : DEFAULT_RULES_SECTIONS;
 
   const items = useMemo(() => {
     if (!usingCms) return FALLBACK_ITEMS;
@@ -431,12 +476,103 @@ export default function ArrivalGuideView() {
         </p>
       </div>
 
-      {/* For your stay — share link/QR code for this booking, and the
-          Opening & Closing checklist. Only shown to the member who actually
-          has an active approved booking (caretaker/admin already have their
-          own editable checklist page; the guest-link view has no logged-in
-          user at all, see the note on activeBooking above). */}
-      {user?.role === "member" && activeBooking && (
+      {/* Health & Safety — folded into the guide (see the comment above
+          DEFAULT_SAFETY_SECTIONS). Open by default, unlike the category
+          panels below, since this is safety-critical and shouldn't need an
+          extra click to see. */}
+      <details open style={{
+        marginBottom: "24px",
+        borderRadius: "var(--radius-panel)",
+        border: "2px solid #DC2626",
+        overflow: "hidden",
+        boxShadow: "var(--shadow-sm)",
+      }}>
+        <summary style={{
+          padding: "16px 20px",
+          background: "color-mix(in srgb, #DC2626 7%, white)",
+          cursor: "pointer",
+          fontSize: "1.2rem",
+          fontWeight: "700",
+          color: "#DC2626",
+        }}>
+          🚨 {safetyHeading ? safetyHeading.title : "Health & Safety"}
+        </summary>
+        <div style={{ padding: "20px", background: "var(--bg-primary)" }}>
+          {safetyHeading && <ContentImage item={safetyHeading} />}
+          <p style={{ color: "var(--text-secondary)", marginBottom: "16px", whiteSpace: "pre-line" }}>
+            {safetyHeading?.body || "Emergency evacuation points for arriving marae users:"}
+          </p>
+          <div style={{ borderRadius: "var(--radius-panel)", overflow: "hidden", marginBottom: "16px", border: "1px solid var(--border-light)" }}>
+            {evacuationImage ? (
+              <ContentImage item={evacuationImage} />
+            ) : (
+              <img
+                src="/images/evacuation-plan.png"
+                alt="Ngaa Tai E Rua Paa fire evacuation plan, showing exits and the front carpark assembly area"
+                style={{ width: "100%", display: "block" }}
+              />
+            )}
+          </div>
+          {safetyInfo.map((section) => (
+            <div key={section.title} style={{ padding: "16px", background: "var(--bg-secondary)", borderRadius: "var(--radius-panel)", marginBottom: "12px" }}>
+              <ContentImage item={section} />
+              <h3 style={{ marginTop: 0 }}>{section.title}</h3>
+              <p style={{ color: "var(--text-secondary)", lineHeight: 1.7, whiteSpace: "pre-line" }}>{section.body}</p>
+            </div>
+          ))}
+        </div>
+      </details>
+
+      {/* Rules & Regulations — folded into the guide the same way, right
+          alongside Health & Safety. */}
+      <details style={{
+        marginBottom: "32px",
+        borderRadius: "var(--radius-panel)",
+        border: "2px solid var(--primary)",
+        overflow: "hidden",
+        boxShadow: "var(--shadow-sm)",
+      }}>
+        <summary style={{
+          padding: "16px 20px",
+          background: "color-mix(in srgb, var(--primary) 7%, white)",
+          cursor: "pointer",
+          fontSize: "1.2rem",
+          fontWeight: "700",
+          color: "var(--primary-dark)",
+        }}>
+          📋 {rulesHeading ? rulesHeading.title : "Rules & Regulations"}
+        </summary>
+        <div style={{ padding: "20px", background: "var(--bg-primary)" }}>
+          {rulesHeading && <ContentImage item={rulesHeading} />}
+          <p style={{ color: "var(--text-secondary)", marginBottom: "16px", whiteSpace: "pre-line" }}>
+            {rulesHeading?.body ||
+              "Welcome to the marae. Please follow these rules to ensure respect, safety, and a smooth stay for everyone."}
+          </p>
+          {rulesInfo.map((item) => (
+            <div key={item.title} style={{ marginBottom: "16px" }}>
+              <ContentImage item={item} />
+              <h3 style={{ marginTop: 0 }}>{item.title}</h3>
+              <ul style={{ color: "var(--text-secondary)", lineHeight: 1.7, paddingLeft: "20px" }}>
+                {(item.body || "").split("\n").filter(Boolean).map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </details>
+
+      {/* For your stay — share link/QR code for this booking (members
+          only -- they're the one with a booking_access_token to share), and
+          links to the Opening & Closing checklist and Tutorials. Shown to a
+          member with an active approved booking, AND to a guest reached via
+          either guest route (per-booking token, or the generic site-wide
+          QR) -- caretaker/admin already have their own editable pages, so
+          they don't need this box. See §24: this used to be guest-only-
+          excluded entirely; the checklist/tutorial links are now extended
+          to guests the same way the Health & Safety/Rules panels above
+          already are. */}
+      {((user?.role === "member" && activeBooking) || isGuestRoute) && (
         <div style={{
           marginBottom: "32px",
           padding: "20px",
@@ -448,22 +584,25 @@ export default function ArrivalGuideView() {
             For your stay
           </h2>
           <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", marginBottom: "12px" }}>
-            Share this guide with others on your booking, or see what the opening &amp; closing
-            checklist covers.
+            {isGuestRoute
+              ? "See what the opening & closing checklist covers, or browse tutorials for how things around the marae work."
+              : "Share this guide with others on your booking, or see what the opening & closing checklist covers."}
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "flex-start" }}>
-            <GuestAccessShare
-              token={activeBooking.guest_access_token}
-              buttonClassName="btn btn-outline guide-action"
-            />
+            {user?.role === "member" && activeBooking && (
+              <GuestAccessShare
+                token={activeBooking.guest_access_token}
+                buttonClassName="btn btn-outline guide-action"
+              />
+            )}
             <Link
-              to="/checklists"
+              to={isGuestRoute ? (guestToken ? `/checklists/guest/${guestToken}` : "/checklists/guest") : "/checklists"}
               className="btn btn-outline guide-action"
             >
               View Opening &amp; Closing Checklist
             </Link>
             <Link
-              to="/tutorials"
+              to={isGuestRoute ? (guestToken ? `/tutorials/guest/${guestToken}` : "/tutorials/guest") : "/tutorials"}
               className="btn btn-outline guide-action"
             >
               View Tutorials

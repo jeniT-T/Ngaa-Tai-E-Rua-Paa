@@ -1,11 +1,9 @@
-// frontend/src/pages/manager/ManagerBookingsPage.jsx
-//
-// Approve/deny booking requests — moved here from the old admin bookings
-// page now that this responsibility belongs to the manager role (backend
-// route is unchanged: GET/PATCH /api/bookings, still requireRole('manager')).
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import GuestAccessShare from "../../components/GuestAccessShare.jsx";
+import StarRating from "../../components/StarRating.jsx";
+import { isBookingComplete } from "../../utils/bookingStatus.js";
+import useSiteSettings from "../../hooks/useSiteSettings.js";
 
 const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
 
@@ -16,25 +14,35 @@ const STATUS_STYLES = {
   cancelled: "bg-gray-100 text-gray-600",
 };
 
-const AREA_LABELS = { general: "General area", paa: "Entire Paa" };
-
 function toDateLabel(dateString) {
   return dateString ? String(dateString).slice(0, 10) : "";
 }
 
-export default function ManagerBookingsPage() {
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
+function ManagerGuestReviewPanel({ bookingId }) {
+  const [open, setOpen] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [notes, setNotes] = useState("");
+  const [savedAt, setSavedAt] = useState(null);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [notesDraft, setNotesDraft] = useState({}); // { [bookingId]: text }
 
-  async function loadBookings() {
+  async function handleOpen() {
+    setOpen(true);
+    if (loaded) return;
     setLoading(true);
+    setError("");
     try {
-      const res = await fetch(`${API_BASE}/bookings`, { credentials: "include" });
+      const res = await fetch(`${API_BASE}/bookings/${bookingId}/review`, { credentials: "include" });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to load bookings");
-      setBookings(data.bookings);
+      if (!res.ok) throw new Error(data.error || "Failed to load review");
+      if (data.review) {
+        setRating(data.review.manager_rating || 0);
+        setNotes(data.review.manager_notes || "");
+        setSavedAt(data.review.manager_reviewed_at || null);
+      }
+      setLoaded(true);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -42,8 +50,103 @@ export default function ManagerBookingsPage() {
     }
   }
 
+  async function handleSave() {
+    if (!rating) {
+      setError("Pick a star rating first.");
+      return;
+    }
+    setError("");
+    setSaving(true);
+    try {
+      const res = await fetch(`${API_BASE}/bookings/${bookingId}/manager-review`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating, notes }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save review");
+      setSavedAt(data.review.manager_reviewed_at);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <button type="button" onClick={handleOpen} className="text-sm border rounded px-3 py-1.5 mt-2">
+        Review this guest (private)
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-3 border-t pt-3 space-y-2">
+      <p className="text-xs text-gray-500">
+        Only you and other managers can see this — the guest never will.
+      </p>
+      {loading ? (
+        <p className="text-sm text-gray-400">Loading...</p>
+      ) : (
+        <>
+          <StarRating value={rating} onChange={setRating} />
+          <textarea
+            placeholder="How good a guest were they? Any notes for next time..."
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={2}
+            className="w-full border rounded px-2 py-1 text-sm"
+          />
+          {error && <p className="text-red-600 text-xs">{error}</p>}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className="text-sm border rounded px-3 py-1.5"
+            >
+              {saving ? "Saving..." : "Save review"}
+            </button>
+            {savedAt && <span className="text-xs text-gray-400">Saved</span>}
+            <button type="button" onClick={() => setOpen(false)} className="text-sm underline text-gray-500">
+              Close
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+export default function ManagerBookingsPage() {
+  const { settings } = useSiteSettings();
+  const typeLabels = Object.fromEntries(settings.booking_types.map((t) => [t.value, t.label]));
+  const areaLabels = Object.fromEntries(settings.booking_areas.map((a) => [a.value, a.label]));
+
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [notesDraft, setNotesDraft] = useState({}); // { [bookingId]: text }
+
   useEffect(() => {
-    loadBookings();
+    let cancelled = false;
+    fetch(`${API_BASE}/bookings`, { credentials: "include" })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to load bookings");
+        if (!cancelled) setBookings(data.bookings);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function decide(id, status) {
@@ -69,7 +172,7 @@ export default function ManagerBookingsPage() {
         <h1 className="text-2xl font-semibold">Booking Requests</h1>
         <Link
           to="/manager/bookings/new"
-          className="text-sm border rounded px-3 py-1.5 whitespace-nowrap"
+          className="flex justify-center items-center text-sm border rounded px-10 py-2 whitespace-nowrap"
         >
           + New booking for a customer
         </Link>
@@ -78,6 +181,20 @@ export default function ManagerBookingsPage() {
         Review, approve, or deny booking requests. The requester gets emailed automatically
         when you make a decision.
       </p>
+
+      {/* Generic, non-booking-specific guest access*/}
+      <div className="border rounded-lg p-4 mb-6 bg-gray-50">
+        <h2 className="text-sm font-semibold mb-1">Guest access for signage</h2>
+        <p className="text-xs text-gray-600 mb-2">
+          A single link/QR code you can print and post physically around the marae — works
+          for any guest while there's a current stay, no per-booking setup needed.
+        </p>
+        <GuestAccessShare
+          url={`${window.location.origin}/arrival/guest`}
+          buttonLabel="Get the guest access QR code"
+          description="Anyone who scans this while a booking is currently active can view the marae guide, checklists and tutorials — no account needed. Not tied to any one booking, so it's safe to print and leave up permanently."
+        />
+      </div>
 
       {error && <p className="text-red-600 mb-4">{error}</p>}
 
@@ -98,7 +215,8 @@ export default function ManagerBookingsPage() {
                     {booking.requester_name} · {booking.requester_email}
                   </p>
                   <p className="text-xs text-gray-500 capitalize">
-                    {booking.booking_type} · {AREA_LABELS[booking.area] || booking.area}
+                    {typeLabels[booking.booking_type] || booking.booking_type} ·{" "}
+                    {areaLabels[booking.area] || booking.area}
                   </p>
                 </div>
                 <span className={`text-xs px-2 py-1 rounded ${STATUS_STYLES[booking.status]}`}>
@@ -108,9 +226,12 @@ export default function ManagerBookingsPage() {
 
               <p className="text-sm text-gray-700 mb-3 whitespace-pre-line">{booking.purpose}</p>
 
-              <p className="text-xs text-gray-500 mb-3">
-                Whakapapa to the Paa: <span className="font-medium">{booking.whakapapa ? "Yes" : "No"}</span>
-              </p>
+              {settings.whakapapa_question_enabled && (
+                <p className="text-xs text-gray-500 mb-3">
+                  {settings.whakapapa_question_label}{" "}
+                  <span className="font-medium">{booking.whakapapa ? "Yes" : "No"}</span>
+                </p>
+              )}
 
               {booking.admin_notes && (
                 <p className="text-xs text-gray-600 italic mb-3">
@@ -151,6 +272,8 @@ export default function ManagerBookingsPage() {
                   <GuestAccessShare token={booking.guest_access_token} />
                 </div>
               )}
+
+              {isBookingComplete(booking) && <ManagerGuestReviewPanel bookingId={booking.id} />}
             </li>
           ))}
         </ul>
