@@ -20,10 +20,7 @@ async function loadPageContent(page, setHeading, setSections, setGallery) {
 function HistoryPage() {
   const [heading, setHeading] = useState(null);
   const [sections, setSections] = useState([]);
-  // The Top.jpg/Flag.jpg gallery was hardcoded (§5) — now admin-uploaded
-  // "gallery" content items if any have been added (Content Manager →
-  // History page), falling back to the original two photos so nothing
-  // changes until an admin actually replaces them.
+ 
   const [gallery, setGallery] = useState([]);
 
   useEffect(() => {

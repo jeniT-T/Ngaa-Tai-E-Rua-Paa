@@ -1,11 +1,6 @@
-// frontend/src/pages/manager/ManagerDashboardPage.jsx
-//
-// The manager's hub — everything that used to be the admin's job except
-// content management, which stays with admin. Managers approve/deny
-// bookings, manage users & roles (including creating caretaker/admin
-// accounts), and handle reported issues.
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import UpcomingTasksPanel from '../../components/UpcomingTasksPanel.jsx';
 
 const FEATURES = [
   {
@@ -33,6 +28,11 @@ const FEATURES = [
     title: 'Caretaker Calendar',
     description: "The same task calendar the caretaker uses, including any marae booking that's currently on.",
   },
+  {
+    to: '/caretaker/equipment',
+    title: 'Equipment',
+    description: 'View what equipment is on hand and its condition (read-only).',
+  },
 ];
 
 export default function ManagerDashboardPage() {
@@ -44,6 +44,7 @@ export default function ManagerDashboardPage() {
       <p className="text-gray-600 mb-10">Welcome, {user?.name}. Manage bookings, people and issues from here.</p>
 
       <div className="grid gap-6 md:grid-cols-2">
+        <UpcomingTasksPanel />
         {FEATURES.map(({ to, title, description }) => (
           <Link
             key={to}

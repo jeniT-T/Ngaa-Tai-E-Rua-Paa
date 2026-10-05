@@ -233,3 +233,15 @@ CREATE TABLE caretaker_tasks (
 );
 
 CREATE INDEX idx_caretaker_tasks_date ON caretaker_tasks(date);
+
+-- Equipment inventory (S36) — see migration_equipment.sql for rationale.
+CREATE TABLE equipment_items (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  condition VARCHAR(100) NOT NULL DEFAULT 'Good',
+  created_by INTEGER REFERENCES users(id),
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_equipment_items_name ON equipment_items(name);

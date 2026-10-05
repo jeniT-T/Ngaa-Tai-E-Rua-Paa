@@ -11,10 +11,7 @@ const TaskContext = createContext();
 
 const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
 
-// Backend rows use snake_case and a DATE column that serializes as a full
-// ISO timestamp (e.g. "2026-10-03T00:00:00.000Z") — trim it back down to
-// the plain "yyyy-MM-dd" string the calendar/schedule pages already filter
-// and sort by, so nothing downstream needs to change.
+
 function mapTask(row) {
   return {
     id: String(row.id),
@@ -29,17 +26,7 @@ function mapTask(row) {
   };
 }
 
-// Previously per-browser localStorage (one caretaker, one browser, fine at
-// the time) — now backed by the shared `caretaker_tasks` table so
-// caretaker and manager see and work from the exact same list, since
-// there's only one caretaker and the manager needs the same view. See
-// database/migration_caretaker_tasks.sql. The consumer-facing API
-// (tasks/addTask/updateTask/completeTask/deleteTask) is unchanged —
-// CalendarCaretaker.jsx and ScheduleCaretaker.jsx needed no rewrites.
-// Only caretaker/manager/admin can read this at all (see
-// backend/routes/caretakerTasks.js) — checking the role here too, before
-// ever calling fetch, means a member or logged-out visitor never fires a
-// request that the backend would just 401/403 anyway.
+
 const STAFF_ROLES = new Set(["caretaker", "manager", "admin"]);
 
 export function TaskProvider({ children }) {
@@ -48,17 +35,7 @@ export function TaskProvider({ children }) {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Deliberately a plain function returning a promise chain, not an async
-  // function — every setState call below sits inside a .then()/.catch()
-  // callback (deferred to a microtask), never synchronously in the
-  // function's own call frame. That matters because this gets called
-  // directly from the mount effect below: an async function that sets
-  // state *before* its first `await` would run that part synchronously
-  // during the effect, which is exactly the anti-pattern the project's
-  // own set-state-in-effect lint rule flags (see useSiteSettings.js for
-  // the same shape, and the project doc's note on two pre-existing
-  // instances of the opposite, synchronous version that were cleaned up
-  // alongside this).
+
   const refresh = useCallback(() => {
     if (!isStaff) {
       return Promise.resolve().then(() => {

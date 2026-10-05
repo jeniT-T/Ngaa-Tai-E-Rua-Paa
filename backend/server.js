@@ -13,6 +13,7 @@ const issueRoutes = require('./routes/issues');
 const checklistRoutes = require('./routes/checklists');
 const settingsRoutes = require('./routes/settings');
 const caretakerTaskRoutes = require('./routes/caretakerTasks');
+const equipmentRoutes = require('./routes/equipment');
 
 const app = express();
 
@@ -61,6 +62,7 @@ app.use('/api/issues', issueRoutes);
 app.use('/api/checklists', checklistRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/caretaker-tasks', caretakerTaskRoutes);
+app.use('/api/equipment', equipmentRoutes);
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));

@@ -34,6 +34,7 @@ import UnauthorizedPage from "./pages/UnauthorizedPage.jsx";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
 import CaretakerDashboardPage from "./pages/caretaker/CaretakerDashboardPage.jsx";
 import ChecklistsPage from "./pages/caretaker/ChecklistsPage.jsx";
+import EquipmentPage from "./pages/caretaker/EquipmentPage.jsx";
 import TutorialsPage from "./pages/caretaker/TutorialsPage.jsx";
 import CaretakerManageContentPage from "./pages/caretaker/CaretakerManageContentPage.jsx";
 import ManageTutorialsPage from "./pages/caretaker/ManageTutorialsPage.jsx";
@@ -324,6 +325,17 @@ function App() {
             element={
               <RoleRoute allowed={["caretaker", "admin"]}>
                 <ChecklistsPage />
+              </RoleRoute>
+            }
+          />
+          {/* Equipment inventory (S36) — caretaker/admin manage it, manager
+              gets the same read-only access it already has to the
+              caretaker calendar (see backend/routes/equipment.js). */}
+          <Route
+            path="/caretaker/equipment"
+            element={
+              <RoleRoute allowed={["caretaker", "manager", "admin"]}>
+                <EquipmentPage />
               </RoleRoute>
             }
           />
