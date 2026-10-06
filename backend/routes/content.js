@@ -103,6 +103,25 @@ function isValidYoutubeUrl(url) {
   return /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/)|youtu\.be\/)/.test(url);
 }
 
+// Tutorial authors manage all assignments; viewers receive only their own role.
+router.get('/tutorials/manage', requireAuth, requireRole('admin', 'caretaker'), async (req, res) => {
+  try {
+    res.json({ items: await ContentItem.findByPlacement(CARETAKER_PLACEMENT) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch tutorials' });
+  }
+});
+
+router.get('/tutorials', requireAuth, async (req, res) => {
+  try {
+    res.json({ items: await ContentItem.findByPlacement(CARETAKER_PLACEMENT, req.user.role) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch tutorials' });
+  }
+});
+
 // GET /api/content/public/:page — no auth. Powers every public/marae-info
 // page (home/history/facilities/events/contacts/health-and-safety/map/
 // arrival guide + subpages). Admins choose a page as an item's "placement"
@@ -116,7 +135,7 @@ router.get('/public/:page', async (req, res) => {
     if (!PUBLIC_PAGES.includes(page)) {
       return res.status(400).json({ error: `page must be one of: ${PUBLIC_PAGES.join(', ')}` });
     }
-    const items = await ContentItem.findByPlacement(page);
+    const items = await ContentItem.findByPlacement(page, page === CARETAKER_PLACEMENT ? 'member' : null);
     res.json({ items });
   } catch (err) {
     console.error(err);
@@ -169,8 +188,8 @@ router.post('/', requireAuth, requireRole('admin', 'caretaker'), async (req, res
     if (!title || !body) {
       return res.status(400).json({ error: 'Title and body are required' });
     }
-    if (visibleToRoles && (!Array.isArray(visibleToRoles) || visibleToRoles.length === 0)) {
-      return res.status(400).json({ error: 'visibleToRoles must be a non-empty array' });
+    if (visibleToRoles !== undefined && (!Array.isArray(visibleToRoles) || visibleToRoles.length === 0 || visibleToRoles.some((role) => !['member', 'caretaker', 'manager', 'admin'].includes(role)))) {
+      return res.status(400).json({ error: 'Choose one or more valid user types' });
     }
     if (placement && !PUBLIC_PAGES.includes(placement)) {
       return res.status(400).json({ error: `placement must be one of: ${PUBLIC_PAGES.join(', ')}` });
@@ -189,7 +208,7 @@ router.post('/', requireAuth, requireRole('admin', 'caretaker'), async (req, res
       title,
       body,
       category,
-      visibleToRoles,
+      visibleToRoles: visibleToRoles || (placement === CARETAKER_PLACEMENT ? ['member', 'caretaker', 'manager', 'admin'] : undefined),
       createdBy: req.user.id,
       placement: placement || null,
       blockType,
@@ -207,8 +226,8 @@ router.patch('/:id', requireAuth, requireRole('admin', 'caretaker'), async (req,
   try {
     const { title, body, category, visibleToRoles, placement, blockType, videoUrl, imageUrl } = req.body;
 
-    if (visibleToRoles && (!Array.isArray(visibleToRoles) || visibleToRoles.length === 0)) {
-      return res.status(400).json({ error: 'visibleToRoles must be a non-empty array' });
+    if (visibleToRoles !== undefined && (!Array.isArray(visibleToRoles) || visibleToRoles.length === 0 || visibleToRoles.some((role) => !['member', 'caretaker', 'manager', 'admin'].includes(role)))) {
+      return res.status(400).json({ error: 'Choose one or more valid user types' });
     }
     if (placement && !PUBLIC_PAGES.includes(placement)) {
       return res.status(400).json({ error: `placement must be one of: ${PUBLIC_PAGES.join(', ')}` });

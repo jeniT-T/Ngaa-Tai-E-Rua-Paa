@@ -15,7 +15,7 @@ import {
   parseISO,
   subDays,
 } from "date-fns";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTasks } from "../../context/TaskContext.jsx";
 import useActiveBookingsForCalendar from "../../hooks/useActiveBookingsForCalendar.js";
 import "./ScheduleCaretaker.css";
@@ -85,6 +85,10 @@ export default function ScheduleCaretaker() {
   return (
     <div className="schedule-caretaker-page">
       <div className="schedule-top-panel">
+        <Link to="/caretaker/calendar" className="btn btn-outline btn-action btn-compact mb-4">
+          <ChevronLeft size={18} aria-hidden="true" />
+          Back to Calendar
+        </Link>
         <div className="schedule-header">
           <div>
             <h1>Daily Timeline</h1>

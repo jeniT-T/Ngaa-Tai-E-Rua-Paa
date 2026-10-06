@@ -34,12 +34,15 @@ describe('Checklist.create', () => {
     const id = await Checklist.create({
       title: 'Opening',
       description: 'Morning routine',
+      assignedRoles: ['member', 'caretaker'],
       createdBy: 7,
       items: ['Unlock gate', '   ', 'Turn on lights'], // blank item must be skipped
     });
 
     expect(id).toBe(42);
     expect(mockClientQuery).toHaveBeenNthCalledWith(1, 'BEGIN');
+    expect(mockClientQuery.mock.calls[1][0]).toContain('assigned_roles');
+    expect(mockClientQuery.mock.calls[1][1]).toEqual(['Opening', 'Morning routine', ['member', 'caretaker'], 7]);
     expect(mockClientQuery.mock.calls[mockClientQuery.mock.calls.length - 1][0]).toBe('COMMIT');
 
     const itemInserts = mockClientQuery.mock.calls.filter(
@@ -62,6 +65,27 @@ describe('Checklist.create', () => {
 
     expect(mockClientQuery).toHaveBeenCalledWith('ROLLBACK');
     expect(mockRelease).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Checklist.findAll', () => {
+  beforeEach(() => mockPoolQuery.mockReset());
+
+  test('filters checklists by assigned user roles when provided', async () => {
+    mockPoolQuery.mockResolvedValue({ rows: [] });
+
+    await Checklist.findAll(['member']);
+
+    expect(mockPoolQuery.mock.calls[0][0]).toContain('c.assigned_roles && $1::text[]');
+    expect(mockPoolQuery.mock.calls[0][1]).toEqual([['member']]);
+  });
+
+  test('returns all checklists when no role filter is provided', async () => {
+    mockPoolQuery.mockResolvedValue({ rows: [] });
+
+    await Checklist.findAll();
+
+    expect(mockPoolQuery.mock.calls[0][1]).toEqual([null]);
   });
 });
 

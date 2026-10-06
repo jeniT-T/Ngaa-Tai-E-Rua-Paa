@@ -59,7 +59,7 @@ function EventsPage() {
         <div className="p-10 rounded-2xl border border-gray-200 bg-white shadow-sm">
           <p className="text-gray-600">
             There are no upcoming events listed right now. Check back soon, or{" "}
-            <Link to="/contacts" className="font-medium" style={{ color: "#0081bd" }}>
+            <Link to="/contacts" className="font-medium" style={{ color: "var(--primary)" }}>
               contact us
             </Link>{" "}
             to find out what's happening at the marae.

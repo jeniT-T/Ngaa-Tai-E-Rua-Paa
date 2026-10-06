@@ -58,6 +58,7 @@ router.put('/', requireAuth, requireRole('admin'), async (req, res) => {
   try {
     const {
       siteName,
+      secondaryColour,
       logoUrl,
       mapImageUrl,
       mapPins,
@@ -67,6 +68,9 @@ router.put('/', requireAuth, requireRole('admin'), async (req, res) => {
       whakapapaQuestionLabel,
     } = req.body;
 
+    if (secondaryColour !== undefined && (typeof secondaryColour !== 'string' || !/^#[0-9a-f]{6}$/i.test(secondaryColour))) {
+      return res.status(400).json({ error: 'Secondary colour must be a six-digit hex colour, such as #0081BD' });
+    }
     if (siteName !== undefined && !isNonEmptyString(siteName)) {
       return res.status(400).json({ error: 'Site name cannot be empty' });
     }
@@ -89,6 +93,7 @@ router.put('/', requireAuth, requireRole('admin'), async (req, res) => {
 
     const settings = await SiteSettings.update({
       siteName,
+      secondaryColour,
       logoUrl,
       mapImageUrl,
       mapPins,

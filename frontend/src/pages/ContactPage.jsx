@@ -37,8 +37,8 @@ function ContactPage() {
           display: "inline-block",
           padding: "12px 20px",
           borderRadius: "var(--radius-control)",
-          border: "2px solid #0081bd",
-          color: "#0081bd",
+          border: "2px solid var(--primary)",
+          color: "var(--primary)",
           fontWeight: 600,
           textDecoration: "none",
         }}

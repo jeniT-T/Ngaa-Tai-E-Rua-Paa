@@ -31,7 +31,7 @@ export default function ContentManagerHubPage() {
           >
             <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
             <p className="text-sm text-gray-600 leading-relaxed">{description}</p>
-            <span className="mt-auto pt-2 text-sm font-medium" style={{ color: "#0081bd" }}>
+            <span className="mt-auto pt-2 text-sm font-medium" style={{ color: "var(--primary)" }}>
               Edit →
             </span>
           </Link>

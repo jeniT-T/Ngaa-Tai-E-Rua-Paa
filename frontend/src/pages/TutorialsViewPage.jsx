@@ -13,7 +13,6 @@ import ContentImage from "../components/ContentImage.jsx";
 import { getYoutubeEmbedUrl } from "../utils/youtube.js";
 
 export default function TutorialsViewPage() {
-  const { heading, sections, loaded } = usePageContent("caretaker-tutorials");
   const [searchTerm, setSearchTerm] = useState("");
 
   // Reachable from the Marae Guide (member with an active booking) or
@@ -24,6 +23,7 @@ export default function TutorialsViewPage() {
   const { token: guestToken } = useParams();
   const location = useLocation();
   const isGuest = location.pathname.startsWith("/tutorials/guest");
+  const { heading, sections, loaded } = usePageContent("caretaker-tutorials", !isGuest);
   const backTo = isGuest ? (guestToken ? `/arrival/guest/${guestToken}` : "/arrival/guest") : "/arrival";
 
   const filtered = useMemo(() => {

@@ -2,14 +2,8 @@
 //
 // Caretaker's own content manager — same add/edit/image-upload/video-embed
 // style as the admin's Content Manager (see admin/ContentManagementPage.jsx),
-// but scoped to just one page: every item this creates is pinned to the
-// "caretaker-tutorials" placement, so there's no placement picker and no
-// "visible to roles" section (those only matter for library-only items —
-// everything here is always public on the tutorials page, same tradeoff
-// already made for every other public/marae-info page). The backend
-// (backend/routes/content.js) enforces the same restriction independently,
-// so a caretaker can never touch content on any other page even by editing
-// this file or calling the API directly.
+// but scoped to the tutorials placement. Assignments control which user
+// types see each tutorial; authors can manage every tutorial.
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getYoutubeEmbedUrl } from "../../utils/youtube.js";
@@ -18,7 +12,10 @@ import { resolveImageUrl } from "../../utils/media.js";
 const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
 const PLACEMENT = "caretaker-tutorials";
 
+const TUTORIAL_ROLES = ["member", "caretaker", "manager", "admin"];
+
 const EMPTY_FORM = {
+  visibleToRoles: TUTORIAL_ROLES,
   title: "",
   body: "",
   blockType: "section",
@@ -56,6 +53,7 @@ function TutorialItemCard({ item, onModify, onCopy, onDelete }) {
       )}
 
       <p className="text-sm text-gray-600 whitespace-pre-line mb-3">{item.body}</p>
+      <p className="text-xs text-gray-500 mb-3">Assigned to: {(item.visible_to_roles || []).join(", ")}</p>
 
       <div className="flex flex-wrap gap-2 items-center">
         <button onClick={() => onModify(item)} className="btn btn-outline btn-action btn-compact">
@@ -89,14 +87,10 @@ export default function ManageTutorialsPage() {
     loadItems();
   }, []);
 
-  // Uses the same public, unauthenticated endpoint every tutorials viewer
-  // uses (see usePageContent.js) — it already returns every field this page
-  // needs to edit (id, image_url, video_url, etc.), so there's no need for a
-  // second admin-only listing route just for this.
   async function loadItems() {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/content/public/${PLACEMENT}`);
+      const res = await fetch(`${API_BASE}/content/tutorials/manage`, { credentials: "include" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to load tutorials");
       setItems(data.items || []);
@@ -135,6 +129,10 @@ export default function ManageTutorialsPage() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    if (!form.visibleToRoles.length) {
+      setError("Choose at least one user type.");
+      return;
+    }
     setSaving(true);
     try {
       const isEditing = Boolean(editingId);
@@ -169,6 +167,7 @@ export default function ManageTutorialsPage() {
     setEditingId(item.id);
     setImageError("");
     setForm({
+      visibleToRoles: item.visible_to_roles || TUTORIAL_ROLES,
       title: item.title,
       body: item.body,
       blockType: item.block_type || "section",
@@ -231,7 +230,7 @@ export default function ManageTutorialsPage() {
       </div>
       <p className="text-sm text-gray-500 mb-6">
         Add, edit, copy or delete tutorial content — everything here shows up straight away on the
-        caretaker Tutorials page.
+        Tutorials page for the assigned user types.
       </p>
 
       {error && <p className="text-red-600 mb-4">{error}</p>}
@@ -255,6 +254,27 @@ export default function ManageTutorialsPage() {
             rows={4}
             className="w-full border rounded px-3 py-2"
           />
+
+          <fieldset>
+            <legend className="text-sm font-medium mb-2">Assign to user types</legend>
+            <div className="flex flex-wrap gap-4">
+              {TUTORIAL_ROLES.map((role) => (
+                <label key={role} className="checklist-item-label">
+                  <input
+                    type="checkbox"
+                    checked={form.visibleToRoles.includes(role)}
+                    onChange={(event) => setForm((previous) => ({
+                      ...previous,
+                      visibleToRoles: event.target.checked
+                        ? [...previous.visibleToRoles, role]
+                        : previous.visibleToRoles.filter((value) => value !== role),
+                    }))}
+                  />
+                  <span>{role.charAt(0).toUpperCase() + role.slice(1)}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
 
           <div>
             <label className="block text-sm font-medium mb-1">Block type</label>

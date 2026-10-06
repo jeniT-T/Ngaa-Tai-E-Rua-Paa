@@ -1,5 +1,5 @@
 
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import HomePage from "../pages/HomePage.jsx";
 
@@ -11,12 +11,13 @@ export const ROLE_HOME = {
 
 export default function HomeRoute() {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return <div className="p-8 text-center">Loading...</div>;
   }
 
-  if (user && ROLE_HOME[user.role]) {
+  if (!location.state?.showHome && user && ROLE_HOME[user.role]) {
     return <Navigate to={ROLE_HOME[user.role]} replace />;
   }
 

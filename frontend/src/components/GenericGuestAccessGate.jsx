@@ -5,6 +5,7 @@
 // in-date-range booking at the marae right now" -- see
 // useGenericGuestAccess.js and §24. This is the sibling of
 // GuestAccessGate.jsx, which gates the per-booking token routes instead.
+import AccessDeniedRedirect from "./AccessDeniedRedirect.jsx";
 import useGenericGuestAccess from "../hooks/useGenericGuestAccess.js";
 
 export default function GenericGuestAccessGate({ children }) {
@@ -15,15 +16,7 @@ export default function GenericGuestAccessGate({ children }) {
   }
 
   if (status === "denied") {
-    return (
-      <div className="p-8 max-w-md mx-auto text-center">
-        <h1 className="text-xl font-semibold mb-2">Marae guide</h1>
-        <p className="text-gray-600">
-          This guide is only available while there's a current stay at the marae. If you're
-          here as a guest right now, please check with your host or the marae office.
-        </p>
-      </div>
-    );
+    return <AccessDeniedRedirect message="This guide is only available while there is a current stay at the marae." />;
   }
 
   return children;

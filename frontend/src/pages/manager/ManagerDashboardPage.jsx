@@ -24,6 +24,11 @@ const FEATURES = [
     description: 'See issues reported by users and track what still needs attention.',
   },
   {
+    to: '/checklists',
+    title: 'Checklists',
+    description: 'View the checklists assigned to managers.',
+  },
+  {
     to: '/caretaker/calendar',
     title: 'Caretaker Calendar',
     description: "The same task calendar the caretaker uses, including any marae booking that's currently on.",
@@ -53,7 +58,7 @@ export default function ManagerDashboardPage() {
           >
             <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
             <p className="text-gray-600 leading-relaxed">{description}</p>
-            <span className="mt-auto pt-2 text-sm font-medium" style={{ color: '#0081bd' }}>
+            <span className="mt-auto pt-2 text-sm font-medium" style={{ color: 'var(--primary)' }}>
               Open →
             </span>
           </Link>

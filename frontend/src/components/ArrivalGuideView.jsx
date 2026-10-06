@@ -51,7 +51,7 @@ const CATEGORY_GROUPS = {
   essentials: {
     label: "✨ Getting Started",
     description: "WiFi, parking, check-in essentials",
-    color: "#0081BD",
+    color: "var(--primary)",
     priority: 2,
   },
   kitchen: {
@@ -283,7 +283,7 @@ export default function ArrivalGuideView() {
         background: "var(--bg-primary)",
         marginBottom: "12px",
         borderRadius: "var(--radius-panel)",
-        border: `1px solid ${categoryInfo.color}30`,
+        border: `1px solid color-mix(in srgb, ${categoryInfo.color} 19%, transparent)`,
         overflow: "hidden",
         boxShadow: "var(--shadow-sm)",
         transition: "all 0.2s ease",
@@ -327,7 +327,7 @@ export default function ArrivalGuideView() {
           <div style={{
             padding: "16px",
             background: "var(--bg-primary)",
-            borderTop: `1px solid ${categoryInfo.color}20`,
+            borderTop: `1px solid color-mix(in srgb, ${categoryInfo.color} 13%, transparent)`,
           }}>
             <ContentImage item={item} />
             {(item.body || "").split("\n\n").map((paragraph, pIdx) => (
@@ -434,7 +434,7 @@ export default function ArrivalGuideView() {
           <div style={{
             padding: "20px",
             background: "var(--bg-primary)",
-            borderTop: `1px solid ${color}30`,
+            borderTop: `1px solid color-mix(in srgb, ${color} 19%, transparent)`,
           }}>
             {categoryItems.map((item) => (
               <CollapsibleSection key={item.id} id={item.id} title={item.title} item={item} />
@@ -477,10 +477,8 @@ export default function ArrivalGuideView() {
       </div>
 
       {/* Health & Safety — folded into the guide (see the comment above
-          DEFAULT_SAFETY_SECTIONS). Open by default, unlike the category
-          panels below, since this is safety-critical and shouldn't need an
-          extra click to see. */}
-      <details open style={{
+          DEFAULT_SAFETY_SECTIONS). Collapsed by default. */}
+      <details style={{
         marginBottom: "24px",
         borderRadius: "var(--radius-panel)",
         border: "2px solid #DC2626",
@@ -644,7 +642,7 @@ export default function ArrivalGuideView() {
               transition: "all 0.2s ease",
             }}
             onFocus={(e) => {
-              e.target.style.boxShadow = "0 0 0 3px rgba(0, 129, 189, 0.15)";
+              e.target.style.boxShadow = "0 0 0 3px rgba(var(--primary-rgb), 0.15)";
             }}
             onBlur={(e) => {
               e.target.style.boxShadow = "var(--shadow-sm)";

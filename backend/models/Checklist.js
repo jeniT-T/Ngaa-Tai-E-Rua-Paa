@@ -5,12 +5,14 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
+const DEFAULT_ASSIGNED_ROLES = ['member', 'caretaker', 'manager', 'admin'];
+
 const Checklist = {
 
-  async findAll() {
+  async findAll(roles) {
     const result = await pool.query(
       `SELECT
-         c.id, c.title, c.description, c.created_by, c.created_at, c.updated_at,
+         c.id, c.title, c.description, c.assigned_roles, c.created_by, c.created_at, c.updated_at,
          u.name AS created_by_name,
          COALESCE(
            json_agg(
@@ -23,8 +25,10 @@ const Checklist = {
        FROM checklists c
        LEFT JOIN users u ON u.id = c.created_by
        LEFT JOIN checklist_items i ON i.checklist_id = c.id
+       WHERE $1::text[] IS NULL OR c.assigned_roles && $1::text[]
        GROUP BY c.id, u.name
-       ORDER BY c.created_at DESC`
+       ORDER BY c.created_at DESC`,
+      [roles || null]
     );
     return result.rows;
   },
@@ -37,7 +41,7 @@ const Checklist = {
   async getWithItems(id) {
     const result = await pool.query(
       `SELECT
-         c.id, c.title, c.description, c.created_by, c.created_at, c.updated_at,
+         c.id, c.title, c.description, c.assigned_roles, c.created_by, c.created_at, c.updated_at,
          u.name AS created_by_name,
          COALESCE(
            json_agg(
@@ -57,15 +61,15 @@ const Checklist = {
     return result.rows[0] || null;
   },
 
-  async create({ title, description, createdBy, items = [] }) {
+  async create({ title, description, assignedRoles = DEFAULT_ASSIGNED_ROLES, createdBy, items = [] }) {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
       const checklistResult = await client.query(
-        `INSERT INTO checklists (title, description, created_by)
-         VALUES ($1, $2, $3)
+        `INSERT INTO checklists (title, description, assigned_roles, created_by)
+         VALUES ($1, $2, $3, $4)
          RETURNING *`,
-        [title, description || null, createdBy]
+        [title, description || null, assignedRoles, createdBy]
       );
       const checklist = checklistResult.rows[0];
 
@@ -89,12 +93,16 @@ const Checklist = {
     }
   },
 
-  async update(id, { title, description }) {
+  async update(id, { title, description, assignedRoles }) {
     const result = await pool.query(
-      `UPDATE checklists SET title = $1, description = $2, updated_at = NOW()
-       WHERE id = $3
+      `UPDATE checklists SET
+         title = $1,
+         description = $2,
+         assigned_roles = COALESCE($3::text[], assigned_roles),
+         updated_at = NOW()
+       WHERE id = $4
        RETURNING *`,
-      [title, description || null, id]
+      [title, description || null, assignedRoles ?? null, id]
     );
     return result.rows[0] || null;
   },

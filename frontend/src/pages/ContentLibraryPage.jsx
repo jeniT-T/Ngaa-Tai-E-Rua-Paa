@@ -96,7 +96,7 @@ export default function ContentLibraryPage() {
         <button
           onClick={() => setActiveCategory("all")}
           className={`text-sm px-3 py-1 rounded border ${
-            activeCategory === "all" ? "bg-[#0081bd] text-white border-[#0081bd]" : ""
+            activeCategory === "all" ? "bg-[var(--primary)] text-white border-[var(--primary)]" : ""
           }`}
         >
           All
@@ -106,7 +106,7 @@ export default function ContentLibraryPage() {
             key={cat}
             onClick={() => setActiveCategory(cat)}
             className={`text-sm px-3 py-1 rounded border ${
-              activeCategory === cat ? "bg-[#0081bd] text-white border-[#0081bd]" : ""
+              activeCategory === cat ? "bg-[var(--primary)] text-white border-[var(--primary)]" : ""
             }`}
           >
             {CATEGORY_LABELS[cat] || cat}

@@ -30,7 +30,7 @@ export default function CaretakerDashboardPage() {
           >
             <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
             <p className="text-gray-600 leading-relaxed">{description}</p>
-            <span className="mt-auto pt-2 text-sm font-medium" style={{ color: '#0081bd' }}>
+            <span className="mt-auto pt-2 text-sm font-medium" style={{ color: 'var(--primary)' }}>
               Open →
             </span>
           </Link>

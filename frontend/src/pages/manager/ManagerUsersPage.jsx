@@ -1,10 +1,14 @@
 import { useState, useEffect } from "react";
 
+import { useAuth } from "../../context/AuthContext.jsx";
+
 const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
 const ROLES = ["member", "caretaker", "manager", "admin"];
 const CREATABLE_ROLES = ["caretaker", "manager", "admin"];
 
 export default function ManagerUsersPage() {
+  const { user: currentUser } = useAuth();
+  const [deletingId, setDeletingId] = useState(null);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -29,6 +33,27 @@ export default function ManagerUsersPage() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleDeleteUser(account) {
+    if (Number(account.id) === Number(currentUser?.id)) return;
+    if (!window.confirm(`Permanently delete ${account.name} (${account.email})? Their bookings, booking reviews and submitted issues will also be removed. This cannot be undone.`)) return;
+    setError("");
+    setDeletingId(account.id);
+    try {
+      const res = await fetch(`${API_BASE}/admin/users/${account.id}`, {
+        method: "DELETE", credentials: "include",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to delete user");
+      }
+      setUsers((previous) => previous.filter((item) => item.id !== account.id));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -141,6 +166,7 @@ export default function ManagerUsersPage() {
                 <th scope="col">Name</th>
                 <th scope="col">Email</th>
                 <th scope="col">Role</th>
+                <th scope="col">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -161,6 +187,21 @@ export default function ManagerUsersPage() {
                         </option>
                       ))}
                     </select>
+                  </td>
+                  <td className="py-2">
+                    {Number(u.id) === Number(currentUser?.id) ? (
+                      <span className="text-sm text-gray-500">Your account</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteUser(u)}
+                        disabled={deletingId !== null}
+                        className="btn btn-error btn-danger-action btn-compact"
+                        aria-label={`Delete user ${u.name || u.email}`}
+                      >
+                        {deletingId === u.id ? "Deleting..." : "Delete user"}
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

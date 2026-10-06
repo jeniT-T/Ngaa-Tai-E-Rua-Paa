@@ -59,7 +59,7 @@ export default function UpcomingTasksPanel() {
 
       {/* Positioned exactly like the "Open →" link on every other tile
           (mt-auto pushes it to the bottom of the card). */}
-      <Link to="/caretaker/schedule" className="mt-auto pt-2 text-sm font-medium" style={{ color: '#0081bd' }}>
+      <Link to="/caretaker/schedule" className="mt-auto pt-2 text-sm font-medium" style={{ color: 'var(--primary)' }}>
         View schedule →
       </Link>
     </div>

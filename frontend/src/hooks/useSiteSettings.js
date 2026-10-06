@@ -17,6 +17,7 @@ const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostn
 
 export const DEFAULT_SETTINGS = {
   site_name: "Marae System",
+  secondary_colour: "#0081BD",
   logo_url: null,
   map_image_url: null,
   map_pins: [
@@ -66,6 +67,7 @@ function fetchSettings() {
 
 export function invalidateSiteSettingsCache() {
   cached = null;
+  window.dispatchEvent(new Event("site-settings-updated"));
 }
 
 export default function useSiteSettings() {
@@ -74,13 +76,16 @@ export default function useSiteSettings() {
 
   useEffect(() => {
     let active = true;
-    fetchSettings().then((result) => {
+    const refresh = () => fetchSettings().then((result) => {
       if (active) {
         setSettings(result);
         setLoading(false);
       }
     });
+    refresh();
+    window.addEventListener("site-settings-updated", refresh);
     return () => {
+      window.removeEventListener("site-settings-updated", refresh);
       active = false;
     };
   }, []);

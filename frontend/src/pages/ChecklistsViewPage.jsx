@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
 
 export default function ChecklistsViewPage() {
-  const { user } = useAuth();
+  const { user, isChecklistItemChecked, setChecklistItemChecked } = useAuth();
   const { token: guestToken } = useParams();
   const location = useLocation();
   // Reachable four ways now (see App.jsx and §24): from the caretaker
@@ -15,16 +15,24 @@ export default function ChecklistsViewPage() {
   // the generic site-wide QR) -- guests have no `user` at all, so that's
   // detected from the URL instead.
   const isGuest = location.pathname.startsWith("/checklists/guest");
+  const progressScope = isGuest ? `guest:${guestToken || "active"}` : `user:${user?.id}`;
   const [checklists, setChecklists] = useState(null);
   const [error, setError] = useState("");
 
   const isCaretakerStaff = user?.role === "caretaker" || user?.role === "admin";
+  const isManager = user?.role === "manager";
   const backTo = isCaretakerStaff
     ? "/caretaker"
+    : isManager
+      ? "/manager"
     : isGuest
       ? (guestToken ? `/arrival/guest/${guestToken}` : "/arrival/guest")
       : "/arrival";
-  const backLabel = isCaretakerStaff ? "← Back to Caretaker Dashboard" : "← Back to Marae Guide";
+  const backLabel = isCaretakerStaff
+    ? "← Back to Caretaker Dashboard"
+    : isManager
+      ? "← Back to Manager Dashboard"
+      : "← Back to Marae Guide";
 
   useEffect(() => {
     const url = isGuest
@@ -70,17 +78,18 @@ export default function ChecklistsViewPage() {
               )}
               <ul className="space-y-1.5 mt-3">
                 {checklist.items.map((item) => (
-                  <li key={item.id} className="flex items-start gap-2 text-sm">
-                    <span
-                      aria-hidden="true"
-                      className="mt-0.5"
-                      style={{ color: item.is_done ? "#1b5e20" : "#999" }}
-                    >
-                      {item.is_done ? "✓" : "○"}
-                    </span>
-                    <span className={item.is_done ? "text-gray-400 line-through" : "text-gray-700"}>
-                      {item.text}
-                    </span>
+                  <li key={item.id} className="text-sm">
+                    <label className="checklist-item-label">
+                      <input
+                        type="checkbox"
+                        checked={isChecklistItemChecked(progressScope, checklist.id, item.id)}
+                        onChange={(event) => setChecklistItemChecked(progressScope, checklist.id, item.id, event.target.checked)}
+                        className="mt-0.5 h-4 w-4 shrink-0"
+                      />
+                      <span className={isChecklistItemChecked(progressScope, checklist.id, item.id) ? "text-gray-400 line-through" : "text-gray-700"}>
+                        {item.text}
+                      </span>
+                    </label>
                   </li>
                 ))}
               </ul>

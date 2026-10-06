@@ -16,6 +16,7 @@ const pool = new Pool({
 // Maps the API's camelCase field names to their actual column names.
 const COLUMNS = {
   siteName: 'site_name',
+  secondaryColour: 'secondary_colour',
   logoUrl: 'logo_url',
   mapImageUrl: 'map_image_url',
   mapPins: 'map_pins',

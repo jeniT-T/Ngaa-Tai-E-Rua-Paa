@@ -7,7 +7,7 @@ import { getYoutubeEmbedUrl } from "../../utils/youtube.js";
 
 export default function TutorialsPage() {
   const { user } = useAuth();
-  const { heading, sections, loaded } = usePageContent("caretaker-tutorials");
+  const { heading, sections, loaded } = usePageContent("caretaker-tutorials", true);
   const [searchTerm, setSearchTerm] = useState("");
 
   const filtered = useMemo(() => {

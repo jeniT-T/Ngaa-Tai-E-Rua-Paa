@@ -147,6 +147,18 @@ const Booking = {
     return result.rows[0] || null;
   },
 
+  // Permanently delete a booking after manager authorization.
+  // Booking reviews are removed by the database's ON DELETE CASCADE.
+  async delete(id) {
+    const result = await pool.query(
+      `DELETE FROM bookings
+       WHERE id = $1
+       RETURNING id`,
+      [id]
+    );
+    return result.rows[0] || null;
+  },
+
   async cancel(id) {
     const result = await pool.query(
       `UPDATE bookings SET status = 'cancelled', updated_at = NOW() WHERE id = $1 RETURNING *`,

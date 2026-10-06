@@ -10,6 +10,9 @@ jest.mock('../middleware/requireAuth', () => (req, res, next) => {
 
 jest.mock('../models/Booking', () => ({
   create: jest.fn(),
+  findById: jest.fn(),
+  delete: jest.fn(),
+  updateStatus: jest.fn(),
 }));
 jest.mock('../models/User', () => ({
   findById: jest.fn(),
@@ -130,5 +133,74 @@ describe('POST /api/bookings -- manager-only overrides', () => {
 
     expect(res.status).toBe(400);
     expect(Booking.create).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('DELETE /api/bookings/:id', () => {
+  const app = buildApp();
+  beforeEach(() => {
+    Booking.findById.mockReset();
+    Booking.delete.mockReset();
+    Booking.findById.mockResolvedValue({ id: 1 });
+    Booking.delete.mockResolvedValue({ id: 1 });
+  });
+
+  test.each(['pending', 'approved', 'denied', 'cancelled'])('manager permanently deletes a %s booking', async (status) => {
+    Booking.findById.mockResolvedValue({ id: 1, status, end_date: '2099-01-01' });
+    const res = await request(app).delete('/api/bookings/1').set(asUser({ id: 2, role: 'manager' }));
+    expect(res.status).toBe(204);
+    expect(Booking.delete).toHaveBeenCalledWith('1');
+  });
+
+  test.each(['member', 'caretaker', 'admin'])('%s cannot delete bookings', async (role) => {
+    const res = await request(app).delete('/api/bookings/1').set(asUser({ id: 2, role }));
+    expect(res.status).toBe(403);
+    expect(Booking.delete).not.toHaveBeenCalled();
+  });
+
+  test('unauthenticated deletion is rejected', async () => {
+    expect((await request(app).delete('/api/bookings/1')).status).toBe(401);
+  });
+
+  test('booking removed by another request returns 404', async () => {
+    Booking.delete.mockResolvedValue(null);
+    const res = await request(app).delete('/api/bookings/1').set(asUser({ id: 2, role: 'manager' }));
+    expect(res.status).toBe(404);
+  });
+
+  test('missing booking returns 404', async () => {
+    Booking.findById.mockResolvedValue(null);
+    const res = await request(app).delete('/api/bookings/1').set(asUser({ id: 2, role: 'manager' }));
+    expect(res.status).toBe(404);
+    expect(Booking.delete).not.toHaveBeenCalled();
+  });
+
+  test('invalid ID is rejected', async () => {
+    const res = await request(app).delete('/api/bookings/invalid').set(asUser({ id: 2, role: 'manager' }));
+    expect(res.status).toBe(400);
+    expect(Booking.delete).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('Reset booking status to pending', () => {
+  const app = buildApp();
+  beforeEach(() => Booking.updateStatus.mockReset());
+
+  test('manager can return a booking to pending', async () => {
+    Booking.updateStatus.mockResolvedValue({ id: 1, status: 'pending' });
+    const res = await request(app).patch('/api/bookings/1/status')
+      .set(asUser({ id: 2, role: 'manager' })).send({ status: 'pending' });
+    expect(res.status).toBe(200);
+    expect(res.body.booking.status).toBe('pending');
+    expect(Booking.updateStatus).toHaveBeenCalledWith('1', 'pending', undefined);
+  });
+
+  test('member cannot reset booking status', async () => {
+    const res = await request(app).patch('/api/bookings/1/status')
+      .set(asUser({ id: 2, role: 'member' })).send({ status: 'pending' });
+    expect(res.status).toBe(403);
+    expect(Booking.updateStatus).not.toHaveBeenCalled();
   });
 });

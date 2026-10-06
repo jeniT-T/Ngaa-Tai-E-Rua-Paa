@@ -202,7 +202,7 @@ function DatePickerDropdown({ selectedDate, onSelect }) {
                   }}
                   className={`relative h-8 w-8 rounded-md text-sm ${
                     selected
-                      ? 'bg-[#0081bd] text-white font-semibold'
+                      ? 'bg-[var(--primary)] text-white font-semibold'
                       : inMonth
                       ? 'text-gray-700 hover:bg-gray-100'
                       : 'text-gray-300 hover:bg-gray-50'
@@ -210,7 +210,7 @@ function DatePickerDropdown({ selectedDate, onSelect }) {
                 >
                   {date.getDate()}
                   {isToday && !selected && (
-                    <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#0081bd]" />
+                    <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[var(--primary)]" />
                   )}
                 </button>
               );
@@ -241,11 +241,11 @@ function WeekView({ weekDates, selectedDate, isCompleted, toggleTask, onSelectDa
         return (
           <div
             key={date.toISOString()}
-            className={`rounded-lg border p-2 sm:p-3 lg:p-4 min-h-[160px] sm:min-h-[200px] lg:min-h-[260px] xl:min-h-[320px] ${isSelected ? 'border-[#0081bd]' : 'border-gray-200'}`}
+            className={`rounded-lg border p-2 sm:p-3 lg:p-4 min-h-[160px] sm:min-h-[200px] lg:min-h-[260px] xl:min-h-[320px] ${isSelected ? 'border-[var(--primary)]' : 'border-gray-200'}`}
           >
             <button onClick={() => onSelectDay(date)} className="w-full text-left mb-2 sm:mb-3">
               <p className="text-[11px] sm:text-xs lg:text-sm text-gray-400">{date.toLocaleDateString('en-NZ', { weekday: 'short' })}</p>
-              <p className={`text-sm sm:text-base lg:text-xl font-semibold ${isToday ? 'text-[#0081bd]' : 'text-gray-900'}`}>{date.getDate()}</p>
+              <p className={`text-sm sm:text-base lg:text-xl font-semibold ${isToday ? 'text-[var(--primary)]' : 'text-gray-900'}`}>{date.getDate()}</p>
             </button>
             <div className="space-y-1 sm:space-y-1.5 lg:space-y-2">
               {tasks.length === 0 ? (
@@ -336,7 +336,7 @@ export default function SchedulePage() {
                 key={mode}
                 onClick={() => setViewMode(mode)}
                 className={`px-3 py-1.5 capitalize ${
-                  viewMode === mode ? 'bg-[#0081bd] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+                  viewMode === mode ? 'bg-[var(--primary)] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
                 }`}
               >
                 {mode}
@@ -347,7 +347,7 @@ export default function SchedulePage() {
           <button
             onClick={() => setSelectedDate(startOfDay(new Date()))}
             className="px-4 py-1.5 rounded-md text-sm font-medium border"
-            style={{ color: '#0081bd', borderColor: '#0081bd' }}
+            style={{ color: 'var(--primary)', borderColor: 'var(--primary)' }}
           >
             Today
           </button>

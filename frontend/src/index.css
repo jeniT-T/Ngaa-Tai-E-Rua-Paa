@@ -16,12 +16,16 @@
 :root {
 
   --bg-image: url('./image/Background_Caretaker.jpg');
-  --bg-image-overlay: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85));
+  --bg-image-overlay: linear-gradient(
+    rgba(var(--primary-rgb), var(--bg-tint-opacity, 0)),
+    rgba(var(--primary-rgb), var(--bg-tint-opacity, 0))
+  ), linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85));
 
   --surface: #FFFFFF;
   --surface-hover: #F0F4F8;
 
   --primary: #0081BD;
+  --primary-rgb: 0, 129, 189;
   --primary-light: #0099E6;              /* Hover states */
   --primary-dark: #005F8A;               /* Pressed states */
 
@@ -318,13 +322,13 @@ header {
 
 .navbar a:hover {
   color: var(--primary);
-  background: #f0f7fb;
+  background: color-mix(in srgb, var(--primary) 4%, white);
 }
 
 .navbar a.active {
   color: var(--primary);
   font-weight: 600;
-  background: #ebf5fa;
+  background: color-mix(in srgb, var(--primary) 6%, white);
 }
 
 .navbar-user {
@@ -367,7 +371,7 @@ header {
 
 .menu-toggle:hover {
   color: var(--primary-dark);
-  background: #e6f2f8;
+  background: color-mix(in srgb, var(--primary) 10%, white);
   border-radius: var(--radius-md);
 }
 
@@ -476,18 +480,18 @@ header {
   background: var(--surface);
   color: var(--primary-dark);
   border-color: currentColor;
-  box-shadow: 0 4px 12px rgba(0, 129, 189, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
 }
 
 .btn-primary:hover {
   background: var(--surface-hover);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 129, 189, 0.4);
+  box-shadow: 0 6px 20px rgba(var(--primary-rgb), 0.4);
 }
 
 .btn-primary:active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(0, 129, 189, 0.2);
+  box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.2);
 }
 
 .btn-secondary {
@@ -515,13 +519,13 @@ header {
 }
 
 .btn-outline:hover {
-  background: #ebf5fa;
+  background: color-mix(in srgb, var(--primary) 6%, white);
   border-color: var(--primary-dark);
   color: var(--primary-dark);
 }
 
 .btn-outline:active {
-  background: #d9ecf5;
+  background: color-mix(in srgb, var(--primary) 15%, white);
 }
 
 .btn-ghost {
@@ -779,7 +783,7 @@ header {
 
 .card-elevated {
   box-shadow: var(--shadow-lg);
-  border: 1px solid rgba(0, 129, 189, 0.1);
+  border: 1px solid rgba(var(--primary-rgb), 0.1);
 }
 
 .card-accent {
@@ -789,7 +793,7 @@ header {
 
 .card-accent:hover {
   border-color: var(--primary-dark);
-  box-shadow: 0 4px 16px rgba(0, 129, 189, 0.15);
+  box-shadow: 0 4px 16px rgba(var(--primary-rgb), 0.15);
 }
 
 /* ========== FORM ELEMENTS ========== */
@@ -845,7 +849,7 @@ select:focus,
 textarea:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(0, 129, 189, 0.15);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.15);
   background: var(--surface-hover);
 }
 
@@ -919,6 +923,21 @@ label .label-required {
   color: var(--error);
   font-weight: 700;
   margin-left: 2px;
+}
+
+label.checklist-item-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 0;
+  font-size: 0.875rem;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.checklist-item-label input[type="checkbox"] {
+  flex-shrink: 0;
+  margin: 0;
 }
 
 /* CHECKBOX & RADIO */
@@ -1025,7 +1044,7 @@ textarea {
   color: var(--text-inverse);
   font-size: 1rem;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(0, 129, 189, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -1033,7 +1052,7 @@ textarea {
 .glButton:hover {
   background: var(--primary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 129, 189, 0.4);
+  box-shadow: 0 6px 20px rgba(var(--primary-rgb), 0.4);
 }
 
 .actionButton {
@@ -1226,7 +1245,10 @@ main {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(rgba(26, 26, 26, 0.65), rgba(26, 26, 26, 0.65));
+  background: linear-gradient(
+    rgba(var(--primary-rgb), var(--bg-tint-opacity, 0)),
+    rgba(var(--primary-rgb), var(--bg-tint-opacity, 0))
+  ), linear-gradient(rgba(26, 26, 26, 0.65), rgba(26, 26, 26, 0.65));
   pointer-events: none;
 }
 
@@ -1237,7 +1259,7 @@ main {
 }
 
 .hero-section h1 {
-  color: #0380ae;
+  color: var(--primary);
 }
 
 .hero-section p {
@@ -1313,8 +1335,8 @@ main {
 
 .feature-box-accent:hover {
   border-color: var(--primary);
-  background: #ebf5fa;
-  box-shadow: 0 6px 20px rgba(0, 129, 189, 0.15);
+  background: color-mix(in srgb, var(--primary) 6%, white);
+  box-shadow: 0 6px 20px rgba(var(--primary-rgb), 0.15);
 }
 
 .feature-box-accent .link-text {
@@ -1355,3 +1377,94 @@ main {
     font-size: 1.5rem;
   }
 }
+
+
+.access-notice {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  width: calc(100vw - 40px);
+  max-width: min(420px, calc(100vw - 40px));
+  padding: 16px 20px;
+  border: 1px solid #dc2626;
+  border-radius: var(--radius-panel);
+  background: #fef2f2;
+  color: #b91c1c;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+
+.staff-back-navigation {
+  max-width: 1280px;
+  margin: 24px auto 0;
+  padding: 0 24px;
+}
+
+
+/* Colour mode applies to every route, while keeping the chosen site accent. */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --surface: #1e293b;
+  --surface-hover: #334155;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --bg-primary: #182231;
+  --bg-secondary: #111827;
+  --bg-tertiary: #263345;
+  --bg-accent: #33291c;
+  --border-light: #3b4758;
+  --border-medium: #526176;
+  --border-dark: #94a3b8;
+  --primary-dark: color-mix(in srgb, var(--primary) 65%, white) !important;
+  --secondary-dark: #f4bd70;
+  --bg-image-overlay: linear-gradient(rgba(15, 23, 42, 0.94), rgba(15, 23, 42, 0.94));
+  color: var(--text-primary);
+}
+
+.navbar-theme-toggle {
+  padding: 8px 12px;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+html[data-theme="dark"] :is(.bg-white, .bg-gray-50, .bg-gray-100, .feature-box,
+  .calendar-panel, .tasks-panel, .schedule-top-panel, .existing-users-panel) {
+  background-color: var(--surface);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] :is(.text-gray-900, .text-gray-800, .text-gray-700, .text-gray-600,
+  h1, h2, h3, h4, label, th, td) {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] :is(.text-gray-500, .text-gray-400) { color: var(--text-secondary); }
+html[data-theme="dark"] :is(.border, .border-b, .border-t, .border-gray-200, .border-gray-300) { border-color: var(--border-light); }
+html[data-theme="dark"] :is(input, textarea, select) {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border-color: var(--border-medium);
+}
+
+/* Older pages use inline light surfaces; theme those alongside shared cards. */
+html[data-theme="dark"] [style*="background"]:is(
+  [style*="white"], [style*="#fff"], [style*="#FFF"], [style*="#fafafa"],
+  [style*="#fbfcfc"], [style*="#f4f7fa"], [style*="#eee"], [style*="#f0f0f0"]
+) {
+  background: var(--surface) !important;
+}
+html[data-theme="dark"] [style*="color"]:is([style*="#2c3e50"], [style*="#1f2937"], [style*="#111827"]) {
+  color: var(--text-primary) !important;
+}
+html[data-theme="dark"] .hero-section h1 { color: var(--primary-dark); }
+html[data-theme="dark"] .hero-section p { color: #f1f5f9; }
+html[data-theme="dark"] .access-notice { background: #450a0a; color: #fecaca; }
+html[data-theme="dark"] .caretaker-calendar-page,
+html[data-theme="dark"] .schedule-caretaker-page { color: var(--text-primary); }

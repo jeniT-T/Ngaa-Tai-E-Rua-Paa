@@ -1,57 +1,119 @@
 # Ngaa-Tai-E-Rua-Paa
 
-A content management system for a marae, built to give visitors a public landing page
-(history, facilities, booking requests, events) and give members, caretakers and admins
-role-specific tools (checklists, content library, issue reporting, booking approval, user
-management).
+A content management system for a marae. It provides a public website for visitors and role-based tools for members, caretakers, and administrators.
 
-## Tech stack
+## Quick setup for a first-time user
 
-- **Frontend**: React 19 + Vite, React Router, Tailwind CSS
-- **Backend**: Node.js + Express, JWT auth via httpOnly cookies
-- **Database**: PostgreSQL
-- **Infra**: Docker Compose (frontend, backend, db)
+This guide is intended for a non-technical user who wants to run the project locally using Visual Studio Code and Docker.
 
-## Setup
+### 1. Check that Docker is available
 
-### Requirements
+Install Docker before continuing:
 
-- Docker Desktop installed
+- **Windows and macOS:** Docker Desktop
+- **Linux:** Docker Engine and Docker Compose
 
-### Start project
+Open Docker Desktop or Docker Engine and make sure Docker is running. If you are using Visual Studio Code, also install the **Docker** extension.
 
-Clone repo:
+### 2. Open the project in Visual Studio Code
 
-```bash
-git clone https://github.com/jeniT-T/Ngaa-Tai-E-Rua-Paa
-cd marae-app
+1. Open Visual Studio Code.
+2. Select **File → Open Folder**.
+3. Choose the folder containing this project.
+
+### 3. Create the local environment file
+
+The project uses a file named `.env` to store local settings.
+
+If `.env` does not already exist:
+
+1. Open `.env.example` in Visual Studio Code.
+2. Copy all of its contents.
+3. Create a new file named `.env` in the project root.
+4. Paste the copied contents into `.env`.
+
+The project already includes a local `.env` file in this workspace, so you can skip this step if that file is present.
+
+### 4. Add the login secret
+
+The backend needs a `JWT_SECRET` for login and registration to work.
+
+Open `.env` and add this line near the other settings:
+
+```env
+JWT_SECRET=replace-this-with-a-long-random-value
 ```
 
-Create env file:
+Use a long value that contains letters, numbers, and symbols. For example:
 
-```bash
-cp .env.example .env
+```env
+JWT_SECRET=local-development-secret-1234567890
 ```
 
-Then open `.env` and fill in real values — see [Environment variables](#environment-variables)
-below. In particular, add a `JWT_SECRET`; it's required for login/register to work and isn't
-included in `.env.example` yet.
+> This is only for local development. Do not use this value in a public or production environment.
 
-Run project:
+### 5. Start the project with Docker
+
+Open the VS Code terminal by selecting **Terminal → New Terminal**. Then enter:
 
 ```bash
 docker compose up --build
 ```
 
-Open:
+Wait for Docker to build the images and start the services. The first run can take a few minutes.
 
-http://localhost:3000
+### 6. Open the website
 
-### Stop containers
+After the containers start, open this address in your web browser:
 
-Press:
+**http://localhost:3000**
 
-CTRL + C
+The project website should appear.
+
+### 7. Set up the database
+
+The local database is managed by Docker. If you are using a fresh copy of the project and the database has no tables yet, open the terminal and run:
+
+```bash
+docker compose exec -T db psql -U postgres -d marae_db -v ON_ERROR_STOP=1 < database/schema.sql
+```
+
+If the database already contains the project tables, do not run this command again.
+
+### 8. Create an administrator account
+
+Only complete this step if you need an administrator account.
+
+Run this command in the terminal:
+
+```bash
+docker compose exec backend node scripts/createAdmin.js "Your Name" your@email.com yourPassword123
+```
+
+Replace `Your Name`, `your@email.com`, and `yourPassword123` with the details you want to use.
+
+### 9. Stop the project
+
+Press **Ctrl + C** in the terminal where Docker Compose is running.
+
+To stop it later from another terminal, run:
+
+```bash
+docker compose down
+```
+
+To start the project again, run:
+
+```bash
+docker compose up
+```
+
+## Local addresses
+
+- Website: http://localhost:3000
+- Backend API: http://localhost:4000
+- Email inbox: http://localhost:8025
+- Database: port 5433
 
 ## Environment variables
 

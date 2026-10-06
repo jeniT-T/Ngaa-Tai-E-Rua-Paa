@@ -9,6 +9,7 @@ jest.mock('../middleware/requireAuth', () => (req, res, next) => {
 });
 
 jest.mock('../models/ContentItem', () => ({
+  findByPlacement: jest.fn(),
   create: jest.fn(),
   findById: jest.fn(),
   update: jest.fn(),
@@ -139,5 +140,48 @@ describe('PATCH /api/content/:id -- a caretaker cannot move content off (or onto
       .send({ title: 'T', body: 'B', placement: 'facilities' });
 
     expect(res.status).toBe(200);
+  });
+});
+
+
+describe('Tutorial role assignments', () => {
+  const app = buildApp();
+  beforeEach(() => {
+    ContentItem.findByPlacement.mockReset();
+    ContentItem.findByPlacement.mockResolvedValue([]);
+  });
+
+  test.each(['member', 'caretaker', 'manager', 'admin'])('viewer uses authenticated %s role', async (role) => {
+    const res = await request(app).get('/api/content/tutorials')
+      .set(asUser({ id: 1, role }));
+    expect(res.status).toBe(200);
+    expect(ContentItem.findByPlacement).toHaveBeenCalledWith('caretaker-tutorials', role);
+  });
+
+  test('guest endpoint only loads Member tutorials', async () => {
+    const res = await request(app).get('/api/content/public/caretaker-tutorials');
+    expect(res.status).toBe(200);
+    expect(ContentItem.findByPlacement).toHaveBeenCalledWith('caretaker-tutorials', 'member');
+  });
+
+  test('caretakers can manage tutorials assigned to other roles', async () => {
+    const res = await request(app).get('/api/content/tutorials/manage')
+      .set(asUser({ id: 1, role: 'caretaker' }));
+    expect(res.status).toBe(200);
+    expect(ContentItem.findByPlacement).toHaveBeenCalledWith('caretaker-tutorials');
+  });
+
+  test('members cannot load the management list', async () => {
+    const res = await request(app).get('/api/content/tutorials/manage')
+      .set(asUser({ id: 1, role: 'member' }));
+    expect(res.status).toBe(403);
+    expect(ContentItem.findByPlacement).not.toHaveBeenCalled();
+  });
+
+  test.each([[], ['unknown'], null])('invalid assignment %j is rejected', async (visibleToRoles) => {
+    const res = await request(app).post('/api/content')
+      .set(asUser({ id: 1, role: 'caretaker' }))
+      .send({ title: 'Tutorial', body: 'Steps', placement: 'caretaker-tutorials', visibleToRoles });
+    expect(res.status).toBe(400);
   });
 });

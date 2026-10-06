@@ -19,7 +19,7 @@ button {
 
   background: transparent;
 
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .caretaker-calendar-layout {
@@ -41,7 +41,7 @@ button {
 
 .calendar-panel,
 .tasks-panel {
-  background: white;
+  background: var(--surface);
 
   border:
     1px solid #e5e7eb;
@@ -79,7 +79,7 @@ button {
 .task-panel-header h2 {
   margin: 0;
 
-  color: #111827;
+  color: var(--text-primary);
 
   font-size: 22px;
 
@@ -132,7 +132,7 @@ button {
   background:
     var(--bg-primary);
 
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .calendar-navigation button:hover {
@@ -140,7 +140,7 @@ button {
     #f3f4f6;
 
   color:
-    #111827;
+    var(--text-primary);
 }
 
 /* WEEKDAYS*/
@@ -195,7 +195,7 @@ button {
   background:
     var(--bg-primary);
 
-  color: #111827;
+  color: var(--text-primary);
 
   font-size: 16px;
 
@@ -277,7 +277,7 @@ button {
 
   border-radius: 2px;
 
-  background: #0081bd;
+  background: var(--primary);
 }
 
 .calendar-booking-banner {
@@ -322,7 +322,7 @@ button {
   margin:
     5px 0 0;
 
-  color: #6b7280;
+  color: var(--text-secondary);
 
   font-size: 14px;
 }
@@ -371,7 +371,7 @@ button {
     center;
 
   color:
-    #6b7280;
+    var(--text-secondary);
 }
 
 .no-task-icon {
@@ -402,7 +402,7 @@ button {
     0 0 6px;
 
   color:
-    #374151;
+    var(--text-primary);
 }
 
 .no-tasks p {
@@ -478,7 +478,7 @@ button {
     0 0 6px;
 
   color:
-    #111827;
+    var(--text-primary);
 
   font-size:
     17px;
@@ -513,7 +513,7 @@ button {
   gap: 5px;
 
   color:
-    #6b7280;
+    var(--text-secondary);
 }
 
 .duration {
@@ -528,7 +528,7 @@ button {
 
 .task-completed {
   opacity: 1;
-  color: #6b7280;
+  color: var(--text-secondary);
 
   background:
     #f9fafb !important;
@@ -540,7 +540,7 @@ button {
 .task-completed
 .task-information h3 {
   color:
-    #6b7280;
+    var(--text-secondary);
 
   text-decoration:
     line-through;
@@ -573,7 +573,7 @@ button {
   border-radius: var(--radius-panel);
 
   background:
-    #ffffff;
+    var(--surface);
 }
 
 .task-notes strong {
@@ -586,7 +586,7 @@ button {
     6px 0 0;
 
   color:
-    #4b5563;
+    var(--text-secondary);
 
   line-height:
     1.5;
@@ -634,7 +634,7 @@ span {
 .task-expanded-details
 strong {
   color:
-    #374151;
+    var(--text-primary);
 
   font-size:
     13px;
@@ -705,7 +705,7 @@ strong {
     #c7d2fe;
 
   background:
-    white;
+    var(--surface);
 
   color:
     #4338ca;
@@ -723,7 +723,7 @@ strong {
     #fecaca;
 
   background:
-    white;
+    var(--surface);
 
   color:
     #dc2626;
@@ -739,7 +739,7 @@ strong {
 .task-actions
 button:disabled {
   opacity: 1;
-  color: #6b7280;
+  color: var(--text-secondary);
 
   cursor:
     not-allowed;
@@ -801,7 +801,7 @@ button:disabled:hover {
   border-radius: var(--radius-panel);
 
   background:
-    white;
+    var(--surface);
 
   box-shadow:
     0 20px 50px
@@ -825,7 +825,7 @@ button:disabled:hover {
   margin: 0;
 
   color:
-    #111827;
+    var(--text-primary);
 }
 
 .dialog-header p {
@@ -833,7 +833,7 @@ button:disabled:hover {
     5px 0 0;
 
   color:
-    #6b7280;
+    var(--text-secondary);
 
   font-size:
     13px;
@@ -857,7 +857,7 @@ button:disabled:hover {
     var(--bg-primary);
 
   color:
-    #6b7280;
+    var(--text-secondary);
 }
 
 .close-dialog:hover {
@@ -881,7 +881,7 @@ button:disabled:hover {
 
 .form-group label {
   color:
-    #374151;
+    var(--text-primary);
 
   font-size:
     13px;
@@ -904,10 +904,10 @@ button:disabled:hover {
   border-radius: var(--radius-control);
 
   background:
-    white;
+    var(--surface);
 
   color:
-    #111827;
+    var(--text-primary);
 
   outline: none;
 }
@@ -968,7 +968,7 @@ textarea:focus {
     #f9fafb;
 
   color:
-    #4b5563;
+    var(--text-secondary);
 
   font-size:
     13px;
@@ -1005,10 +1005,10 @@ textarea:focus {
   border-radius: var(--radius-control);
 
   background:
-    white;
+    var(--surface);
 
   color:
-    #4b5563;
+    var(--text-secondary);
 
   font-size:
     12px;
@@ -1101,10 +1101,10 @@ textarea:focus {
     #d1d5db;
 
   background:
-    white;
+    var(--surface);
 
   color:
-    #4b5563;
+    var(--text-secondary);
 }
 
 .cancel-dialog-button:hover {
@@ -1174,7 +1174,7 @@ textarea:focus {
   border-radius: var(--radius-panel);
 
   background:
-    white;
+    var(--surface);
 
   text-align:
     center;
@@ -1223,7 +1223,7 @@ textarea:focus {
     0 0 8px;
 
   color:
-    #111827;
+    var(--text-primary);
 
   font-size:
     22px;
@@ -1234,7 +1234,7 @@ textarea:focus {
     5px 0;
 
   color:
-    #6b7280;
+    var(--text-secondary);
 
   font-size:
     14px;
@@ -1249,7 +1249,7 @@ textarea:focus {
     10px 0;
 
   color:
-    #111827;
+    var(--text-primary);
 
   font-weight:
     600;
@@ -1292,10 +1292,10 @@ button {
     #d1d5db;
 
   background:
-    white;
+    var(--surface);
 
   color:
-    #374151;
+    var(--text-primary);
 }
 
 .delete-cancel-button:hover {

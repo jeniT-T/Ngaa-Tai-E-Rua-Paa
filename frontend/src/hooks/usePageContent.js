@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
 
 
-export default function usePageContent(page) {
+export default function usePageContent(page, authenticatedTutorials = false) {
   const [heading, setHeading] = useState(null);
   const [sections, setSections] = useState([]);
   // Plain admin-uploaded photos (block_type "gallery") — no title/body
@@ -19,7 +19,7 @@ export default function usePageContent(page) {
 
     async function load() {
       try {
-        const res = await fetch(`${API_BASE}/content/public/${page}`);
+        const res = await fetch(authenticatedTutorials ? `${API_BASE}/content/tutorials` : `${API_BASE}/content/public/${page}`, { credentials: "include" });
         const data = await res.json();
         if (cancelled || !res.ok) return;
         const items = data.items || [];
@@ -37,7 +37,7 @@ export default function usePageContent(page) {
     return () => {
       cancelled = true;
     };
-  }, [page]);
+  }, [page, authenticatedTutorials]);
 
   return { heading, sections, gallery, loaded };
 }

@@ -1,5 +1,6 @@
 
 import { Navigate, useLocation } from 'react-router-dom';
+import AccessDeniedRedirect from './AccessDeniedRedirect.jsx';
 import { useAuth } from '../context/AuthContext';
 
 // Wrap any <Route element={...}> with this to restrict it by role.
@@ -20,7 +21,7 @@ export default function RoleRoute({ allowed, children }) {
   }
 
   if (!allowed.includes(user.role)) {
-    return <Navigate to="/unauthorized" replace />;
+    return <AccessDeniedRedirect />;
   }
 
   return children;

@@ -243,6 +243,25 @@ router.get('/guest-active', async (req, res) => {
 });
 
 // GET /api/bookings — manager only, view all booking requests
+// Permanent deletion is restricted to managers.
+router.delete('/:id', requireAuth, requireRole('manager'), async (req, res) => {
+  try {
+    if (!/^[1-9]\d*$/.test(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid booking ID' });
+    }
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) return res.status(404).json({ error: 'Booking not found' });
+    const deleted = await Booking.delete(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+    res.status(204).send();
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete booking' });
+  }
+});
+
 router.get('/', requireAuth, requireRole('manager'), async (req, res) => {
   try {
     const bookings = await Booking.findAll();

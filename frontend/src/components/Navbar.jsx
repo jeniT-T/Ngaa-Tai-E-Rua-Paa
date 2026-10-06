@@ -16,6 +16,18 @@ const DASHBOARD_LINKS = {
 };
 
 function Navbar() {
+  const [darkMode, setDarkMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem('site-colour-mode');
+      if (saved) return saved === 'dark';
+    } catch { /* Use system preference when storage is unavailable. */ }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useLayoutEffect(() => {
+    document.documentElement.dataset.theme = darkMode ? 'dark' : 'light';
+    try { localStorage.setItem('site-colour-mode', darkMode ? 'dark' : 'light'); } catch { /* Keep the current preference in memory. */ }
+  }, [darkMode]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [compact, setCompact] = useState(false);
   const containerRef = useRef(null);
@@ -26,7 +38,7 @@ function Navbar() {
   const location = useLocation();
   const arrivalAccess = useArrivalAccess();
   const { settings } = useSiteSettings();
-  const logoSrc = resolveImageUrl(settings.logo_url) || "/images/logo.png";
+  const logoSrc = resolveImageUrl(settings.logo_url) || "/images/logo-transparent.png";
 
   // The browser tab title is set once from the fixed index.html markup —
   // this keeps it in sync with the admin-configurable site name instead,
@@ -67,7 +79,7 @@ function Navbar() {
       observer.disconnect();
       window.removeEventListener("resize", measure);
     };
-  }, [user, arrivalAccess, location.pathname, settings.site_name]);
+  }, [user, arrivalAccess, location.pathname, settings.site_name, darkMode]);
 
   function closeMenu() {
     setMenuOpen(false);
@@ -137,10 +149,8 @@ function Navbar() {
                   {dashboard.label}
                 </Link>
               )}
-              {/* Caretakers don't need the Marae Guide link — that's for the
-                  people hiring the marae, not the staff running it. Still
-                  shown to admin/member as before. */}
-              {arrivalAccess === "allowed" && user?.role !== "caretaker" && (
+              {/* Staff always have access; Members need an approved booking. */}
+              {arrivalAccess === "allowed" && (
                 <Link
                   to="/arrival"
                   onClick={closeMenu}
@@ -215,6 +225,15 @@ function Navbar() {
               </Link>
             </>
           )}
+          <button
+            type="button"
+            className="navbar-theme-toggle"
+            onClick={() => setDarkMode((previous) => !previous)}
+            aria-pressed={darkMode}
+            aria-label="Dark mode"
+          >
+            {darkMode ? '☀ Light mode' : '☾ Dark mode'}
+          </button>
         </nav>
 
         {/* Hamburger menu toggle */}

@@ -4,7 +4,7 @@ import { getYoutubeEmbedUrl } from "../../utils/youtube.js";
 import { resolveImageUrl } from "../../utils/media.js";
 
 const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
-const ALL_ROLES = ["member", "caretaker", "admin"];
+const ALL_ROLES = ["member", "caretaker", "manager", "admin"];
 const SUGGESTED_CATEGORIES = [
   "recipe",
   "onboarding",
@@ -96,7 +96,7 @@ function ContentItemCard({ item, categories, moveValue, onMoveChange, onModify, 
 
       <p className="text-sm text-gray-600 whitespace-pre-line mb-2">{item.body}</p>
       <p className="text-xs text-gray-500 mb-3">
-        {item.placement
+        {item.placement && item.placement !== "caretaker-tutorials"
           ? `Public on the ${item.placement} page`
           : `Visible to: ${item.visible_to_roles.join(", ")}`}
       </p>

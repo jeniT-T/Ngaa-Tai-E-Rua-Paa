@@ -6,6 +6,9 @@ import RoleRoute from "./components/RoleRoute.jsx";
 import ArrivalAccessGate from "./components/ArrivalAccessGate.jsx";
 import HomeRoute from "./components/HomeRoute.jsx";
 
+import SiteTheme from "./components/SiteTheme.jsx";
+import StaffBackButton from "./components/StaffBackButton.jsx";
+import AccessNotice from "./components/AccessNotice.jsx";
 import Navbar from "./components/Navbar.jsx";
 
 import ArrivalPage from "./pages/ArrivalPage.jsx";
@@ -60,7 +63,10 @@ function App() {
     <AuthProvider>
       <TaskProvider>
       <div>
+        <SiteTheme />
         <Navbar />
+        <AccessNotice />
+        <StaffBackButton />
 
         <Routes>
           {/* Logged-out visitors see the public homepage; logged-in users
@@ -106,7 +112,7 @@ function App() {
           <Route
             path="/arrival"
             element={
-              <RoleRoute allowed={["member", "caretaker", "admin"]}>
+              <RoleRoute allowed={["member", "caretaker", "manager", "admin"]}>
                 <ArrivalAccessGate>
                   <ArrivalPage />
                 </ArrivalAccessGate>
@@ -116,7 +122,7 @@ function App() {
           <Route
             path="/arrival/gas"
             element={
-              <RoleRoute allowed={["member", "caretaker", "admin"]}>
+              <RoleRoute allowed={["member", "caretaker", "manager", "admin"]}>
                 <ArrivalAccessGate>
                   <GasPage />
                 </ArrivalAccessGate>
@@ -126,7 +132,7 @@ function App() {
           <Route
             path="/arrival/wifi"
             element={
-              <RoleRoute allowed={["member", "caretaker", "admin"]}>
+              <RoleRoute allowed={["member", "caretaker", "manager", "admin"]}>
                 <ArrivalAccessGate>
                   <WifiPage />
                 </ArrivalAccessGate>
@@ -136,7 +142,7 @@ function App() {
           <Route
             path="/arrival/emergency"
             element={
-              <RoleRoute allowed={["member", "caretaker", "admin"]}>
+              <RoleRoute allowed={["member", "caretaker", "manager", "admin"]}>
                 <ArrivalAccessGate>
                   <EmergencyPage />
                 </ArrivalAccessGate>
@@ -146,7 +152,7 @@ function App() {
           <Route
             path="/arrival/accessibility"
             element={
-              <RoleRoute allowed={["member", "caretaker", "admin"]}>
+              <RoleRoute allowed={["member", "caretaker", "manager", "admin"]}>
                 <ArrivalAccessGate>
                   <AccessibilityPage />
                 </ArrivalAccessGate>
@@ -154,14 +160,14 @@ function App() {
             }
           />
 
-          {/* Read-only checklist view — same access rule as the arrival
-              guide itself (member with an active approved booking, or
-              caretaker/admin). Caretakers manage the real, editable version
-              at /caretaker/checklists; this is the "look, don't touch" one. */}
+          {/* Read-only checklist view — members need an active booking;
+              caretaker/admin/manager access is filtered by assigned role.
+              Caretakers and admins manage the editable version at
+              /caretaker/checklists. */}
           <Route
             path="/checklists"
             element={
-              <RoleRoute allowed={["member", "caretaker", "admin"]}>
+              <RoleRoute allowed={["member", "caretaker", "manager", "admin"]}>
                 <ArrivalAccessGate>
                   <ChecklistsViewPage />
                 </ArrivalAccessGate>
@@ -175,7 +181,7 @@ function App() {
           <Route
             path="/tutorials"
             element={
-              <RoleRoute allowed={["member", "caretaker", "admin"]}>
+              <RoleRoute allowed={["member", "caretaker", "manager", "admin"]}>
                 <ArrivalAccessGate>
                   <TutorialsViewPage />
                 </ArrivalAccessGate>
@@ -283,6 +289,14 @@ function App() {
             element={
               <RoleRoute allowed={["manager"]}>
                 <ManagerBookingsPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/manager/bookings/previous"
+            element={
+              <RoleRoute allowed={["manager"]}>
+                <ManagerBookingsPage previous />
               </RoleRoute>
             }
           />

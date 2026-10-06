@@ -66,3 +66,12 @@ describe('SiteSettings.update', () => {
     expect(mockQuery.mock.calls[0][0]).toMatch(/^SELECT \* FROM site_settings/);
   });
 });
+
+
+test('persists the configurable secondary colour', async () => {
+  mockQuery.mockReset();
+  mockQuery.mockResolvedValue({ rows: [{ secondary_colour: '#8134ab' }] });
+  await SiteSettings.update({ secondaryColour: '#8134ab' });
+  expect(mockQuery.mock.calls[0][0]).toContain('secondary_colour = $1');
+  expect(mockQuery.mock.calls[0][1]).toEqual(['#8134ab']);
+});

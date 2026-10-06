@@ -1,12 +1,38 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext(null);
+const CHECKLIST_SESSION_KEY = 'checklist-session-progress';
+
+function readChecklistProgress() {
+  try {
+    return JSON.parse(sessionStorage.getItem(CHECKLIST_SESSION_KEY) || '{}') || {};
+  } catch {
+    return {};
+  }
+}
 
 const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null); // { id, email, role, name } | null
   const [loading, setLoading] = useState(true);
+  const [checklistProgress, setChecklistProgress] = useState(readChecklistProgress);
+
+  const clearChecklistProgress = () => {
+    setChecklistProgress({});
+    try { sessionStorage.removeItem(CHECKLIST_SESSION_KEY); } catch { /* Storage may be unavailable. */ }
+  };
+
+  const isChecklistItemChecked = (scope, checklistId, itemId) =>
+    checklistProgress[JSON.stringify([scope, checklistId, itemId])] === true;
+
+  const setChecklistItemChecked = (scope, checklistId, itemId, checked) => {
+    setChecklistProgress((previous) => {
+      const next = { ...previous, [JSON.stringify([scope, checklistId, itemId])]: checked };
+      try { sessionStorage.setItem(CHECKLIST_SESSION_KEY, JSON.stringify(next)); } catch { /* Keep in-memory progress. */ }
+      return next;
+    });
+  };
 
   useEffect(() => {
     fetch(`${API_BASE}/auth/me`, { credentials: 'include' })
@@ -30,6 +56,7 @@ export function AuthProvider({ children }) {
     }
 
     const data = await res.json();
+    clearChecklistProgress();
     setUser(data.user);
     return data.user;
   };
@@ -48,6 +75,7 @@ export function AuthProvider({ children }) {
     }
 
     const data = await res.json();
+    clearChecklistProgress();
     setUser(data.user);
     return data.user;
   };
@@ -57,6 +85,7 @@ export function AuthProvider({ children }) {
       method: 'POST',
       credentials: 'include',
     });
+    clearChecklistProgress();
     setUser(null);
   };
 
@@ -90,7 +119,8 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, logout, register, forgotPassword, resetPassword }}
+      value={{ user, loading, login, logout, register, forgotPassword, resetPassword,
+        isChecklistItemChecked, setChecklistItemChecked }}
     >
       {children}
     </AuthContext.Provider>

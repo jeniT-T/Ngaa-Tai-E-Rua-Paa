@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import GuestAccessShare from "../../components/GuestAccessShare.jsx";
 import StarRating from "../../components/StarRating.jsx";
-import { isBookingComplete } from "../../utils/bookingStatus.js";
+import { hasBookingEnded, isBookingComplete } from "../../utils/bookingStatus.js";
 import useSiteSettings from "../../hooks/useSiteSettings.js";
 
 const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
@@ -120,7 +120,7 @@ function ManagerGuestReviewPanel({ bookingId }) {
   );
 }
 
-export default function ManagerBookingsPage() {
+export default function ManagerBookingsPage({ previous = false }) {
   const { settings } = useSiteSettings();
   const typeLabels = Object.fromEntries(settings.booking_types.map((t) => [t.value, t.label]));
   const areaLabels = Object.fromEntries(settings.booking_areas.map((a) => [a.value, a.label]));
@@ -128,6 +128,16 @@ export default function ManagerBookingsPage() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
+  const [updatingId, setUpdatingId] = useState(null);
+  const [now, setNow] = useState(() => new Date());
+  const visibleBookings = bookings.filter((booking) => hasBookingEnded(booking, now) === previous);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   const [notesDraft, setNotesDraft] = useState({}); // { [bookingId]: text }
 
   useEffect(() => {
@@ -149,8 +159,30 @@ export default function ManagerBookingsPage() {
     };
   }, []);
 
+  async function deleteBooking(booking) {
+    if (!window.confirm(`Permanently delete the booking for ${booking.requester_name} (${toDateLabel(booking.start_date)} → ${toDateLabel(booking.end_date)})? Its reviews will also be removed. This cannot be undone.`)) return;
+    setError("");
+    setDeletingId(booking.id);
+    try {
+      const res = await fetch(`${API_BASE}/bookings/${booking.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to delete booking");
+      }
+      setBookings((previousBookings) => previousBookings.filter((item) => item.id !== booking.id));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   async function decide(id, status) {
     setError("");
+    setUpdatingId(id);
     try {
       const res = await fetch(`${API_BASE}/bookings/${id}/status`, {
         method: "PATCH",
@@ -163,27 +195,38 @@ export default function ManagerBookingsPage() {
       setBookings((prev) => prev.map((b) => (b.id === id ? data.booking : b)));
     } catch (err) {
       setError(err.message);
+    } finally {
+      setUpdatingId(null);
     }
   }
 
   return (
     <div className="p-8 max-w-2xl mx-auto">
       <div className="flex justify-between items-start gap-4 mb-2">
-        <h1 className="text-2xl font-semibold">Booking Requests</h1>
+        <h1 className="text-2xl font-semibold">{previous ? "Previous Bookings" : "Booking Requests"}</h1>
+        <div className="flex flex-col gap-2">
         <Link
           to="/manager/bookings/new"
           className="flex justify-center items-center text-sm border rounded px-10 py-2 whitespace-nowrap"
         >
           + New booking for a customer
         </Link>
+        <Link
+          to={previous ? "/manager/bookings" : "/manager/bookings/previous"}
+          className="flex justify-center items-center text-sm border rounded px-10 py-2 whitespace-nowrap"
+        >
+          {previous ? "Current bookings" : "Previous bookings"}
+        </Link>
+        </div>
       </div>
       <p className="text-sm text-gray-500 mb-6">
-        Review, approve, or deny booking requests. The requester gets emailed automatically
-        when you make a decision.
+        {previous
+          ? "Bookings whose end date has passed. View booking details and review previous guests."
+          : "Review, approve, or deny booking requests. The requester gets emailed automatically when you make a decision."}
       </p>
 
       {/* Generic, non-booking-specific guest access*/}
-      <div className="border rounded-lg p-4 mb-6 bg-gray-50">
+      {!previous && <div className="border rounded-lg p-4 mb-6 bg-gray-50">
         <h2 className="text-sm font-semibold mb-1">Guest access for signage</h2>
         <p className="text-xs text-gray-600 mb-2">
           A single link/QR code you can print and post physically around the marae — works
@@ -194,17 +237,17 @@ export default function ManagerBookingsPage() {
           buttonLabel="Get the guest access QR code"
           description="Anyone who scans this while a booking is currently active can view the marae guide, checklists and tutorials — no account needed. Not tied to any one booking, so it's safe to print and leave up permanently."
         />
-      </div>
+      </div>}
 
       {error && <p className="text-red-600 mb-4">{error}</p>}
 
       {loading ? (
         <p>Loading...</p>
-      ) : bookings.length === 0 ? (
-        <p className="text-gray-500">No booking requests yet.</p>
+      ) : visibleBookings.length === 0 ? (
+        <p className="text-gray-500">{previous ? "No previous bookings yet." : "No current booking requests."}</p>
       ) : (
         <ul className="space-y-4">
-          {bookings.map((booking) => (
+          {visibleBookings.map((booking) => (
             <li key={booking.id} className="border rounded p-4">
               <div className="flex justify-between items-start mb-2">
                 <div>
@@ -239,7 +282,7 @@ export default function ManagerBookingsPage() {
                 </p>
               )}
 
-              {booking.status === "pending" && (
+              {!previous && booking.status === "pending" && (
                 <div className="space-y-2">
                   <textarea
                     placeholder="Optional note to include in the decision email..."
@@ -253,12 +296,14 @@ export default function ManagerBookingsPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => decide(booking.id, "approved")}
+                      disabled={updatingId !== null || deletingId !== null}
                       className="btn btn-success btn-success-action btn-compact"
                     >
                       Approve
                     </button>
                     <button
                       onClick={() => decide(booking.id, "denied")}
+                      disabled={updatingId !== null || deletingId !== null}
                       className="btn btn-error btn-danger-action btn-compact"
                     >
                       Deny
@@ -267,13 +312,33 @@ export default function ManagerBookingsPage() {
                 </div>
               )}
 
-              {booking.status === "approved" && (
+              {!previous && booking.status === "approved" && (
                 <div className="mt-2">
                   <GuestAccessShare token={booking.guest_access_token} />
                 </div>
               )}
 
               {isBookingComplete(booking) && <ManagerGuestReviewPanel bookingId={booking.id} />}
+              <div className="mt-3 flex flex-wrap gap-2">
+                  {!previous && booking.status !== "pending" && (
+                    <button
+                      type="button"
+                      onClick={() => decide(booking.id, "pending")}
+                      disabled={updatingId !== null || deletingId !== null}
+                      className="btn btn-outline btn-action btn-compact"
+                    >
+                      {updatingId === booking.id ? "Updating..." : "Change status to pending"}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => deleteBooking(booking)}
+                    disabled={deletingId !== null || updatingId !== null}
+                    className="btn btn-error btn-danger-action btn-compact"
+                  >
+                    {deletingId === booking.id ? "Deleting..." : "Delete booking"}
+                  </button>
+              </div>
             </li>
           ))}
         </ul>

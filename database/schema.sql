@@ -118,6 +118,7 @@ CREATE TABLE checklists (
   id SERIAL PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
   description TEXT,
+  assigned_roles TEXT[] NOT NULL DEFAULT ARRAY['member', 'caretaker', 'manager', 'admin']::TEXT[],
   created_by INTEGER REFERENCES users(id),
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
@@ -169,6 +170,7 @@ CREATE TABLE site_settings (
   id SMALLINT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
 
   site_name VARCHAR(255) NOT NULL DEFAULT 'Marae System',
+  secondary_colour VARCHAR(7) NOT NULL DEFAULT '#0081BD' CHECK (secondary_colour ~ '^#[0-9A-Fa-f]{6}$'),
   logo_url VARCHAR(500),
 
   map_image_url VARCHAR(500),

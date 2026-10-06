@@ -95,3 +95,21 @@ describe('Booking.findCurrentlyOnSite (backs the generic guest-signage QR code)'
     expect(mockQuery.mock.calls[0][0]).toMatch(/end_date >= CURRENT_DATE/);
   });
 });
+
+
+describe('Booking.delete', () => {
+  beforeEach(() => mockQuery.mockReset());
+  test('permanently deletes the selected booking regardless of its dates', async () => {
+    mockQuery.mockResolvedValue({ rows: [{ id: 7 }] });
+    expect(await Booking.delete(7)).toEqual({ id: 7 });
+    const [sql, values] = mockQuery.mock.calls[0];
+    expect(sql).toContain('DELETE FROM bookings');
+    expect(sql).toContain("WHERE id = $1");
+    expect(sql).not.toContain("end_date <");
+    expect(values).toEqual([7]);
+  });
+  test('returns null if the booking is missing', async () => {
+    mockQuery.mockResolvedValue({ rows: [] });
+    expect(await Booking.delete(7)).toBeNull();
+  });
+});

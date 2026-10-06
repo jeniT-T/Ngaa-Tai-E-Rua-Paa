@@ -238,6 +238,7 @@ export default function SiteSettingsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           siteName: settings.site_name,
+          secondaryColour: settings.secondary_colour || "#0081BD",
           logoUrl: settings.logo_url,
           mapImageUrl: settings.map_image_url,
           mapPins,
@@ -288,6 +289,26 @@ export default function SiteSettingsPage() {
             required
             className="w-full border rounded px-3 py-2"
           />
+        </div>
+
+        <div>
+          <label htmlFor="secondaryColour" className="block text-sm font-medium mb-1">Secondary colour</label>
+          <p className="text-xs text-gray-500 mb-2">
+            Choose the accent used for navigation, buttons, links and background highlights. Applies across the site after saving.
+          </p>
+          <div className="flex items-center gap-3">
+            <input
+              id="secondaryColour"
+              type="color"
+              value={settings.secondary_colour || "#0081BD"}
+              onChange={(event) => update("secondary_colour", event.target.value)}
+              className="h-12 w-16 cursor-pointer"
+            />
+            <span>{settings.secondary_colour || "#0081BD"}</span>
+            <button type="button" className="btn btn-outline btn-compact" onClick={() => update("secondary_colour", "#0081BD")}>
+              Return to default
+            </button>
+          </div>
         </div>
 
         <ImageField

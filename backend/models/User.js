@@ -47,6 +47,37 @@ const User = {
     return result.rows[0] || null;
   },
 
+  async delete(id) {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const existing = await client.query('SELECT id FROM users WHERE id = $1 FOR UPDATE', [id]);
+      if (!existing.rows.length) {
+        await client.query('ROLLBACK');
+        return null;
+      }
+      // Preserve shared records while removing references to their author.
+      for (const table of ['content_items', 'checklists', 'caretaker_tasks', 'equipment_items']) {
+        const exists = await client.query('SELECT to_regclass($1) AS table_name', [table]);
+        if (!exists.rows[0]?.table_name) continue;
+        await client.query(`UPDATE ${table} SET created_by = NULL WHERE created_by = $1`, [id]);
+      }
+      const reviews = await client.query("SELECT to_regclass('booking_reviews') AS table_name");
+      if (reviews.rows[0]?.table_name) {
+        await client.query('UPDATE booking_reviews SET manager_reviewed_by = NULL WHERE manager_reviewed_by = $1', [id]);
+      }
+      // Owned bookings, their reviews, and issues cascade on account deletion.
+      const result = await client.query('DELETE FROM users WHERE id = $1 RETURNING id', [id]);
+      await client.query('COMMIT');
+      return result.rows[0];
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+  },
+
   // --- Password reset ---
 
   async setResetToken(id, token, expiresAt) {

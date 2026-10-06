@@ -39,12 +39,12 @@ const ContentItem = {
   // facilities/events/...). No role filtering — anyone can see these.
   // Heading blocks (the page's title/intro) come first, then sections in
   // the order they were created.
-  async findByPlacement(page) {
+  async findByPlacement(page, role = null) {
     const result = await pool.query(
       `SELECT * FROM content_items
-       WHERE placement = $1
+       WHERE placement = $1 AND ($2::text IS NULL OR $2 = ANY(visible_to_roles))
        ORDER BY CASE block_type WHEN 'heading' THEN 0 ELSE 1 END, created_at ASC`,
-      [page]
+      [page, role]
     );
     return result.rows;
   },

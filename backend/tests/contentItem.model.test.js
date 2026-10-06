@@ -146,3 +146,22 @@ describe('ContentItem.findVisibleToRole', () => {
     expect(values).toEqual(['member', 'general']);
   });
 });
+
+
+describe('ContentItem.findByPlacement role filtering', () => {
+  beforeEach(() => mockQuery.mockReset());
+
+  test('filters placement results by role in the database', async () => {
+    mockQuery.mockResolvedValue({ rows: [] });
+    await ContentItem.findByPlacement('caretaker-tutorials', 'manager');
+    const [sql, values] = mockQuery.mock.calls[0];
+    expect(sql).toContain('$2 = ANY(visible_to_roles)');
+    expect(values).toEqual(['caretaker-tutorials', 'manager']);
+  });
+
+  test('management and other public pages can load all placement content', async () => {
+    mockQuery.mockResolvedValue({ rows: [] });
+    await ContentItem.findByPlacement('caretaker-tutorials');
+    expect(mockQuery.mock.calls[0][1]).toEqual(['caretaker-tutorials', null]);
+  });
+});

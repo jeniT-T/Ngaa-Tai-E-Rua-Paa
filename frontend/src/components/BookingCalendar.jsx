@@ -139,7 +139,7 @@ export default function BookingCalendar({
                 disabled
                   ? "text-gray-300 bg-gray-50 cursor-not-allowed line-through"
                   : selected
-                  ? "bg-[#0081bd] text-white"
+                  ? "bg-[var(--primary)] text-white"
                   : "hover:bg-gray-100",
               ].join(" ")}
             >
@@ -154,7 +154,7 @@ export default function BookingCalendar({
           <span className="w-3 h-3 rounded bg-gray-50 border inline-block" /> Unavailable
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-[#0081bd] inline-block" /> Selected
+          <span className="w-3 h-3 rounded bg-[var(--primary)] inline-block" /> Selected
         </span>
       </div>
     </div>

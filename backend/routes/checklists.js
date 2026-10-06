@@ -18,6 +18,15 @@ const requireRole = require('../middleware/requireRole');
 
 const router = express.Router();
 
+const CHECKLIST_ROLES = ['member', 'caretaker', 'manager', 'admin'];
+
+function hasValidAssignedRoles(roles) {
+  return Array.isArray(roles) &&
+    roles.length > 0 &&
+    new Set(roles).size === roles.length &&
+    roles.every((role) => CHECKLIST_ROLES.includes(role));
+}
+
 // GET /api/checklists/guest/:token and GET /api/checklists/guest -- no
 // auth. Read-only, same checklist data a caretaker/admin/member with an
 // active booking already sees (opening/closing procedures -- nothing
@@ -40,7 +49,7 @@ router.get('/guest/:token', async (req, res) => {
     if (!active) {
       return res.status(403).json({ error: 'This link is no longer active.' });
     }
-    const checklists = await Checklist.findAll();
+    const checklists = await Checklist.findAll(['member']);
     res.json({ checklists });
   } catch (err) {
     console.error(err);
@@ -54,7 +63,7 @@ router.get('/guest-active', async (req, res) => {
     if (!booking) {
       return res.status(403).json({ error: 'Not currently available' });
     }
-    const checklists = await Checklist.findAll();
+    const checklists = await Checklist.findAll(['member']);
     res.json({ checklists });
   } catch (err) {
     console.error(err);
@@ -72,7 +81,7 @@ async function hasActiveApprovedBooking(userId) {
 }
 
 async function canView(req) {
-  if (['caretaker', 'admin'].includes(req.user.role)) return true;
+  if (['caretaker', 'admin', 'manager'].includes(req.user.role)) return true;
   if (req.user.role !== 'member') return false;
   return hasActiveApprovedBooking(req.user.id);
 }
@@ -82,7 +91,8 @@ router.get('/', async (req, res) => {
     if (!(await canView(req))) {
       return res.status(403).json({ error: 'Not authorized to view checklists' });
     }
-    const checklists = await Checklist.findAll();
+    const roles = ['caretaker', 'admin'].includes(req.user.role) ? undefined : [req.user.role];
+    const checklists = await Checklist.findAll(roles);
     res.json({ checklists });
   } catch (err) {
     console.error(err);
@@ -98,13 +108,18 @@ router.use(requireRole('caretaker', 'admin'));
 
 router.post('/', async (req, res) => {
   try {
-    const { title, description, items } = req.body;
+    const { title, description, assignedRoles, items } = req.body;
     if (!title || !title.trim()) {
       return res.status(400).json({ error: 'Title is required' });
+    }
+    const roles = assignedRoles === undefined ? CHECKLIST_ROLES : assignedRoles;
+    if (!hasValidAssignedRoles(roles)) {
+      return res.status(400).json({ error: 'Choose one or more valid user types for this checklist' });
     }
     const id = await Checklist.create({
       title: title.trim(),
       description,
+      assignedRoles: roles,
       createdBy: req.user.id,
       items: Array.isArray(items) ? items : [],
     });
@@ -118,15 +133,22 @@ router.post('/', async (req, res) => {
 
 router.patch('/:id', async (req, res) => {
   try {
-    const { title, description } = req.body;
+    const { title, description, assignedRoles } = req.body;
     if (!title || !title.trim()) {
       return res.status(400).json({ error: 'Title is required' });
+    }
+    if (assignedRoles !== undefined && !hasValidAssignedRoles(assignedRoles)) {
+      return res.status(400).json({ error: 'Choose one or more valid user types for this checklist' });
     }
     const existing = await Checklist.findById(req.params.id);
     if (!existing) {
       return res.status(404).json({ error: 'Checklist not found' });
     }
-    await Checklist.update(req.params.id, { title: title.trim(), description });
+    await Checklist.update(req.params.id, {
+      title: title.trim(),
+      description,
+      assignedRoles,
+    });
     const checklist = await Checklist.getWithItems(req.params.id);
     res.json({ checklist });
   } catch (err) {

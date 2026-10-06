@@ -15,7 +15,7 @@ export default function useArrivalAccess() {
       return;
     }
 
-    if (user.role === "caretaker" || user.role === "admin") {
+    if (user.role === "caretaker" || user.role === "manager" || user.role === "admin") {
       setStatus("allowed");
       return;
     }

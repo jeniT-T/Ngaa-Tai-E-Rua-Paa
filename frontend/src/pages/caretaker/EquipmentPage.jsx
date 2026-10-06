@@ -134,7 +134,7 @@ function ItemRow({ item, canManage, onChange }) {
       </div>
       {canManage && (
         <div className="flex gap-3 shrink-0">
-          <button onClick={() => setEditing(true)} className="text-sm" style={{ color: '#0081bd' }}>
+          <button onClick={() => setEditing(true)} className="text-sm" style={{ color: 'var(--primary)' }}>
             Edit
           </button>
           <button onClick={deleteItem} className="text-sm text-red-600">

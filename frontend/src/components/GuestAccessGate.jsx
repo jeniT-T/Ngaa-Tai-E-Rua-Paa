@@ -1,10 +1,11 @@
 // frontend/src/components/GuestAccessGate.jsx
+import AccessDeniedRedirect from "./AccessDeniedRedirect.jsx";
 import { useParams } from "react-router-dom";
 import useGuestBookingAccess from "../hooks/useGuestBookingAccess.js";
 
 export default function GuestAccessGate({ children }) {
   const { token } = useParams();
-  const { status, booking } = useGuestBookingAccess(token);
+  const { status } = useGuestBookingAccess(token);
 
   if (status === "checking") {
     return <div className="p-8 text-center text-gray-500">Checking this link...</div>;
@@ -23,17 +24,7 @@ export default function GuestAccessGate({ children }) {
   }
 
   if (status === "denied") {
-    const notYetStarted = booking && new Date(booking.startDate) > new Date();
-    return (
-      <div className="p-8 max-w-md mx-auto text-center">
-        <h1 className="text-xl font-semibold mb-2">Marae guide</h1>
-        <p className="text-gray-600">
-          {notYetStarted
-            ? "This booking hasn't been approved yet, so the marae guide isn't available through this link yet. Please check back closer to the stay."
-            : "This booking's marae guide is no longer available through this link — the stay has ended, or the booking wasn't approved."}
-        </p>
-      </div>
-    );
+    return <AccessDeniedRedirect message="This booking's guide is unavailable because the stay has ended or the booking is not approved." />;
   }
 
   return children;
