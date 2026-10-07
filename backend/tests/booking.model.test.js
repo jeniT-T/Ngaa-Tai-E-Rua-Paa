@@ -113,3 +113,16 @@ describe('Booking.delete', () => {
     expect(await Booking.delete(7)).toBeNull();
   });
 });
+
+
+test('conflict checks use inclusive dates, approved status, area and whole-Paa overlap', async () => {
+  mockQuery.mockReset();
+  mockQuery.mockResolvedValue({ rows: [] });
+  await Booking.findConflicts({ startDate: '2026-11-01', endDate: '2026-11-03', area: 'general', excludeId: 2 });
+  const [sql, values] = mockQuery.mock.calls[0];
+  expect(sql).toContain("b.status = 'approved'");
+  expect(sql).toContain('b.start_date <= $2::date AND b.end_date >= $1::date');
+  expect(sql).toContain("b.area = $3 OR b.area = 'paa' OR $3 = 'paa'");
+  expect(sql).toContain('b.id <> $4');
+  expect(values).toEqual(['2026-11-01', '2026-11-03', 'general', 2]);
+});

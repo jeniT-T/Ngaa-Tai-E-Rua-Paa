@@ -141,6 +141,24 @@ router.post('/', requireAuth, async (req, res) => {
 });
 
 // GET /api/bookings/mine — the logged-in user's own booking requests
+router.get('/conflicts', requireAuth, requireRole('manager'), async (req, res) => {
+  try {
+    const { startDate, endDate, area, excludeId } = req.query;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate || '') || !/^\d{4}-\d{2}-\d{2}$/.test(endDate || '') ||
+        !Number.isFinite(Date.parse(startDate)) || !Number.isFinite(Date.parse(endDate)) || endDate < startDate ||
+        (excludeId !== undefined && !/^[1-9]\d*$/.test(excludeId))) {
+      return res.status(400).json({ error: 'Choose valid booking dates' });
+    }
+    const { areas } = await getValidBookingValues();
+    if (!areas.includes(area)) return res.status(400).json({ error: 'Choose a valid booking area' });
+    const conflicts = await Booking.findConflicts({ startDate, endDate, area, excludeId: excludeId || null });
+    res.json({ conflicts });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to check booking conflicts' });
+  }
+});
+
 router.get('/mine', requireAuth, async (req, res) => {
   try {
     const bookings = await Booking.findByUser(req.user.id);

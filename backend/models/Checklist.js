@@ -8,11 +8,43 @@ const pool = new Pool({
 const DEFAULT_ASSIGNED_ROLES = ['member', 'caretaker', 'manager', 'admin'];
 
 const Checklist = {
+  async defaultTemplate() {
+    const result = await pool.query('SELECT body FROM default_booking_checklist WHERE id = 1');
+    return result.rows[0] || { body: '' };
+  },
+  async saveDefaultTemplate(body) {
+    const result = await pool.query('UPDATE default_booking_checklist SET body = $1, updated_at = NOW() WHERE id = 1 RETURNING body', [body]);
+    return result.rows[0];
+  },
+  async completionBookings(user) {
+    const result = await pool.query(
+      `SELECT b.id, b.start_date, b.end_date, b.purpose, u.name AS requester_name
+       FROM bookings b JOIN users u ON u.id = b.user_id
+       WHERE b.status = 'approved' AND ($1::boolean OR
+         (b.user_id = $2 AND b.end_date >= (CURRENT_TIMESTAMP AT TIME ZONE 'Pacific/Auckland')::date))
+       ORDER BY b.end_date DESC`, [user.role !== 'member', user.id]);
+    return result.rows;
+  },
 
-  async findAll(roles) {
+  async completions(bookingId) {
+    const result = await pool.query('SELECT * FROM checklist_completions WHERE booking_id = $1 ORDER BY completed_at DESC', [bookingId]);
+    return result.rows;
+  },
+
+  async complete({ bookingId, checklist, user }) {
+    const result = await pool.query(
+      `INSERT INTO checklist_completions (booking_id, checklist_id, checklist_title, completed_by, completed_by_name, items)
+       VALUES ($1, $2, $3, $4, $5, $6::jsonb)
+       ON CONFLICT (booking_id, checklist_id) DO NOTHING RETURNING *`,
+      [bookingId, checklist.id, checklist.title, user.id, user.name,
+       JSON.stringify(checklist.items.map(({ id, text }) => ({ id, text })))]);
+    return result.rows[0] || null;
+  },
+
+  async findAll(roles, userId = null, bookingId = null) {
     const result = await pool.query(
       `SELECT
-         c.id, c.title, c.description, c.assigned_roles, c.created_by, c.created_at, c.updated_at,
+         c.id, c.title, c.description, c.booking_id, c.assigned_roles, c.created_by, c.created_at, c.updated_at,
          u.name AS created_by_name,
          COALESCE(
            json_agg(
@@ -25,10 +57,13 @@ const Checklist = {
        FROM checklists c
        LEFT JOIN users u ON u.id = c.created_by
        LEFT JOIN checklist_items i ON i.checklist_id = c.id
-       WHERE $1::text[] IS NULL OR c.assigned_roles && $1::text[]
+       WHERE ($1::text[] IS NULL OR c.assigned_roles && $1::text[])
+         AND (c.booking_id IS NULL OR ($3::integer IS NOT NULL AND c.booking_id = $3) OR
+           ($3::integer IS NULL AND ($2::integer IS NULL OR EXISTS (
+             SELECT 1 FROM bookings b WHERE b.id = c.booking_id AND b.user_id = $2))))
        GROUP BY c.id, u.name
        ORDER BY c.created_at DESC`,
-      [roles || null]
+      [roles || null, userId, bookingId]
     );
     return result.rows;
   },
@@ -41,7 +76,7 @@ const Checklist = {
   async getWithItems(id) {
     const result = await pool.query(
       `SELECT
-         c.id, c.title, c.description, c.assigned_roles, c.created_by, c.created_at, c.updated_at,
+         c.id, c.title, c.description, c.booking_id, c.assigned_roles, c.created_by, c.created_at, c.updated_at,
          u.name AS created_by_name,
          COALESCE(
            json_agg(

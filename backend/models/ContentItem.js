@@ -43,7 +43,7 @@ const ContentItem = {
     const result = await pool.query(
       `SELECT * FROM content_items
        WHERE placement = $1 AND ($2::text IS NULL OR $2 = ANY(visible_to_roles))
-       ORDER BY CASE block_type WHEN 'heading' THEN 0 ELSE 1 END, created_at ASC`,
+       ORDER BY CASE block_type WHEN 'heading' THEN 0 ELSE 1 END, created_at ASC, id ASC`,
       [page, role]
     );
     return result.rows;

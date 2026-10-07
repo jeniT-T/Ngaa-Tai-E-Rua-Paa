@@ -15,7 +15,12 @@ export default function ChecklistsViewPage() {
   // the generic site-wide QR) -- guests have no `user` at all, so that's
   // detected from the URL instead.
   const isGuest = location.pathname.startsWith("/checklists/guest");
-  const progressScope = isGuest ? `guest:${guestToken || "active"}` : `user:${user?.id}`;
+  const [bookingId, setBookingId] = useState("");
+  const [bookings, setBookings] = useState([]);
+  const [completions, setCompletions] = useState([]);
+  const [savingId, setSavingId] = useState(null);
+  const [recordsLoadedFor, setRecordsLoadedFor] = useState("");
+  const progressScope = isGuest ? `guest:${guestToken || "active"}` : `user:${user?.id}:booking:${bookingId}`;
   const [checklists, setChecklists] = useState(null);
   const [error, setError] = useState("");
 
@@ -47,6 +52,41 @@ export default function ChecklistsViewPage() {
       .catch((err) => setError(err.message));
   }, [isGuest, guestToken]);
 
+  useEffect(() => {
+    if (isGuest) return;
+    let cancelled = false;
+    fetch(`${API_BASE}/checklists/completion-bookings`, { credentials: 'include' })
+      .then(async (res) => { const data = await res.json(); if (!res.ok) throw new Error(data.error); return data; })
+      .then((data) => { if (!cancelled) { setBookings(data.bookings); setBookingId(String(data.bookings[0]?.id || '')); } })
+      .catch((err) => { if (!cancelled) setError(err.message); });
+    return () => { cancelled = true; };
+  }, [isGuest]);
+
+  useEffect(() => {
+    if (!bookingId || isGuest) return;
+    let cancelled = false;
+    fetch(`${API_BASE}/checklists/completions?bookingId=${bookingId}`, { credentials: 'include' })
+      .then(async (res) => { const data = await res.json(); if (!res.ok) throw new Error(data.error); return data; })
+      .then((data) => { if (!cancelled) { setCompletions(data.completions); setRecordsLoadedFor(bookingId); } })
+      .catch((err) => { if (!cancelled) setError(err.message); });
+    return () => { cancelled = true; };
+  }, [bookingId, isGuest]);
+
+  async function saveCompletion(checklist) {
+    setSavingId(checklist.id);
+    setError('');
+    try {
+      const res = await fetch(`${API_BASE}/checklists/${checklist.id}/complete`, {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId, checkedItemIds: checklist.items.filter((item) => isChecklistItemChecked(progressScope, checklist.id, item.id)).map((item) => item.id) }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to save completion');
+      setCompletions((previous) => [data.completion, ...previous]);
+    } catch (err) { setError(err.message); }
+    finally { setSavingId(null); }
+  }
+
   return (
     <div className="p-8 max-w-2xl mx-auto">
       <div className="flex justify-between items-start gap-4 mb-2">
@@ -60,6 +100,21 @@ export default function ChecklistsViewPage() {
         during your stay.
       </p>
 
+      {!isGuest && user?.role !== "member" && <Link to="/checklists/default" className="btn btn-outline btn-compact mb-4">Edit default cleaning checklist</Link>}
+      {!isGuest && user?.role !== "member" && <Link to="/caretaker/checklists" className="btn btn-outline btn-compact mb-4">Edit checklists</Link>}
+      {!isGuest && (
+        <div className="mb-6">
+          <label htmlFor="completion-booking">Booking for cleaning completion</label>
+          <select id="completion-booking" value={bookingId} disabled={savingId !== null} onChange={(event) => setBookingId(event.target.value)}>
+            <option value="">Select an approved booking</option>
+            {bookings.map((booking) => <option key={booking.id} value={booking.id}>
+              {booking.requester_name} · {String(booking.start_date).slice(0, 10)} → {String(booking.end_date).slice(0, 10)} · {booking.purpose}
+            </option>)}
+          </select>
+          <p className="text-sm text-gray-500 mt-2">Check every item, then save completion to record your name and the time for this booking.</p>
+        </div>
+      )}
+
       {error && <p className="text-red-600 mb-4">{error}</p>}
 
       {!checklists ? (
@@ -68,7 +123,7 @@ export default function ChecklistsViewPage() {
         <p className="text-gray-500">No checklists have been added yet.</p>
       ) : (
         <div className="space-y-3">
-          {checklists.map((checklist) => (
+          {checklists.filter((checklist) => isGuest || !checklist.booking_id || String(checklist.booking_id) === bookingId).map((checklist) => (
             <details key={checklist.id} className="border rounded-xl p-4">
               <summary className="text-lg font-semibold cursor-pointer select-none">
                 {checklist.title}
@@ -82,7 +137,8 @@ export default function ChecklistsViewPage() {
                     <label className="checklist-item-label">
                       <input
                         type="checkbox"
-                        checked={isChecklistItemChecked(progressScope, checklist.id, item.id)}
+                        disabled={savingId !== null || (!isGuest && completions.some((record) => String(record.booking_id) === bookingId && record.checklist_id === checklist.id))}
+                        checked={(!isGuest && completions.some((record) => String(record.booking_id) === bookingId && record.checklist_id === checklist.id)) || isChecklistItemChecked(progressScope, checklist.id, item.id)}
                         onChange={(event) => setChecklistItemChecked(progressScope, checklist.id, item.id, event.target.checked)}
                         className="mt-0.5 h-4 w-4 shrink-0"
                       />
@@ -93,9 +149,32 @@ export default function ChecklistsViewPage() {
                   </li>
                 ))}
               </ul>
+              {!isGuest && bookingId && recordsLoadedFor === bookingId && (
+                <div className="mt-3">
+                  {completions.some((record) => String(record.booking_id) === bookingId && record.checklist_id === checklist.id) ? (
+                    <p className="text-sm text-green-700">Completion saved for this booking.</p>
+                  ) : (
+                    <button type="button" className="btn btn-primary btn-compact" onClick={() => saveCompletion(checklist)}
+                      disabled={savingId !== null || !checklist.items.length || !checklist.items.every((item) => isChecklistItemChecked(progressScope, checklist.id, item.id))}>
+                      {savingId === checklist.id ? 'Saving...' : 'Save completion'}
+                    </button>
+                  )}
+                </div>
+              )}
             </details>
           ))}
         </div>
+      )}
+      {!isGuest && bookingId && recordsLoadedFor === bookingId && (
+        <section className="mt-6 border rounded p-4">
+          <h2 className="font-semibold">Completion records</h2>
+          {!completions.length ? <p>No checklists completed for this booking yet.</p> : completions.map((record) => (
+            <details key={record.id} className="mt-3">
+              <summary>{record.checklist_title} — {record.completed_by_name} · {new Date(record.completed_at).toLocaleString('en-NZ', { timeZone: 'Pacific/Auckland' })}</summary>
+              <ul>{record.items.map((item) => <li key={item.id}>✓ {item.text}</li>)}</ul>
+            </details>
+          ))}
+        </section>
       )}
     </div>
   );

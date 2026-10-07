@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { confirmBookingConflicts } from "../../utils/bookingConflicts.js";
 import GuestAccessShare from "../../components/GuestAccessShare.jsx";
 import StarRating from "../../components/StarRating.jsx";
 import { hasBookingEnded, isBookingComplete } from "../../utils/bookingStatus.js";
@@ -131,7 +132,16 @@ export default function ManagerBookingsPage({ previous = false }) {
   const [deletingId, setDeletingId] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
   const [now, setNow] = useState(() => new Date());
-  const visibleBookings = bookings.filter((booking) => hasBookingEnded(booking, now) === previous);
+  const [filters, setFilters] = useState({ customer: '', status: '', area: '', from: '', to: '' });
+  const visibleBookings = bookings.filter((booking) => {
+    const customer = `${booking.requester_name || ''} ${booking.requester_email || ''}`.toLowerCase();
+    return hasBookingEnded(booking, now) === previous &&
+      customer.includes(filters.customer.trim().toLowerCase()) &&
+      (!filters.status || booking.status === filters.status) &&
+      (!filters.area || booking.area === filters.area) &&
+      (!filters.from || toDateLabel(booking.end_date) >= filters.from) &&
+      (!filters.to || toDateLabel(booking.start_date) <= filters.to);
+  });
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 60_000);
@@ -184,6 +194,10 @@ export default function ManagerBookingsPage({ previous = false }) {
     setError("");
     setUpdatingId(id);
     try {
+      if (status === 'approved') {
+        const booking = bookings.find((item) => item.id === id);
+        if (!await confirmBookingConflicts({ startDate: booking.start_date, endDate: booking.end_date, area: booking.area, excludeId: id })) return;
+      }
       const res = await fetch(`${API_BASE}/bookings/${id}/status`, {
         method: "PATCH",
         credentials: "include",
@@ -192,7 +206,7 @@ export default function ManagerBookingsPage({ previous = false }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to update booking");
-      setBookings((prev) => prev.map((b) => (b.id === id ? data.booking : b)));
+      setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, ...data.booking } : b)));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -239,12 +253,37 @@ export default function ManagerBookingsPage({ previous = false }) {
         />
       </div>}
 
+      <section className="border rounded p-4 mb-6 space-y-3" aria-label="Booking filters">
+        <h2 className="font-semibold">Search and filter bookings</h2>
+        <label>Customer
+          <input type="search" placeholder="Name or email" value={filters.customer} onChange={(e) => setFilters({ ...filters, customer: e.target.value })} />
+        </label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label>Status
+            <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}>
+              <option value="">All statuses</option>
+              {['pending', 'approved', 'denied', 'cancelled'].map((status) => <option key={status} value={status}>{status}</option>)}
+            </select>
+          </label>
+          <label>Area
+            <select value={filters.area} onChange={(e) => setFilters({ ...filters, area: e.target.value })}>
+              <option value="">All areas</option>
+              {settings.booking_areas.map((area) => <option key={area.value} value={area.value}>{area.label}</option>)}
+            </select>
+          </label>
+          <label>From date<input type="date" value={filters.from} max={filters.to || undefined} onChange={(e) => setFilters({ ...filters, from: e.target.value })} /></label>
+          <label>To date<input type="date" value={filters.to} min={filters.from || undefined} onChange={(e) => setFilters({ ...filters, to: e.target.value })} /></label>
+        </div>
+        <p className="text-sm text-gray-500">Shows bookings overlapping the selected date range.</p>
+        <button type="button" className="btn btn-outline btn-compact" onClick={() => setFilters({ customer: '', status: '', area: '', from: '', to: '' })}>Clear filters</button>
+      </section>
+
       {error && <p className="text-red-600 mb-4">{error}</p>}
 
       {loading ? (
         <p>Loading...</p>
       ) : visibleBookings.length === 0 ? (
-        <p className="text-gray-500">{previous ? "No previous bookings yet." : "No current booking requests."}</p>
+        <p className="text-gray-500">{previous ? "No previous bookings match your filters." : "No current bookings match your filters."}</p>
       ) : (
         <ul className="space-y-4">
           {visibleBookings.map((booking) => (

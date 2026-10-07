@@ -77,7 +77,7 @@ describe('Checklist.findAll', () => {
     await Checklist.findAll(['member']);
 
     expect(mockPoolQuery.mock.calls[0][0]).toContain('c.assigned_roles && $1::text[]');
-    expect(mockPoolQuery.mock.calls[0][1]).toEqual([['member']]);
+    expect(mockPoolQuery.mock.calls[0][1]).toEqual([['member'], null, null]);
   });
 
   test('returns all checklists when no role filter is provided', async () => {
@@ -85,7 +85,7 @@ describe('Checklist.findAll', () => {
 
     await Checklist.findAll();
 
-    expect(mockPoolQuery.mock.calls[0][1]).toEqual([null]);
+    expect(mockPoolQuery.mock.calls[0][1]).toEqual([null, null, null]);
   });
 });
 

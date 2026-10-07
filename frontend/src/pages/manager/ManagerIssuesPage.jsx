@@ -12,13 +12,12 @@ export default function ManagerIssuesPage() {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [notesDraft, setNotesDraft] = useState({});
+  const [busyId, setBusyId] = useState(null);
+  const [savedId, setSavedId] = useState(null);
 
   useEffect(() => {
-    loadIssues();
-  }, []);
-
   async function loadIssues() {
-    setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/issues`, { credentials: "include" });
       const data = await res.json();
@@ -30,21 +29,46 @@ export default function ManagerIssuesPage() {
       setLoading(false);
     }
   }
+    loadIssues();
+  }, []);
 
-  async function updateStatus(id, status) {
+  async function updateStatus(id, status, completionNotes) {
     setError("");
+    setBusyId(id);
+    setSavedId(null);
     try {
       const res = await fetch(`${API_BASE}/issues/${id}`, {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, completionNotes }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to update issue");
-      setIssues((prev) => prev.map((i) => (i.id === id ? data.issue : i)));
+      if (completionNotes !== undefined) setSavedId(id);
+      setIssues((prev) => prev.map((i) => (i.id === id ? { ...i, ...data.issue } : i)));
     } catch (err) {
       setError(err.message);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function deleteIssue(issue) {
+    if (!window.confirm(`Permanently delete the reported issue "${issue.subject}"? This cannot be undone.`)) return;
+    setError("");
+    setBusyId(issue.id);
+    try {
+      const res = await fetch(`${API_BASE}/issues/${issue.id}`, { method: 'DELETE', credentials: 'include' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to delete issue');
+      }
+      setIssues((previous) => previous.filter((item) => item.id !== issue.id));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusyId(null);
     }
   }
 
@@ -66,15 +90,17 @@ export default function ManagerIssuesPage() {
                 <div>
                   <p className="font-medium">{issue.subject}</p>
                   <p className="text-sm text-gray-500">
-                    {issue.reporter_name} · {issue.reporter_email}
+                    {issue.reporter_name} · <a href={`mailto:${issue.reporter_email}`}>{issue.reporter_email}</a>
                   </p>
                 </div>
                 <span className={`text-xs px-2 py-1 rounded ${STATUS_STYLES[issue.status]}`}>
-                  {issue.status}
+                  {{ open: "Open", in_progress: "In Progress", resolved: "Resolved" }[issue.status] || issue.status}
                 </span>
               </div>
               <p className="text-sm text-gray-700 mb-3 whitespace-pre-line">{issue.message}</p>
               <select
+                aria-label={`Status for ${issue.subject}`}
+                disabled={busyId !== null}
                 value={issue.status}
                 onChange={(e) => updateStatus(issue.id, e.target.value)}
                 className="text-sm border rounded px-2 py-1"
@@ -83,6 +109,23 @@ export default function ManagerIssuesPage() {
                 <option value="in_progress">In Progress</option>
                 <option value="resolved">Resolved</option>
               </select>
+              <label htmlFor={`notes-${issue.id}`} className="mt-3">Completion notes</label>
+              <textarea
+                id={`notes-${issue.id}`}
+                rows={3}
+                placeholder="Describe the work completed or how the issue was resolved..."
+                value={notesDraft[issue.id] ?? issue.completion_notes ?? ''}
+                onChange={(e) => { setNotesDraft({ ...notesDraft, [issue.id]: e.target.value }); setSavedId(null); }}
+                disabled={busyId !== null}
+              />
+              <div className="flex flex-wrap gap-2 mt-3 items-center">
+                <button type="button" className="btn btn-primary btn-compact" disabled={busyId !== null}
+                  onClick={() => updateStatus(issue.id, undefined, notesDraft[issue.id] ?? issue.completion_notes ?? '')}>Save notes</button>
+                <button type="button" className="btn btn-error btn-danger-action btn-compact" disabled={busyId !== null}
+                  onClick={() => deleteIssue(issue)}>Delete issue</button>
+                {busyId === issue.id && <span role="status">Saving...</span>}
+                {savedId === issue.id && <span role="status" className="text-green-700">Notes saved</span>}
+              </div>
             </li>
           ))}
         </ul>

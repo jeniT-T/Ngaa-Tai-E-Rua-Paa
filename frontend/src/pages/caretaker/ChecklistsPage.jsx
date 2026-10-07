@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -209,7 +210,11 @@ function ChecklistCard({ checklist, onChange }) {
   const doneCount = checklist.items.filter(isChecked).length;
 
   return (
-    <div className="border rounded-2xl p-6 bg-white shadow-sm">
+    <details className="border rounded-2xl p-6 bg-white shadow-sm">
+      <summary className="text-xl font-semibold cursor-pointer select-none">
+        {checklist.title}
+      </summary>
+      <div className="mt-4">
       {editing ? (
         <form onSubmit={saveDetails} className="space-y-2 mb-4">
           <input
@@ -292,7 +297,8 @@ function ChecklistCard({ checklist, onChange }) {
       </ul>
 
       <AddItemRow checklistId={checklist.id} onAdded={onChange} />
-    </div>
+      </div>
+    </details>
   );
 }
 
@@ -302,13 +308,9 @@ export default function ChecklistsPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    loadChecklists();
-  }, []);
-
   async function loadChecklists() {
-    setError('');
     try {
-      const res = await fetch(`${API_BASE}/checklists`, { credentials: 'include' });
+      const res = await fetch(`${API_BASE}/checklists/manage`, { credentials: 'include' });
       if (!res.ok) throw new Error('Failed to load checklists');
       const data = await res.json();
       setChecklists(data.checklists);
@@ -316,6 +318,8 @@ export default function ChecklistsPage() {
       setError(err.message);
     }
   }
+    loadChecklists();
+  }, []);
 
   function handleChecklistChange(updated, deletedId) {
     setChecklists((prev) => {
@@ -336,6 +340,10 @@ export default function ChecklistsPage() {
       </p>
 
       {error && <p className="text-red-600 mb-6">{error}</p>}
+
+      <Link to="/checklists" className="btn btn-outline btn-action mb-6">Complete checklists for a booking</Link>
+
+      <Link to="/checklists/default" className="btn btn-outline btn-action mb-6">Edit default cleaning checklist</Link>
 
       <NewChecklistForm onCreated={handleCreated} />
 

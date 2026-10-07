@@ -9,6 +9,7 @@
 // pending queue). See backend/routes/bookings.js for that logic.
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { confirmBookingConflicts } from "../../utils/bookingConflicts.js";
 import BookingCalendar from "../../components/BookingCalendar.jsx";
 import useBookingAvailability from "../../hooks/useBookingAvailability.js";
 import useSiteSettings from "../../hooks/useSiteSettings.js";
@@ -73,6 +74,7 @@ export default function ManagerNewBookingPage() {
 
     setSubmitting(true);
     try {
+      if (!await confirmBookingConflicts({ startDate, endDate, area: effectiveArea })) return;
       const res = await fetch(`${API_BASE}/bookings`, {
         method: "POST",
         credentials: "include",

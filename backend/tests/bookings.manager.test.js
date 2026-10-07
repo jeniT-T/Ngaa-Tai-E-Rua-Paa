@@ -10,6 +10,7 @@ jest.mock('../middleware/requireAuth', () => (req, res, next) => {
 
 jest.mock('../models/Booking', () => ({
   create: jest.fn(),
+  findConflicts: jest.fn(),
   findById: jest.fn(),
   delete: jest.fn(),
   updateStatus: jest.fn(),
@@ -202,5 +203,26 @@ describe('Reset booking status to pending', () => {
       .set(asUser({ id: 2, role: 'member' })).send({ status: 'pending' });
     expect(res.status).toBe(403);
     expect(Booking.updateStatus).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('GET /api/bookings/conflicts', () => {
+  const app = buildApp();
+  beforeEach(() => { Booking.findConflicts.mockReset(); Booking.findConflicts.mockResolvedValue([{ id: 8 }]); });
+  test('manager can check overlaps while excluding the booking being approved', async () => {
+    const res = await request(app).get('/api/bookings/conflicts?startDate=2026-11-01&endDate=2026-11-03&area=general&excludeId=2').set(asUser({ id: 1, role: 'manager' }));
+    expect(res.status).toBe(200);
+    expect(res.body.conflicts).toEqual([{ id: 8 }]);
+    expect(Booking.findConflicts).toHaveBeenCalledWith({ startDate: '2026-11-01', endDate: '2026-11-03', area: 'general', excludeId: '2' });
+  });
+  test('members cannot access customer conflict details', async () => {
+    const res = await request(app).get('/api/bookings/conflicts').set(asUser({ id: 1, role: 'member' }));
+    expect(res.status).toBe(403);
+    expect(Booking.findConflicts).not.toHaveBeenCalled();
+  });
+  test('reversed dates are rejected', async () => {
+    const res = await request(app).get('/api/bookings/conflicts?startDate=2026-11-03&endDate=2026-11-01&area=general').set(asUser({ id: 1, role: 'manager' }));
+    expect(res.status).toBe(400);
   });
 });

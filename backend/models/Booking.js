@@ -101,6 +101,19 @@ const Booking = {
     return result.rows[0] || null;
   },
 
+  async findConflicts({ startDate, endDate, area, excludeId = null }) {
+    const result = await pool.query(
+      `SELECT b.id, b.start_date, b.end_date, b.area, u.name AS requester_name
+       FROM bookings b JOIN users u ON u.id = b.user_id
+       WHERE b.status = 'approved' AND b.start_date <= $2::date AND b.end_date >= $1::date
+         AND (b.area = $3 OR b.area = 'paa' OR $3 = 'paa')
+         AND ($4::integer IS NULL OR b.id <> $4)
+       ORDER BY b.start_date`,
+      [startDate, endDate, area, excludeId]
+    );
+    return result.rows;
+  },
+
   async findAll() {
     const result = await pool.query(
       `SELECT bookings.*, users.name AS requester_name, users.email AS requester_email

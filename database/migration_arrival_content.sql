@@ -1,9 +1,10 @@
+-- Seed guide in display order; preserve existing CMS edits.
 -- database/migration_arrival_content.sql
 
 INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Marae Guide',
   $body$Please follow these guidelines to ensure proper use of all marae facilities. Click on any section to expand.$body$,
-  'general', 'arrival', 'heading'
+  'Arrival Guide Getting Started', 'arrival', 'heading'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND block_type = 'heading'
 );
@@ -16,7 +17,7 @@ The remote for the air conditioning is located on the right side of the 4th pill
 
 Dining Room / Reitu
 The remote is located on the wall. If you come in from the Reitu carving entrance it is on the left wall below the mural. If you come in from the side entrance it's on your right side.$body$,
-  'equipment', 'arrival', 'section'
+  'Arrival Guide Equipment', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Airconditioning'
 );
@@ -34,7 +35,7 @@ SELECT 'Bakers Oven',
 • If it doesn't appear keep your finger on the dial and press the Lighter Button another 5 times. If it doesn't light up a blue flame keep trying until you see the flame.
 • When the flame is lit the oven is now active. Turn the dial to the far left to start in full ignition mode.
 • To turn off, turn the Dial to the far right and turn the temperature dial to off.$body$,
-  'equipment', 'arrival', 'section'
+  'Arrival Guide Kitchen', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Bakers Oven'
 );
@@ -46,7 +47,7 @@ SELECT 'Bratt Pan',
 • Ensure the Gas Fan is turned on. The Gas Fan makes the Gas Flow.
 • Press the button to fill the Bratt pan with water.
 • When the Bratt pan is full turn, the temperature dials up to its required temperature.$body$,
-  'equipment', 'arrival', 'section'
+  'Arrival Guide Kitchen', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Bratt Pan'
 );
@@ -58,7 +59,7 @@ SELECT 'Chairs',
 • Outside chairs are stacked under the awning.
 • Forms and stacked chairs are under the marae.
 • Dining Chairs are stacked on the stage, 5 high and 2 rows all the way across.$body$,
-  'equipment', 'arrival', 'section'
+  'Arrival Guide Equipment', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Chairs'
 );
@@ -69,7 +70,7 @@ SELECT 'Chiller',
   $body$• To use the Chiller, you must use the step ladder to the left of the Chiller and switch the Chiller on by looking on top of the chiller and turning on the switch.
 • Upon final clean ensure all food is removed.
 • Give the chiller a quick mop on exit and switch off from the wall.$body$,
-  'equipment', 'arrival', 'section'
+  'Arrival Guide Equipment', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Chiller'
 );
@@ -78,7 +79,7 @@ WHERE NOT EXISTS (
 INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Combi Ovens',
   $body$• Watch this space. There will be some instructions on how to cook using the Combi ovens if you don't already know. Ensure to run a quick clean when you finish. Trays are to the right of the Combi Ovens on the bench.$body$,
-  'equipment', 'arrival', 'section'
+  'Arrival Guide Kitchen', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Combi Ovens'
 );
@@ -87,7 +88,7 @@ WHERE NOT EXISTS (
 INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Deep Fryer',
   $body$• It takes about 20 Litres of oil to use this, Fryer. To start do the same instructions as for the Bakers Oven.$body$,
-  'equipment', 'arrival', 'section'
+  'Arrival Guide Kitchen', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Deep Fryer'
 );
@@ -96,7 +97,7 @@ WHERE NOT EXISTS (
 INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Defibrillator',
   $body$• Located to the right of the Wharenui. Please follow the instructions. Inform the Paa Committee Chairperson if it's been used.$body$,
-  'equipment', 'arrival', 'section'
+  'Arrival Guide Equipment', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Defibrillator'
 );
@@ -113,7 +114,7 @@ SELECT 'Clean – Final Dining Hall',
 • From the Loading Dock there are 2 Green Mop Buckets and 2 Mops. Use these only for the Dining Hall. The cleaning products are to the left of the hot water Urn. If you want to get hot water out of the taps you must make sure the Gas Button is turned on. This allows the Gas to flow and heat the water.
 • Mop the Floor as usual.
 • When finished poor the water outside down the drain. Ring out the Mops and hang back up on the wall of the Loading Dock.$body$,
-  'cleaning', 'arrival', 'section'
+  'Arrival Guide Cleaning & Checkout', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Clean – Final Dining Hall'
 );
@@ -137,7 +138,7 @@ SELECT 'Clean – Final Kitchen',
 • Urn. If you want to get hot water out of the taps you must make sure the Gas Button is turned on. This allows the Gas to flow and heat the water. Turn off when you have the hot water.
 • Mop the Floor ensuring you cover the entire floor. Make a track so that you'll mop all the way out to the exit door. Close the Door and lock up.
 • When finished pour the water outside down the drain. Ring out the Mops and hang back up on the wall of the Loading Dock.$body$,
-  'cleaning', 'arrival', 'section'
+  'Arrival Guide Cleaning & Checkout', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Clean – Final Kitchen'
 );
@@ -155,7 +156,7 @@ SELECT 'Clean – Final Toilets',
 • Use the Floor cleaning product. Turn on a shower and use the hot water from there. Mop the showers and the floors.
 • Return the Mop and Buckets to original spots please.
 • Lock the Toilet doors so no one can use them.$body$,
-  'cleaning', 'arrival', 'section'
+  'Arrival Guide Cleaning & Checkout', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Clean – Final Toilets'
 );
@@ -168,7 +169,7 @@ SELECT 'Clean – Final Wharenui',
 • Floors to be vacuum.
 • Ensure to vacuum the mattress room and return the Vacuum to the Mattress room.
 • If windows are dirty, please use the window cleaner in the toilets and paper towels to clean.$body$,
-  'cleaning', 'arrival', 'section'
+  'Arrival Guide Cleaning & Checkout', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Clean – Final Wharenui'
 );
@@ -179,7 +180,7 @@ SELECT 'Cleaning Equipment',
   $body$• Wharenui – Vacuum, Brushes and Brooms are in the Mattress Room.
 • Toilets – Cleaning chemicals are in the ladies toilet. Brooms are next to the disability toilets. Mops and Buckets are on the back wall of the Wharekai Reitu.
 • Kitchen – All cleaning chemicals are on the bench next to the Urn. All mops, buckets and brooms are on the back loading dock.$body$,
-  'cleaning', 'arrival', 'section'
+  'Arrival Guide Getting Started', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Cleaning Equipment'
 );
@@ -193,7 +194,7 @@ SELECT 'Dish Washer',
 • Press Start.
 • Wait till finished then lift hood and remove the rack.
 • For the final clean ensure all of the Racks are put away below the benches and the Dishwasher hood is raised.$body$,
-  'equipment', 'arrival', 'section'
+  'Arrival Guide Kitchen', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Dish Washer'
 );
@@ -204,7 +205,7 @@ SELECT 'Dishes',
   $body$• The backroom has labels for where each dish must return to.
 • Cutlery and Cups are on the trolley with drawers.
 • Ensure every dish is put away on your final clean.$body$,
-  'equipment', 'arrival', 'section'
+  'Arrival Guide Kitchen', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Dishes'
 );
@@ -214,7 +215,7 @@ INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Freezers',
   $body$• Press the button on the top of the freezer to turn on.
 • Remove all kai from Freezer on final clean and turn off the Freezer.$body$,
-  'equipment', 'arrival', 'section'
+  'Arrival Guide Kitchen', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Freezers'
 );
@@ -224,7 +225,7 @@ INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Fridges',
   $body$• Press the button on the top of the Fridges to turn on.
 • Remove all kai from Freezer on final clean and turn off the Fridge.$body$,
-  'equipment', 'arrival', 'section'
+  'Arrival Guide Kitchen', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Fridges'
 );
@@ -236,7 +237,7 @@ SELECT 'Gas',
 • If the gas runs out, turn the dial to the other gas bottle and open up the value. Close the Value of the gas bottle that has run out.
 • Important: In the kitchen, you must switch the Gas switch on (located below the power buttons for the Combi Ovens). This controls the flow of Gas. Without it switched on your gas cookers will not work and no Hot water will come out of the taps.
 • When not in use turn off the Gas switch.$body$,
-  'equipment', 'arrival', 'section'
+  'Arrival Guide Utilities & Climate', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Gas'
 );
@@ -246,7 +247,7 @@ INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Grill Tops',
   $body$• Switch on the Gas Switch.
 • Turn on the Gas dial and light with the Gas Lighter located on the shelf above the GrilTops.$body$,
-  'equipment', 'arrival', 'section'
+  'Arrival Guide Getting Started', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Grill Tops'
 );
@@ -255,7 +256,7 @@ WHERE NOT EXISTS (
 INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Hangi Cookers',
   $body$• Hangi Cookers should have a connection directly to the wall gas outlet.$body$,
-  'equipment', 'arrival', 'section'
+  'Arrival Guide Kitchen', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Hangi Cookers'
 );
@@ -266,7 +267,7 @@ SELECT 'Hot Boxes',
   $body$• Hot boxes used to keep your bulk kai warm.
 • Just turn on and turn off as needed.
 • Make sure on your final clean to give it a wipe out and switch off.$body$,
-  'equipment', 'arrival', 'section'
+  'Arrival Guide Kitchen', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Hot Boxes'
 );
@@ -277,7 +278,7 @@ SELECT 'Hot Water',
   $body$• For immediate hot water use the Urn on the Wall.
 • There maybe in some cases a plug in Urn available to you.
 • Hot water from the taps you must make sure you turn the Gas Switch 1*.$body$,
-  'equipment', 'arrival', 'section'
+  'Arrival Guide Utilities & Climate', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Hot Water'
 );
@@ -286,7 +287,7 @@ WHERE NOT EXISTS (
 INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Microwave',
   $body$• Make sure everything is removed and switch off when not in use.$body$,
-  'equipment', 'arrival', 'section'
+  'Arrival Guide Kitchen', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Microwave'
 );
@@ -295,7 +296,7 @@ WHERE NOT EXISTS (
 INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Evacuation Point',
   $body$• The Evacuation point is located in the front car park by the main road.$body$,
-  'facilities', 'arrival', 'section'
+  'Arrival Guide Getting Started', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Evacuation Point'
 );
@@ -304,7 +305,7 @@ WHERE NOT EXISTS (
 INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'First Aid',
   $body$• The 1st Aid kit is located at the shelf next to the Urn.$body$,
-  'facilities', 'arrival', 'section'
+  'Arrival Guide Getting Started', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'First Aid'
 );
@@ -313,7 +314,7 @@ WHERE NOT EXISTS (
 INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Flag / Kara',
   $body$• The Flag / Kara will stay up during the whole duration of the hui/tangi/wananga.$body$,
-  'facilities', 'arrival', 'section'
+  'Arrival Guide Getting Started', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Flag / Kara'
 );
@@ -325,7 +326,7 @@ SELECT 'Floors',
 • The Green mop and bucket are for the Dining hall only. Use the floor cleaner.
 • The Yellow mop and bucket are for the Kitchen only. Do spot cleans during your time and use the Yellow mop and bucket for your final exit clean. If not, the floor will come up dirty unless its dried. Also use the sjax or Jiff products for this floor.
 • The Blue mop and bucket are for the new and old toilets. Floor cleaner in Ladies Toilet.$body$,
-  'facilities', 'arrival', 'section'
+  'Arrival Guide Getting Started', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Floors'
 );
@@ -335,7 +336,7 @@ INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Linen',
   $body$• All linen is in the Mattress Room Cupboard.
 • On exit day, use the Green Laundry bag that is located in the Cupboard to the left of the linen cupboard and fill up with all of the linen to be collected. Leave the bags in the Mattress Room for collection.$body$,
-  'facilities', 'arrival', 'section'
+  'Arrival Guide Facilities', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Linen'
 );
@@ -346,7 +347,7 @@ SELECT 'Loading Dock',
   $body$• Do not use the Dining Room chairs outside. It ruins the chair foot rubbers.
 • No smoking on the Loading Dock.
 • On the final clean, use the hose on the wall to hose down.$body$,
-  'facilities', 'arrival', 'section'
+  'Arrival Guide Getting Started', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Loading Dock'
 );
@@ -363,7 +364,7 @@ SELECT 'Mattress Room',
 • 6 treacle tables are stored to the back.
 • Vacuum is stacked at the back wall.
 • Blow up mattresses stack in the gap next to it.$body$,
-  'facilities', 'arrival', 'section'
+  'Arrival Guide Getting Started', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Mattress Room'
 );
@@ -392,7 +393,7 @@ Light switch is located in the kitchen to the left of the storage/dishes room be
 
 Outside and Front Gate Lights
 Light switch is located in the kitchen to the left of the storage/dishes room between the Main Switch Board and the door.$body$,
-  'facilities', 'arrival', 'section'
+  'Arrival Guide Utilities & Climate', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Lights'
 );
@@ -404,7 +405,7 @@ SELECT 'Parking',
 • Front Carpark at the Front of the Paa.
 • Back Carpark behind the Wharenui and Kitchen.
 • On the road.$body$,
-  'facilities', 'arrival', 'section'
+  'Arrival Guide Getting Started', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Parking'
 );
@@ -414,7 +415,7 @@ INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Pig Bins',
   $body$• There are large Blue pig bins at the back loading dock. Please ensure you only have food scraps in the bin. We will use these scraps in our new composting system.
 • Place the Bins to the left of the Loading Dock.$body$,
-  'facilities', 'arrival', 'section'
+  'Arrival Guide Getting Started', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Pig Bins'
 );
@@ -423,7 +424,7 @@ WHERE NOT EXISTS (
 INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Recycling Bins',
   $body$• There is a limited amount of recycling bins. Please fill these bins and then place any extra in rubbish bags.$body$,
-  'facilities', 'arrival', 'section'
+  'Arrival Guide Getting Started', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Recycling Bins'
 );
@@ -434,7 +435,7 @@ SELECT 'Rubbish',
   $body$• It is the responsibility of the hirer to remove the rubbish from the paa. However, if you require us to remove the rubbish there is a cost. For some people do hire a skip to get rid of the rubbish. We can provide you details for this.
 • Stack all of the rubbish bags on the grey rack on the loading dock.
 • We do have pig bins which you can use for kai which we use in our composting system.$body$,
-  'facilities', 'arrival', 'section'
+  'Arrival Guide Getting Started', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Rubbish'
 );
@@ -443,7 +444,7 @@ WHERE NOT EXISTS (
 INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Showers',
   $body$• The Showers use gas which is located at the back of the main toilets. If the Water goes cold, check the Dial which way it's pointing and point it to the opposite side. Then turn on the gas bottle you've pointed the dial to and you should have hot water. Any issues please call The Paa Committee Chairperson 0212749600.$body$,
-  'facilities', 'arrival', 'section'
+  'Arrival Guide Facilities', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Showers'
 );
@@ -452,7 +453,7 @@ WHERE NOT EXISTS (
 INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Smoking',
   $body$• Smoking is only permitted by the back Green toilets to the back of the loading dock.$body$,
-  'facilities', 'arrival', 'section'
+  'Arrival Guide Getting Started', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Smoking'
 );
@@ -462,7 +463,7 @@ INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Tables',
   $body$• Wharenui tables must stay in the Wharenui. No Dining room tables to be used in the Wharenui.
 • Wharekai tables are stacked on the trolleys and placed in front of the stage.$body$,
-  'facilities', 'arrival', 'section'
+  'Arrival Guide Equipment', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Tables'
 );
@@ -474,7 +475,7 @@ SELECT 'Toilets',
 • The main toilets are to the left of the Wharenui.
 • There are green toilets at the back of the loading dock. These toilets will only be opened for large events. This area is also used for Smoking and Vaping.
 • The final is the front toilets. Due to be completed in November 2025 these will be used mainly for our visitors who come onto the Paa.$body$,
-  'facilities', 'arrival', 'section'
+  'Arrival Guide Facilities', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Toilets'
 );
@@ -484,7 +485,7 @@ INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Trolleys',
   $body$• All of the kitchen trolleys must be removed from the kitchen floor and placed in the area where the dishes are stacked on final clean.
 • Ensure these are wiped down and clear of any kai or rubbish.$body$,
-  'facilities', 'arrival', 'section'
+  'Arrival Guide Equipment', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Trolleys'
 );
@@ -495,7 +496,7 @@ SELECT 'Vacuum',
   $body$• The Vacuum is located in the Mattress room of the wharenui. Please use this to do a final clean before exiting the Wharenui.
 • It's a backpack style so easy to use.
 • Please ensure the Vacuum is returned to its proper place.$body$,
-  'facilities', 'arrival', 'section'
+  'Arrival Guide Equipment', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Vacuum'
 );
@@ -506,7 +507,7 @@ SELECT 'WiFi',
   $body$• The WiFi Router is located in the Kitchen on the shelf.
 • WiFi password is "NgaaTaieRua23"
 • Reception doesn't extend to the Wharenui.$body$,
-  'facilities', 'arrival', 'section'
+  'Arrival Guide Getting Started', 'arrival', 'section'
 WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'WiFi'
 );

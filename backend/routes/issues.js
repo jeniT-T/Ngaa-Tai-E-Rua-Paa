@@ -41,11 +41,17 @@ router.get('/', requireAuth, requireRole('manager', 'caretaker', 'admin'), async
 
 router.patch('/:id', requireAuth, requireRole('manager', 'caretaker', 'admin'), async (req, res) => {
   try {
-    const { status } = req.body;
-    if (!['open', 'in_progress', 'resolved'].includes(status)) {
+    const { status, completionNotes } = req.body;
+    if (status !== undefined && !['open', 'in_progress', 'resolved'].includes(status)) {
       return res.status(400).json({ error: "Status must be 'open', 'in_progress' or 'resolved'" });
     }
-    const issue = await Issue.updateStatus(req.params.id, status);
+    if (completionNotes !== undefined && typeof completionNotes !== 'string') {
+      return res.status(400).json({ error: 'Completion notes must be text' });
+    }
+    if (status === undefined && completionNotes === undefined) {
+      return res.status(400).json({ error: 'Provide a status or completion notes' });
+    }
+    const issue = await Issue.updateStatus(req.params.id, status, completionNotes);
     if (!issue) {
       return res.status(404).json({ error: 'Issue not found' });
     }
@@ -53,6 +59,18 @@ router.patch('/:id', requireAuth, requireRole('manager', 'caretaker', 'admin'), 
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to update issue' });
+  }
+});
+
+router.delete('/:id', requireAuth, requireRole('manager', 'caretaker', 'admin'), async (req, res) => {
+  try {
+    if (!/^[1-9]\d*$/.test(req.params.id)) return res.status(400).json({ error: 'Invalid issue ID' });
+    const deleted = await Issue.delete(req.params.id);
+    if (!deleted) return res.status(404).json({ error: 'Issue not found' });
+    res.status(204).send();
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete issue' });
   }
 });
 

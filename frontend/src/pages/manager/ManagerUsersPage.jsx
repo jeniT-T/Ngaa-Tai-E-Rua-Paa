@@ -9,6 +9,7 @@ const CREATABLE_ROLES = ["caretaker", "manager", "admin"];
 export default function ManagerUsersPage() {
   const { user: currentUser } = useAuth();
   const [deletingId, setDeletingId] = useState(null);
+  const [search, setSearch] = useState("");
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -18,12 +19,7 @@ export default function ManagerUsersPage() {
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    loadUsers();
-  }, []);
-
   async function loadUsers() {
-    setLoading(true);
-    setError("");
     try {
       const res = await fetch(`${API_BASE}/admin/users`, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to load users");
@@ -35,6 +31,8 @@ export default function ManagerUsersPage() {
       setLoading(false);
     }
   }
+    loadUsers();
+  }, []);
 
   async function handleDeleteUser(account) {
     if (Number(account.id) === Number(currentUser?.id)) return;
@@ -156,6 +154,8 @@ export default function ManagerUsersPage() {
       {/* Existing users, with role dropdown to promote/demote */}
       <section className="existing-users-panel" aria-labelledby="existing-users-title">
         <h2 id="existing-users-title" className="text-lg font-medium mb-4">Existing users</h2>
+        <label htmlFor="userSearch">Search users by name or email</label>
+        <input id="userSearch" type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name or email" className="mb-4" />
         {loading ? (
           <p>Loading users...</p>
         ) : (
@@ -170,7 +170,7 @@ export default function ManagerUsersPage() {
               </tr>
             </thead>
             <tbody>
-              {users.map((u) => (
+              {users.filter((u) => `${u.name} ${u.email}`.toLowerCase().includes(search.trim().toLowerCase())).map((u) => (
                 <tr key={u.id} className="border-b">
                   <td className="py-2">{u.name}</td>
                   <td className="py-2">{u.email}</td>
@@ -205,6 +205,9 @@ export default function ManagerUsersPage() {
                   </td>
                 </tr>
               ))}
+              {!users.some((u) => `${u.name} ${u.email}`.toLowerCase().includes(search.trim().toLowerCase())) && (
+                <tr><td colSpan={4}>No users match your search.</td></tr>
+              )}
             </tbody>
           </table>
           </div>

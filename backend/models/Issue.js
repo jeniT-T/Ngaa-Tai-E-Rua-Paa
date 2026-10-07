@@ -28,11 +28,15 @@ const Issue = {
     return result.rows;
   },
 
-  async updateStatus(id, status) {
+  async updateStatus(id, status, completionNotes) {
     const result = await pool.query(
-      `UPDATE issues SET status = $1 WHERE id = $2 RETURNING *`,
-      [status, id]
+      `UPDATE issues SET status = COALESCE($1, status), completion_notes = COALESCE($3, completion_notes) WHERE id = $2 RETURNING *`,
+      [status ?? null, id, completionNotes ?? null]
     );
+    return result.rows[0] || null;
+  },
+  async delete(id) {
+    const result = await pool.query('DELETE FROM issues WHERE id = $1 RETURNING id', [id]);
     return result.rows[0] || null;
   },
 };

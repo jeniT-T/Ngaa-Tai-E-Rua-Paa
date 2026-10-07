@@ -36,6 +36,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage.jsx";
 import UnauthorizedPage from "./pages/UnauthorizedPage.jsx";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
 import CaretakerDashboardPage from "./pages/caretaker/CaretakerDashboardPage.jsx";
+import DefaultChecklistPage from "./pages/caretaker/DefaultChecklistPage.jsx";
 import ChecklistsPage from "./pages/caretaker/ChecklistsPage.jsx";
 import EquipmentPage from "./pages/caretaker/EquipmentPage.jsx";
 import TutorialsPage from "./pages/caretaker/TutorialsPage.jsx";
@@ -334,10 +335,13 @@ function App() {
               </RoleRoute>
             }
           />
+          <Route path="/checklists/default" element={
+            <RoleRoute allowed={["caretaker", "manager", "admin"]}><DefaultChecklistPage /></RoleRoute>
+          } />
           <Route
             path="/caretaker/checklists"
             element={
-              <RoleRoute allowed={["caretaker", "admin"]}>
+              <RoleRoute allowed={["caretaker", "manager", "admin"]}>
                 <ChecklistsPage />
               </RoleRoute>
             }

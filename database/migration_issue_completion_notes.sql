@@ -1,0 +1,1 @@
+ALTER TABLE issues ADD COLUMN IF NOT EXISTS completion_notes TEXT NOT NULL DEFAULT '';

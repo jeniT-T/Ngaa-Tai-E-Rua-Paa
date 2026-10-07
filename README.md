@@ -32,7 +32,7 @@ If `.env` does not already exist:
 3. Create a new file named `.env` in the project root.
 4. Paste the copied contents into `.env`.
 
-The project already includes a local `.env` file in this workspace, so you can skip this step if that file is present.
+Each developer needs their own `.env`; it is not included in a GitHub clone.
 
 ### 4. Add the login secret
 
@@ -80,14 +80,17 @@ docker compose exec -T db psql -U postgres -d marae_db -v ON_ERROR_STOP=1 < data
 
 If the database already contains the project tables, do not run this command again.
 
-### 8. Create an administrator account
+The schema also seeds the Marae Guide with its saved categories and item order, then creates the default Cleaning & Checkout checklist. Existing guide items remain editable in **Content Manager → Arrival Guide**. Staff can edit the booking template at `/checklists/default`.
 
-Only complete this step if you need an administrator account.
+### 8. Create Admin and Manager accounts
+
+Create separate Admin and Manager accounts on a fresh database. Admins manage content and site settings; Managers manage users, booking approvals, and issues.
 
 Run this command in the terminal:
 
 ```bash
-docker compose exec backend node scripts/createAdmin.js "Your Name" your@email.com yourPassword123
+docker compose exec backend node scripts/createAdmin.js "Admin Name" admin@example.com "your-admin-password" admin
+docker compose exec backend node scripts/createAdmin.js "Manager Name" manager@example.com "your-manager-password" manager
 ```
 
 Replace `Your Name`, `your@email.com`, and `yourPassword123` with the details you want to use.
@@ -130,17 +133,32 @@ will fail.
 
 ## Database
 
-Run `database/schema.sql` against a fresh database to create the `users`, `bookings`,
-`content_items` and `issues` tables. If you already have a database from an earlier version,
-use `database/migration_content_v2.sql` instead of re-running the full schema.
+Run `database/schema.sql` only on an empty database, using the command in step 7. It includes the current tables, guide seed, and booking checklist template; do not apply all historical migrations afterward.
+
+For an existing database, back it up first and apply only migrations missing from that installation. Filenames are not a chronological migration sequence. `migration_content_v2.sql` is only for the old `type`/`audience` content schema and must not be rerun on the current schema.
+
+For an installation updated before the latest cleaning checklist and issue changes, apply these files in this order (skip any already applied):
+
+```bash
+docker compose exec -T db psql -U postgres -d marae_db -v ON_ERROR_STOP=1 < database/migration_issue_completion_notes.sql
+docker compose exec -T db psql -U postgres -d marae_db -v ON_ERROR_STOP=1 < database/migration_checklist_completions.sql
+docker compose exec -T db psql -U postgres -d marae_db -v ON_ERROR_STOP=1 < database/migration_arrival_content.sql
+docker compose exec -T db psql -U postgres -d marae_db -v ON_ERROR_STOP=1 < database/migration_booking_cleaning_checklist.sql
+docker compose exec -T db psql -U postgres -d marae_db -v ON_ERROR_STOP=1 < database/migration_default_checklist_editor.sql
+```
+
+The guide seed inserts missing items without changing existing categories or text. Do not rerun the historical `migration_arrival_categories.sql` or `migration_arrival_groups.sql`: they reassign categories and can undo Content Manager edits. The default-template migration fills an empty template but preserves a populated staff-edited template.
+
+For older installations, inspect their tables and apply the relevant earlier migrations before these commands. This project does not yet record applied migrations automatically.
 
 ## User roles
 
 | Role | Can do |
 |---|---|
-| `member` | Log in, request bookings, view the content library, report issues |
-| `caretaker` | Everything a member can, plus checklists and tutorials |
-| `admin` | Everything above, plus manage users, manage content, view reported issues, and (once wired up — see Known gaps) approve/deny bookings |
+| `member` | Request bookings, report issues, access the Marae Guide with an approved booking, complete assigned checklists |
+| `caretaker` | View the guide, schedule and tasks, manage checklists and tutorials |
+| `manager` | Manage users, bookings and issues; view the guide and edit the default checklist |
+| `admin` | Manage content and site settings; view the guide and edit the default checklist |
 
 ## Folder structure
 
@@ -153,7 +171,7 @@ marae-app/
 │
 ├── database/
 │   ├── schema.sql               ← source of truth for a fresh database
-│   ├── migration_content_v2.sql ← run instead of schema.sql on an existing db
+│   ├── migration_*.sql         ← apply only missing migrations on an existing db
 │   └── bookings.sql
 │
 ├── frontend/
@@ -220,11 +238,14 @@ marae-app/
 
 | Route | Allowed roles |
 |---|---|
-| `/bookings` | member, caretaker, admin |
-| `/content` | member, caretaker, admin |
-| `/report-issue` | member, caretaker, admin |
+| `/bookings` | member, caretaker, manager, admin |
+| `/content` | member, caretaker, manager, admin |
+| `/report-issue` | member, caretaker, manager, admin |
 | `/caretaker/checklists`, `/caretaker/tutorials` | caretaker, admin |
-| `/admin`, `/admin/users`, `/admin/issues`, `/admin/content` | admin |
+| `/admin`, `/admin/content`, `/admin/site-settings` | admin |
+| `/manager`, `/manager/users`, `/manager/bookings`, `/manager/issues` | manager |
+| `/arrival` | staff; members with an approved booking |
+| `/checklists/default` | admin, manager, caretaker |
 
 ## Setting this up for a different marae
 
@@ -245,38 +266,17 @@ needs to change to make a fork "theirs":
    the image) so the numbered pins land on the right spots for your own site. The pin
    name/description text itself is CMS-editable once the app is running (Content Manager →
    Map).
-5. **First admin account** — there's no admin user in a fresh database, and admin accounts
-   are normally created by an existing admin. Run this once:
-   ```bash
-   docker compose exec backend node scripts/createAdmin.js "Your Name" you@example.com yourPassword123
-   ```
-   Then log in as that account and use Manage Users to create/promote any other admin or
-   caretaker accounts.
+5. **First staff accounts** — follow step 8 to create both an Admin and a Manager. Log in as the Manager to create or update other users; use the Admin for Content Manager and Site Settings.
 6. **Everything else is content, not code.** Once you've got an admin account, log in and use
    the Content Manager to write your own Home/History/Facilities/Events/Map copy, your own
    arrival guide sections (equipment, cleaning, facilities info), and set your own colors per
    content block. None of that needs a code change or a redeploy.
 
-Two things worth knowing about the current codebase if you're forking it:
+Site Settings supports the site name, logo, map, booking options, and secondary colour. The navigation also provides a dark mode toggle.
 
-- `frontend/src/pages/ArrivalPage.jsx` ships a small set of generic `FALLBACK_ITEMS`, shown
-  only until an admin adds real arrival-guide content via the CMS. Don't add real operational
-  details (WiFi passwords, phone numbers, equipment locations) to that fallback array directly
-  in code — it's shipped in the public JS bundle. Add real content through the Content Manager
-  instead, where it lives in the database.
-- The visual theme (colors, layout) isn't a CMS setting — it's Tailwind classes throughout the
-  component files. A fork that wants a different look and feel needs to edit those directly;
-  there's no theming system yet.
+Database content, accounts, bookings and uploaded files are local data, not shared by Git. Back them up separately when moving an existing installation. The guide seed preserves its initial categories and order; subsequent changes belong to that installation's database.
 
 ## Known gaps / TODO
 
-- **History and Facilities copy is placeholder.** Swap the text in `HistoryPage.jsx` and
-  `FacilitiesPage.jsx` for the marae's real history and facility details (or better, migrate
-  them to the CMS like the other pages).
-- **Events has no backend yet.** `/events` currently just shows a static "no events" message —
-  there's no `events` table or admin UI to publish events.
-- **`backend/routes/checklists.js` and `backend/controllers/` are empty/unused.** Routes are
-  defined inline inside each `routes/*.js` file rather than in separate controllers; the
-  `controllers` folder is left over from an earlier structure and isn't required by anything.
-- **No multi-tenancy.** One deployment = one marae. See "Setting this up for a different
-  marae" above if that's what you need.
+- No multi-tenancy: each marae needs its own deployment and database.
+- Applied database migrations are not tracked automatically; record which migrations you run.
