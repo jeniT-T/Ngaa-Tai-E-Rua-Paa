@@ -83,10 +83,6 @@ export default function ManageTutorialsPage() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageError, setImageError] = useState("");
 
-  useEffect(() => {
-    loadItems();
-  }, []);
-
   async function loadItems() {
     setLoading(true);
     try {
@@ -100,6 +96,10 @@ export default function ManageTutorialsPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    loadItems();
+  }, []);
 
   async function handleImageSelect(e) {
     const file = e.target.files?.[0];

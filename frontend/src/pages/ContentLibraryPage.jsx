@@ -27,15 +27,6 @@ export default function ContentLibraryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => loadItems(), 250); // debounce search typing
-    return () => clearTimeout(timer);
-  }, [search, activeCategory]);
-
   async function loadCategories() {
     try {
       const res = await fetch(`${API_BASE}/content/categories`, { credentials: "include" });
@@ -66,6 +57,16 @@ export default function ContentLibraryPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => loadItems(), 250); // debounce search typing
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, activeCategory]);
 
   // Group results by category for display (server already filters if
   // activeCategory is set, so this groups whatever came back)

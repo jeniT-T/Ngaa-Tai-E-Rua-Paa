@@ -152,10 +152,6 @@ export default function EquipmentPage() {
   const [items, setItems] = useState(null);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    loadItems();
-  }, []);
-
   async function loadItems() {
     setError('');
     try {
@@ -167,6 +163,10 @@ export default function EquipmentPage() {
       setError(err.message);
     }
   }
+
+  useEffect(() => {
+    loadItems();
+  }, []);
 
   function handleItemChange(updated, deletedId) {
     setItems((prev) => {
