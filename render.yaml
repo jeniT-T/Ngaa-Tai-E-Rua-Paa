@@ -6,7 +6,7 @@ services:
     branch: main
     
     buildCommand: >-
-      cd frontend && npm ci && VITE_API_URL=/api VITE_UPLOADS_ORIGIN= npm run build &&
+      cd frontend && npm ci --include=dev && VITE_API_URL=/api VITE_UPLOADS_ORIGIN= npm run build &&
       cd ../backend && npm ci
     startCommand: cd backend && npm start
     healthCheckPath: /
@@ -20,7 +20,6 @@ services:
       
       - key: DATABASE_URL
         sync: false
-      # Your Render URL once it exists, e.g. https://manage-my-marae.onrender.com
       - key: FRONTEND_URL
         sync: false
       - key: SMTP_HOST
