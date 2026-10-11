@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: manage-my-marae
+    runtime: node
+    plan: free
+    branch: main
+    
+    buildCommand: >-
+      cd frontend && npm ci && VITE_API_URL=/api VITE_UPLOADS_ORIGIN= npm run build &&
+      cd ../backend && npm ci
+    startCommand: cd backend && npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      
+      - key: DATABASE_URL
+        sync: false
+      # Your Render URL once it exists, e.g. https://manage-my-marae.onrender.com
+      - key: FRONTEND_URL
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_SECURE
+        value: false
+      - key: EMAIL_FROM
+        value: Manage My Marae <no-reply@example.com>

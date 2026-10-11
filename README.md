@@ -111,6 +111,29 @@ To start the project again, run:
 docker compose up
 ```
 
+## Deploying a demo for the client (Render + Neon)
+
+This puts the whole app at one public URL so the client can try it. The Express backend also
+serves the built frontend (`backend/server.js`), so the site and API share one origin -- this
+is what makes the login cookie work. `render.yaml` describes the web service.
+
+1. **Database** -- create a free Postgres project on [Neon](https://neon.tech) and copy its
+   connection string (it should end in `?sslmode=require`).
+2. **Load the schema** -- on a fresh, empty database run `database/schema.sql` only (do not apply
+   the `migration_*.sql` files; the schema already includes them):
+   `psql "<connection string>" -v ON_ERROR_STOP=1 -f database/schema.sql`
+3. **Web service** -- on [Render](https://render.com): New -> Blueprint -> pick this GitHub repo.
+   When prompted, set `DATABASE_URL` (step 1) and `FRONTEND_URL` (the `https://...onrender.com`
+   address Render gives the service). `JWT_SECRET` is generated automatically.
+4. **Demo accounts** -- from your own computer, with `DATABASE_URL` pointing at the Neon database:
+   `cd backend && DATABASE_URL="<connection string>" node scripts/createAdmin.js "Name" email password manager`
+   (roles: `admin` or `manager`; caretakers and members can then be created from the app).
+5. Every push to `main` redeploys automatically.
+
+Things to know: the free tier sleeps when idle (first load can take ~1 minute); images uploaded
+through the Content Manager are lost on each redeploy (no persistent disk); password-reset emails
+need a real SMTP service (`SMTP_*` variables); use demo data only.
+
 ## Local addresses
 
 - Website: http://localhost:3000

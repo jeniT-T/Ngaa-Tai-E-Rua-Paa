@@ -1,22 +1,10 @@
-// frontend/src/hooks/useSiteSettings.js
-//
-// The handful of things specific to THIS marae's identity rather than page
-// content — site name/logo, the map's image + pin layout, and the booking
-// form's area/type options and "whakapapa" question wording. Backed by the
-// site_settings table (see backend/routes/settings.js) so an admin can
-// change all of this from a form (SiteSettingsPage.jsx) instead of a
-// developer editing source code — see the project doc for why this exists
-// (the client may hand this product to other marae for their own use).
-//
-// DEFAULT_SETTINGS mirrors what used to be hardcoded in each consuming
-// file, and is what every page shows while the fetch is in flight (or if it
-// fails), so there's never a flash of broken/empty UI.
+
 import { useEffect, useState } from "react";
 
 const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000/api`;
 
 export const DEFAULT_SETTINGS = {
-  site_name: "Marae System",
+  site_name: "Manage My Marae",
   secondary_colour: "#0081BD",
   logo_url: null,
   map_image_url: null,
@@ -41,11 +29,7 @@ export const DEFAULT_SETTINGS = {
   whakapapa_question_label: "Do you whakapapa to the Paa?",
 };
 
-// Cached at module scope — every page that mounts this hook (Navbar, Map,
-// both booking forms, both booking lists) would otherwise each fire their
-// own fetch on every navigation. Good for the lifetime of one page load;
-// an admin's own save invalidates it immediately (see below) so their
-// Site Settings page reflects its own changes without a full reload.
+
 let cached = null;
 let inFlight = null;
 

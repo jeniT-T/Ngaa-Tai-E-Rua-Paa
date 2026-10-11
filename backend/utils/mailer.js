@@ -1,16 +1,3 @@
-// backend/utils/mailer.js
-//
-// Thin wrapper around Nodemailer so the rest of the app just calls
-// sendEmail({ to, subject, text, html }) without caring where mail actually
-// goes.
-//
-// Local dev: points at Mailpit (see docker-compose.yml), an open-source SMTP
-// catcher that never sends anything to the real internet — it just captures
-// mail in a web inbox at http://localhost:8025 so you can see it land.
-//
-// Production: point SMTP_HOST/PORT/USER/PASS at a real provider (Gmail SMTP
-// with an app password, or a transactional service like Resend/Mailgun/SES).
-// No code changes needed — just different env vars.
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
@@ -22,7 +9,7 @@ const transporter = nodemailer.createTransport({
     : undefined,
 });
 
-const FROM_ADDRESS = process.env.EMAIL_FROM || 'Marae System <no-reply@marae.local>';
+const FROM_ADDRESS = process.env.EMAIL_FROM || 'Manage My Marae <no-reply@marae.local>';
 
 async function sendEmail({ to, subject, text, html }) {
   try {

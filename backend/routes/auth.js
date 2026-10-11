@@ -21,7 +21,7 @@ const RESET_TOKEN_TTL_MS = 1000 * 60 * 60; // 1 hour
 async function sendPasswordResetEmail(email, resetLink) {
   await sendEmail({
     to: email,
-    subject: 'Reset your Marae System password',
+    subject: 'Reset your Manage My Marae password',
     text: `We received a request to reset your password. Follow this link to choose a new one (expires in 1 hour):\n\n${resetLink}\n\nIf you didn't request this, you can safely ignore this email.`,
     html: `
       <p>We received a request to reset your password.</p>

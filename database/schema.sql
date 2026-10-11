@@ -163,14 +163,10 @@ CREATE TABLE booking_reviews (
 
 CREATE INDEX idx_booking_reviews_booking ON booking_reviews(booking_id);
 
--- Site-wide settings — the handful of things specific to THIS marae's
--- identity rather than page content (see migration_site_settings.sql for
--- the full rationale: making the product reusable by a different marae
--- without a developer editing code). Singleton table, exactly one row.
 CREATE TABLE site_settings (
   id SMALLINT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
 
-  site_name VARCHAR(255) NOT NULL DEFAULT 'Marae System',
+  site_name VARCHAR(255) NOT NULL DEFAULT 'Manage My Marae',
   secondary_colour VARCHAR(7) NOT NULL DEFAULT '#0081BD' CHECK (secondary_colour ~ '^#[0-9A-Fa-f]{6}$'),
   logo_url VARCHAR(500),
 
@@ -195,7 +191,7 @@ INSERT INTO site_settings (
   whakapapa_question_enabled, whakapapa_question_label
 ) VALUES (
   1,
-  'Marae System',
+  'Manage My Marae',
   '[
     {"type": "Entrance", "x": 80, "y": 61},
     {"type": "Main Facility", "x": 46, "y": 68},
