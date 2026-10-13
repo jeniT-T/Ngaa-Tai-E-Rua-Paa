@@ -18,6 +18,15 @@ const COOKIE_OPTIONS = {
 
 const RESET_TOKEN_TTL_MS = 1000 * 60 * 60; // 1 hour
 
+   const MIN_PASSWORD_LENGTH = 8;
+
+   function passwordProblem(password) {
+     if (typeof password !== 'string' || password.length < MIN_PASSWORD_LENGTH) {
+       return `Password must be at least ${MIN_PASSWORD_LENGTH} characters`;
+     }
+     return null;
+   }
+
 async function sendPasswordResetEmail(email, resetLink) {
   await sendEmail({
     to: email,
@@ -37,6 +46,11 @@ router.post('/register', async (req, res) => {
 
     if (!email || !password || !name) {
       return res.status(400).json({ error: 'Name, email and password are required' });
+    }
+
+    const problem = passwordProblem(password);
+    if (problem) {
+      return res.status(400).json({ error: problem });
     }
 
     const existing = await User.findByEmail(email);
@@ -119,6 +133,11 @@ router.post('/reset-password', async (req, res) => {
     const { token, password } = req.body;
     if (!token || !password) {
       return res.status(400).json({ error: 'Token and new password are required' });
+    }
+
+    const problem = passwordProblem(password);
+    if (problem) {
+      return res.status(400).json({ error: problem });
     }
 
     const user = await User.findByValidResetToken(token);

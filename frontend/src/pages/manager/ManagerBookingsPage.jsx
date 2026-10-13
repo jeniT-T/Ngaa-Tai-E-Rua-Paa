@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { confirmBookingConflicts } from "../../utils/bookingConflicts.js";
+import { confirmConflictList } from "../../utils/bookingConflicts.js";
 import GuestAccessShare from "../../components/GuestAccessShare.jsx";
 import StarRating from "../../components/StarRating.jsx";
 import { hasBookingEnded, isBookingComplete } from "../../utils/bookingStatus.js";
@@ -148,7 +148,7 @@ export default function ManagerBookingsPage({ previous = false }) {
     return () => window.clearInterval(timer);
   }, []);
 
-  const [notesDraft, setNotesDraft] = useState({}); // { [bookingId]: text }
+  const [notesDraft, setNotesDraft] = useState({});
 
   useEffect(() => {
     let cancelled = false;
@@ -194,17 +194,20 @@ export default function ManagerBookingsPage({ previous = false }) {
     setError("");
     setUpdatingId(id);
     try {
-      if (status === 'approved') {
-        const booking = bookings.find((item) => item.id === id);
-        if (!await confirmBookingConflicts({ startDate: booking.start_date, endDate: booking.end_date, area: booking.area, excludeId: id })) return;
-      }
-      const res = await fetch(`${API_BASE}/bookings/${id}/status`, {
+
+      const send = (overrideConflicts) => fetch(`${API_BASE}/bookings/${id}/status`, {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status, adminNotes: notesDraft[id] }),
+        body: JSON.stringify({ status, adminNotes: notesDraft[id], overrideConflicts }),
       });
-      const data = await res.json();
+      let res = await send(false);
+      let data = await res.json();
+      if (res.status === 409 && Array.isArray(data.conflicts)) {
+        if (!confirmConflictList(data.conflicts)) return;
+        res = await send(true);
+        data = await res.json();
+      }
       if (!res.ok) throw new Error(data.error || "Failed to update booking");
       setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, ...data.booking } : b)));
     } catch (err) {

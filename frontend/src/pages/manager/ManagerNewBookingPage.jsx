@@ -1,15 +1,6 @@
-// frontend/src/pages/manager/ManagerNewBookingPage.jsx
-//
-// Lets a manager create a booking on behalf of a customer who booked by
-// phone or in person, rather than through the customer's own account. This
-// reuses the exact same POST /api/bookings endpoint the self-serve
-// BookingRequestPage.jsx uses — the only difference is a manager may also
-// send `userId` (whose account the booking is filed under) and `status`
-// (so it can be marked approved immediately instead of sitting in the
-// pending queue). See backend/routes/bookings.js for that logic.
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { confirmBookingConflicts } from "../../utils/bookingConflicts.js";
+import { confirmBookingConflicts, confirmConflictList } from "../../utils/bookingConflicts.js";
 import BookingCalendar from "../../components/BookingCalendar.jsx";
 import useBookingAvailability from "../../hooks/useBookingAvailability.js";
 import useSiteSettings from "../../hooks/useSiteSettings.js";
@@ -39,8 +30,6 @@ export default function ManagerNewBookingPage() {
 
   const { unavailableDays, loading: loadingAvailability } = useBookingAvailability();
 
-  // Computed at render time rather than synced via an effect — see the
-  // matching comment in BookingRequestPage.jsx.
   const effectiveBookingType = bookingTypes.some((t) => t.value === bookingType)
     ? bookingType
     : bookingTypes[0]?.value || "";
@@ -74,8 +63,9 @@ export default function ManagerNewBookingPage() {
 
     setSubmitting(true);
     try {
-      if (!await confirmBookingConflicts({ startDate, endDate, area: effectiveArea })) return;
-      const res = await fetch(`${API_BASE}/bookings`, {
+
+      if (!markApproved && !await confirmBookingConflicts({ startDate, endDate, area: effectiveArea })) return;
+      const send = (overrideConflicts) => fetch(`${API_BASE}/bookings`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -88,12 +78,18 @@ export default function ManagerNewBookingPage() {
           purpose,
           whakapapa: settings.whakapapa_question_enabled ? whakapapa === "yes" : false,
           status: markApproved ? "approved" : "pending",
+          overrideConflicts,
         }),
       });
-      const data = await res.json();
+      let res = await send(false);
+      let data = await res.json();
+      if (res.status === 409 && Array.isArray(data.conflicts)) {
+        if (!confirmConflictList(data.conflicts)) return;
+        res = await send(true);
+        data = await res.json();
+      }
       if (!res.ok) throw new Error(data.error || "Failed to create booking");
 
-      // Back to the bookings list so the manager can see it land there.
       navigate("/manager/bookings");
     } catch (err) {
       setError(err.message);
