@@ -1,10 +1,3 @@
--- database/schema.sql
--- Single source of truth for a fresh database. If you already have a database
--- from before, apply only missing migrations; see README.md.
-
--- Roles: 'admin' manages content (the CMS) only. 'manager' handles booking
--- approvals, user/role management and reported issues — everything the
--- admin role used to do besides content. 'caretaker' and 'member' unchanged.
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   email VARCHAR(255) UNIQUE NOT NULL,
@@ -24,31 +17,14 @@ CREATE TABLE bookings (
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,
   purpose TEXT NOT NULL,
-
-  -- The set of valid values for booking_type/area is admin-configurable
-  -- (see site_settings below, migration_site_settings.sql) rather than a
-  -- fixed CHECK enum — validated at the application layer instead
-  -- (backend/routes/bookings.js) against the current site_settings row.
   booking_type VARCHAR(50) NOT NULL DEFAULT 'standard',
-
-  -- Which part of the marae is being requested. Regardless of which area is
-  -- chosen, booking ANY area blocks the whole property for everyone else —
-  -- there's no partial/simultaneous availability, this is purely so the
-  -- booker and admin know what was actually asked for.
   area VARCHAR(50) NOT NULL DEFAULT 'general',
 
   status VARCHAR(20) NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'approved', 'denied', 'cancelled')),
 
   admin_notes TEXT,
-
-  -- "Do you whakapapa to the Paa?" — asked on every booking request.
   whakapapa BOOLEAN NOT NULL DEFAULT false,
-
-  -- Unguessable token generated in backend/models/Booking.js (crypto.randomBytes).
-  -- Lets anyone with the link view arrival info for this booking's dates
-  -- without an account — solves "50 guests, 1 account holder". See
-  -- GET /api/bookings/guest/:token.
   guest_access_token VARCHAR(64) NOT NULL UNIQUE,
 
   created_at TIMESTAMP DEFAULT NOW(),
@@ -60,22 +36,6 @@ CREATE TABLE bookings (
 CREATE INDEX idx_bookings_user_status ON bookings(user_id, status);
 CREATE INDEX idx_bookings_dates ON bookings(start_date, end_date);
 CREATE INDEX idx_bookings_guest_access_token ON bookings(guest_access_token);
-
--- category: freeform, e.g. 'recipe', 'onboarding', 'equipment', 'maintenance',
---           'rules', 'health_safety' — admins can introduce new categories too.
---           Special case: for items with placement = 'arrival', category
---           doubles as which phase-group the item is shown under on the
---           arrival guide — must be 'arrival', 'general' or 'leaving'
---           (anything else falls back to 'general'). See ArrivalGuideView.jsx.
--- visible_to_roles: which roles can see this item, e.g. ARRAY['member','caretaker']
--- placement: NULL = internal content library item (existing behaviour).
---            'home' | 'history' | 'facilities' | 'events' = shows up on that
---            public marketing page instead, no login required to view it.
--- block_type: 'section' (a card in the page's list), 'heading' (the page's
---            title/intro text), or 'gallery' (a plain admin-uploaded photo
---            in the page's image strip, no title/body rendered alongside
---            it — used for things like the History page's photo gallery) —
---            only meaningful when placement is set.
 CREATE TABLE content_items (
   id SERIAL PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
@@ -86,9 +46,7 @@ CREATE TABLE content_items (
   block_type VARCHAR(20) NOT NULL DEFAULT 'section'
     CHECK (block_type IN ('heading', 'section', 'gallery')),
   video_url TEXT,
-  -- Admin-uploaded image for this item (see migration_content_images.sql /
-  -- POST /api/content/upload) — a relative "/uploads/<filename>" path, or
-  -- NULL for none.
+
   image_url TEXT,
   color VARCHAR(20),
 
@@ -113,8 +71,6 @@ CREATE TABLE issues (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Caretaker-authored checklists (see migration_checklists.sql for the
--- rationale) — caretakers create and maintain these themselves.
 CREATE TABLE checklists (
   id SERIAL PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
@@ -137,13 +93,6 @@ CREATE TABLE checklist_items (
 
 CREATE INDEX idx_checklist_items_checklist ON checklist_items(checklist_id, position);
 
--- Post-stay reviews, both directions (see migration_booking_reviews.sql for
--- the full rationale). One row per booking: manager_* is the manager's
--- private star rating + notes about the guest, never exposed to the guest;
--- guest_* is the guest's own star rating + notes about their stay, readable
--- by the booking's owner and by a manager. Both halves are only writable
--- once a booking is "complete" (approved, end_date passed) — enforced in
--- the routes, not here.
 CREATE TABLE booking_reviews (
   id SERIAL PRIMARY KEY,
   booking_id INTEGER NOT NULL UNIQUE REFERENCES bookings(id) ON DELETE CASCADE,
@@ -171,12 +120,9 @@ CREATE TABLE site_settings (
   logo_url VARCHAR(500),
 
   map_image_url VARCHAR(500),
-  -- Array of {type, x, y} — a pin's position in this array IS its number
-  -- on the map; each pin's name/description/image is still a normal
-  -- content item under the "map" placement, matched by the same order.
+
   map_pins JSONB NOT NULL DEFAULT '[]'::jsonb,
 
-  -- Array of {value, label} each. `value` is what's stored on a booking row.
   booking_types JSONB NOT NULL DEFAULT '[]'::jsonb,
   booking_areas JSONB NOT NULL DEFAULT '[]'::jsonb,
 
@@ -213,10 +159,6 @@ INSERT INTO site_settings (
   'Do you whakapapa to the Paa?'
 );
 
--- The caretaker's own task calendar/schedule, shared between caretaker and
--- manager (see migration_caretaker_tasks.sql for the full rationale —
--- there's only one caretaker, and manager needs the same view, which the
--- old per-browser localStorage version couldn't do).
 CREATE TABLE caretaker_tasks (
   id SERIAL PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
@@ -232,8 +174,6 @@ CREATE TABLE caretaker_tasks (
 );
 
 CREATE INDEX idx_caretaker_tasks_date ON caretaker_tasks(date);
-
--- Equipment inventory (S36) — see migration_equipment.sql for rationale.
 CREATE TABLE equipment_items (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
@@ -290,14 +230,12 @@ $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS booking_cleaning_checklist ON bookings;
 CREATE TRIGGER booking_cleaning_checklist AFTER INSERT OR UPDATE OF status ON bookings
 FOR EACH ROW EXECUTE FUNCTION add_booking_cleaning_checklist();
--- Give already-approved bookings the same default without overwriting existing copies.
+
 UPDATE bookings SET status = status WHERE status = 'approved';
 COMMIT;
 
 BEGIN;
--- Seed the guide before deriving its cleaning checklist.
--- Seed guide in display order; preserve existing CMS edits.
--- database/migration_arrival_content.sql
+
 
 INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Marae Guide',
@@ -307,7 +245,6 @@ WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND block_type = 'heading'
 );
 
--- aircon
 INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Airconditioning',
   $body$Wharenui
@@ -338,7 +275,6 @@ WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Bakers Oven'
 );
 
--- brattPan
 INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Bratt Pan',
   $body$• Ensure the Bratt pan is turned on the wall.
@@ -350,7 +286,6 @@ WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Bratt Pan'
 );
 
--- chairs
 INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Chairs',
   $body$• Wharenui Chairs are stacked to the far left of the Wharenui.
@@ -362,7 +297,6 @@ WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Chairs'
 );
 
--- chiller
 INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Chiller',
   $body$• To use the Chiller, you must use the step ladder to the left of the Chiller and switch the Chiller on by looking on top of the chiller and turning on the switch.
@@ -373,7 +307,6 @@ WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Chiller'
 );
 
--- combiOvens
 INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Combi Ovens',
   $body$• Watch this space. There will be some instructions on how to cook using the Combi ovens if you don't already know. Ensure to run a quick clean when you finish. Trays are to the right of the Combi Ovens on the bench.$body$,
@@ -400,7 +333,6 @@ WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Defibrillator'
 );
 
--- cleanDining
 INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Clean – Final Dining Hall',
   $body$• Close all windows.
@@ -667,7 +599,6 @@ WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Mattress Room'
 );
 
--- lights
 INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'Lights',
   $body$Wharenui
@@ -799,7 +730,6 @@ WHERE NOT EXISTS (
   SELECT 1 FROM content_items WHERE placement = 'arrival' AND title = 'Vacuum'
 );
 
--- wifi
 INSERT INTO content_items (title, body, category, placement, block_type)
 SELECT 'WiFi',
   $body$• The WiFi Router is located in the Kitchen on the shelf.

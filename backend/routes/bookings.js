@@ -1,4 +1,3 @@
-// backend/routes/bookings.js
 const express = require('express');
 const Booking = require('../models/Booking');
 const User = require('../models/User');
@@ -10,9 +9,6 @@ const { sendEmail } = require('../utils/mailer');
 
 const router = express.Router();
 
-// A booking only becomes reviewable (by either side) once it's actually
-// over — no point rating a guest's stay, or asking a guest how their stay
-// went, while it's still pending or still happening.
 function isBookingComplete(booking) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -23,10 +19,6 @@ function isValidRating(rating) {
   return Number.isInteger(rating) && rating >= 1 && rating <= 5;
 }
 
-// The set of valid booking_type/area values is admin-configurable (see
-// SiteSettings / the new Site Settings page) rather than fixed here — these
-// helpers read the CURRENT settings row on each call rather than caching a
-// list at startup, so a change takes effect immediately with no restart.
 async function getValidBookingValues() {
   const settings = await SiteSettings.get();
   return {
@@ -39,9 +31,19 @@ function formatDate(d) {
   return new Date(d).toLocaleDateString('en-NZ', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
+function dateOnly(value) {
+  if (typeof value === 'string') return value.slice(0, 10);
+  const d = new Date(value);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+const CONFLICT_MESSAGE =
+  'These dates overlap with an approved booking. Resend with overrideConflicts: true to approve anyway.';
+
 async function notifyRequester(booking, { subject, intro }) {
   const requester = await User.findById(booking.user_id);
-  if (!requester) return; // shouldn't happen, but don't let a missing user break the flow
+  if (!requester) return; 
 
   const settings = await SiteSettings.get();
   const areaOption = (settings?.booking_areas || []).find((a) => a.value === booking.area);
@@ -59,9 +61,7 @@ async function notifyRequester(booking, { subject, intro }) {
   });
 }
 
-// POST /api/bookings — any logged-in user can request a booking for
-// themselves; a manager can additionally pass `userId` to book on behalf of
-// a customer's account, and `status` to mark it approved immediately.
+
 router.post('/', requireAuth, async (req, res) => {
   try {
     const { startDate, endDate, purpose, bookingType, whakapapa, area, userId, status } = req.body;
@@ -77,9 +77,7 @@ router.post('/', requireAuth, async (req, res) => {
     if (bookingType && !validTypes.includes(bookingType)) {
       return res.status(400).json({ error: `bookingType must be one of: ${validTypes.join(', ')}` });
     }
-    // The "whakapapa" question itself can be switched off per marae (Site
-    // Settings) — when it is, the frontend never asks it and always sends
-    // `false`, so this still arrives as a boolean either way.
+    
     if (typeof whakapapa !== 'boolean') {
       return res.status(400).json({ error: 'Please answer whether you whakapapa to the Paa' });
     }
@@ -87,11 +85,6 @@ router.post('/', requireAuth, async (req, res) => {
       return res.status(400).json({ error: `area must be one of: ${validAreas.join(', ')}` });
     }
 
-    // A regular member can only ever book for themselves. A manager may
-    // book on behalf of a customer's account (someone who rang up or asked
-    // in person) by passing that customer's userId — everything else about
-    // the booking works exactly the same either way (same table, same
-    // approval flow, same emails), it's just whose account it's filed under.
     let bookingUserId = req.user.id;
     if (isManager && userId) {
       const targetUser = await User.findById(userId);
@@ -101,17 +94,25 @@ router.post('/', requireAuth, async (req, res) => {
       bookingUserId = targetUser.id;
     }
 
-    // Only a manager can set the status directly — a manager taking a
-    // booking over the phone already knows it's confirmed, so they can mark
-    // it approved immediately instead of it sitting in the pending queue
-    // waiting for... the same manager to approve it. Anyone else's request
-    // always starts 'pending', same as before.
+    
     let bookingStatus = 'pending';
     if (isManager && status) {
       if (!['pending', 'approved'].includes(status)) {
         return res.status(400).json({ error: "status must be 'pending' or 'approved'" });
       }
       bookingStatus = status;
+    }
+
+    
+    if (bookingStatus === 'approved' && req.body.overrideConflicts !== true) {
+      const conflicts = await Booking.findConflicts({
+        startDate: dateOnly(startDate),
+        endDate: dateOnly(endDate),
+        area: area || 'general',
+      });
+      if (conflicts.length > 0) {
+        return res.status(409).json({ error: CONFLICT_MESSAGE, conflicts });
+      }
     }
 
     const booking = await Booking.create({
@@ -131,7 +132,7 @@ router.post('/', requireAuth, async (req, res) => {
         bookingStatus === 'approved'
           ? 'Your booking has been confirmed.'
           : "We've received your booking request. We'll email you once it's been reviewed.",
-    }).catch(() => {}); // fire-and-forget, don't block the response on email
+    }).catch(() => {}); 
 
     res.status(201).json({ booking });
   } catch (err) {
@@ -140,7 +141,6 @@ router.post('/', requireAuth, async (req, res) => {
   }
 });
 
-// GET /api/bookings/mine — the logged-in user's own booking requests
 router.get('/conflicts', requireAuth, requireRole('manager'), async (req, res) => {
   try {
     const { startDate, endDate, area, excludeId } = req.query;
@@ -169,10 +169,6 @@ router.get('/mine', requireAuth, async (req, res) => {
   }
 });
 
-// GET /api/bookings/availability — any logged-in user, the date ranges that
-// are already spoken for so the frontend can gray them out on a calendar.
-// ?excludeId=123 lets a booker editing their own booking see the calendar
-// without their own current dates showing up as blocked.
 router.get('/availability', requireAuth, async (req, res) => {
   try {
     const excludeId = req.query.excludeId ? Number(req.query.excludeId) : undefined;
@@ -191,12 +187,6 @@ router.get('/availability', requireAuth, async (req, res) => {
   }
 });
 
-// GET /api/bookings/calendar — caretaker/manager/admin only. Approved
-// bookings with enough detail to show on the caretaker's task
-// calendar/schedule (see frontend/src/hooks/useActiveBookingsForCalendar.js),
-// so staff can see when the marae itself is booked, not just each other's
-// tasks. Deliberately narrower than GET / (manager-only, full booking
-// management) — this never exposes who booked it, just that it's booked.
 router.get('/calendar', requireAuth, requireRole('caretaker', 'manager', 'admin'), async (req, res) => {
   try {
     const bookings = await Booking.findApprovedForCalendar();
@@ -207,11 +197,6 @@ router.get('/calendar', requireAuth, requireRole('caretaker', 'manager', 'admin'
   }
 });
 
-// GET /api/bookings/guest/:token — no auth. The "share this booking" link/QR
-// code a guest without their own account uses. Deliberately returns only
-// what's needed to gate the arrival guide (dates/status/purpose) — never the
-// account holder's name, email or user id. Placed before the manager-only
-// routes below since this one is meant for anyone with the link.
 router.get('/guest/:token', async (req, res) => {
   try {
     const booking = await Booking.findByGuestToken(req.params.token);
@@ -241,15 +226,6 @@ router.get('/guest/:token', async (req, res) => {
   }
 });
 
-// GET /api/bookings/guest-active — no auth, no token. Backs a generic,
-// non-booking-specific QR code the client can post physically around the
-// marae itself (as opposed to the per-booking link/QR above, which is
-// personal to one booking and shared digitally) -- see §24. Deliberately
-// the narrowest possible check: true only when an approved booking's date
-// range covers *today* specifically, so this only ever works while someone
-// is actually in residence -- not before arrival or after departure, unlike
-// the per-booking link above (which stays "active" from approval through
-// to end-of-stay). Returns nothing about who's booked, or why.
 router.get('/guest-active', async (req, res) => {
   try {
     const booking = await Booking.findCurrentlyOnSite();
@@ -260,8 +236,6 @@ router.get('/guest-active', async (req, res) => {
   }
 });
 
-// GET /api/bookings — manager only, view all booking requests
-// Permanent deletion is restricted to managers.
 router.delete('/:id', requireAuth, requireRole('manager'), async (req, res) => {
   try {
     if (!/^[1-9]\d*$/.test(req.params.id)) {
@@ -290,13 +264,30 @@ router.get('/', requireAuth, requireRole('manager'), async (req, res) => {
   }
 });
 
-// PATCH /api/bookings/:id/status — manager only, approve/deny a booking
 router.patch('/:id/status', requireAuth, requireRole('manager'), async (req, res) => {
   try {
     const { status, adminNotes } = req.body;
     if (!['pending', 'approved', 'denied'].includes(status)) {
       return res.status(400).json({ error: "Status must be 'pending', 'approved' or 'denied'" });
     }
+
+  
+    if (status === 'approved' && req.body.overrideConflicts !== true) {
+      const existing = await Booking.findById(req.params.id);
+      if (!existing) {
+        return res.status(404).json({ error: 'Booking not found' });
+      }
+      const conflicts = await Booking.findConflicts({
+        startDate: dateOnly(existing.start_date),
+        endDate: dateOnly(existing.end_date),
+        area: existing.area,
+        excludeId: existing.id,
+      });
+      if (conflicts.length > 0) {
+        return res.status(409).json({ error: CONFLICT_MESSAGE, conflicts });
+      }
+    }
+
     const booking = await Booking.updateStatus(req.params.id, status, adminNotes);
     if (!booking) {
       return res.status(404).json({ error: 'Booking not found' });
@@ -319,9 +310,6 @@ router.patch('/:id/status', requireAuth, requireRole('manager'), async (req, res
   }
 });
 
-// PATCH /api/bookings/:id — the requester edits their own booking (dates,
-// purpose, type). This resets it to 'pending' so the admin reviews the
-// updated details — effectively a "re-request".
 router.patch('/:id', requireAuth, async (req, res) => {
   try {
     const existing = await Booking.findById(req.params.id);
@@ -358,7 +346,6 @@ router.patch('/:id', requireAuth, async (req, res) => {
   }
 });
 
-// PATCH /api/bookings/:id/cancel — the requester (or an admin) cancels a booking
 router.patch('/:id/cancel', requireAuth, async (req, res) => {
   try {
     const existing = await Booking.findById(req.params.id);
@@ -377,11 +364,7 @@ router.patch('/:id/cancel', requireAuth, async (req, res) => {
   }
 });
 
-// GET /api/bookings/:id/review — manager only. Returns the full review row
-// (both the manager's private rating/notes about the guest AND the guest's
-// own rating/notes about the marae) — the manager is allowed to see both
-// sides, only the guest's own half is kept from the guest. See GET
-// /:id/guest-review below for that boundary.
+
 router.get('/:id/review', requireAuth, requireRole('manager'), async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id);
@@ -396,9 +379,6 @@ router.get('/:id/review', requireAuth, requireRole('manager'), async (req, res) 
   }
 });
 
-// PUT /api/bookings/:id/manager-review — manager only, { rating, notes }.
-// The manager's private assessment of the guest — never returned to the
-// guest by any route.
 router.put('/:id/manager-review', requireAuth, requireRole('manager'), async (req, res) => {
   try {
     const { rating, notes } = req.body;
@@ -424,11 +404,6 @@ router.put('/:id/manager-review', requireAuth, requireRole('manager'), async (re
   }
 });
 
-// GET /api/bookings/:id/guest-review — the booking's own owner (or a
-// manager). Deliberately selects only the guest_* columns, never
-// manager_rating/manager_notes/manager_reviewed_by — a guest requesting
-// their own booking's review must never see what the manager wrote about
-// them.
 router.get('/:id/guest-review', requireAuth, async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id);
@@ -451,8 +426,6 @@ router.get('/:id/guest-review', requireAuth, async (req, res) => {
   }
 });
 
-// PUT /api/bookings/:id/guest-review — the booking's own owner only,
-// { rating, notes }. The guest's own review of their stay at the marae.
 router.put('/:id/guest-review', requireAuth, async (req, res) => {
   try {
     const { rating, notes } = req.body;

@@ -7,6 +7,13 @@ export async function confirmBookingConflicts({ startDate, endDate, area, exclud
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Failed to check booking conflicts');
   if (!data.conflicts.length) return true;
-  const details = data.conflicts.map((booking) => `${booking.requester_name}: ${String(booking.start_date).slice(0, 10)} → ${String(booking.end_date).slice(0, 10)} (${booking.area})`).join('\n');
+  return confirmConflictList(data.conflicts);
+}
+
+// Asks the manager whether to carry on despite overlapping approved bookings.
+// Used both for the advisory check above and when the server refuses an
+// approval with 409 (see routes/bookings.js) and lists the conflicts.
+export function confirmConflictList(conflicts) {
+  const details = conflicts.map((booking) => `${booking.requester_name}: ${String(booking.start_date).slice(0, 10)} → ${String(booking.end_date).slice(0, 10)} (${booking.area})`).join('\n');
   return window.confirm(`Warning: these dates and areas overlap with approved bookings:\n${details}\n\nContinue anyway?`);
 }

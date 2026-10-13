@@ -54,6 +54,8 @@ describe('POST /api/bookings -- manager-only overrides', () => {
 
   beforeEach(() => {
     Booking.create.mockReset();
+    Booking.findConflicts.mockReset();
+    Booking.findConflicts.mockResolvedValue([]);
     User.findById.mockReset();
     Booking.create.mockResolvedValue({
       id: 1,
@@ -224,5 +226,116 @@ describe('GET /api/bookings/conflicts', () => {
   test('reversed dates are rejected', async () => {
     const res = await request(app).get('/api/bookings/conflicts?startDate=2026-11-03&endDate=2026-11-01&area=general').set(asUser({ id: 1, role: 'manager' }));
     expect(res.status).toBe(400);
+  });
+});
+
+describe('Server-side overlap check when a booking is approved (CR-01)', () => {
+  const app = buildApp();
+  const manager = { id: 2, role: 'manager' };
+  const clash = [{ id: 8, requester_name: 'Aroha', start_date: '2026-11-02', end_date: '2026-11-04', area: 'general' }];
+  const stored = { id: 5, status: 'pending', start_date: '2026-11-01', end_date: '2026-11-03', area: 'general' };
+
+  beforeEach(() => {
+    Booking.findById.mockReset();
+    Booking.findConflicts.mockReset();
+    Booking.updateStatus.mockReset();
+    Booking.create.mockReset();
+    Booking.findById.mockResolvedValue(stored);
+    Booking.updateStatus.mockResolvedValue({ ...stored, status: 'approved' });
+    Booking.create.mockResolvedValue({ ...stored, status: 'approved', user_id: 1 });
+  });
+
+  test('approving a booking that overlaps an approved one is refused with 409 and the clashes', async () => {
+    Booking.findConflicts.mockResolvedValue(clash);
+    const res = await request(app).patch('/api/bookings/5/status').set(asUser(manager)).send({ status: 'approved' });
+    expect(res.status).toBe(409);
+    expect(res.body.conflicts).toEqual(clash);
+    expect(Booking.updateStatus).not.toHaveBeenCalled();
+  });
+
+  test('the check uses the stored dates and area and excludes the booking itself', async () => {
+    Booking.findConflicts.mockResolvedValue([]);
+    await request(app).patch('/api/bookings/5/status').set(asUser(manager)).send({ status: 'approved' });
+    expect(Booking.findConflicts).toHaveBeenCalledWith({ startDate: '2026-11-01', endDate: '2026-11-03', area: 'general', excludeId: 5 });
+  });
+
+  test('a Date object from the database is turned into a local YYYY-MM-DD string', async () => {
+    Booking.findById.mockResolvedValue({ ...stored, start_date: new Date(2026, 10, 1), end_date: new Date(2026, 10, 3) });
+    Booking.findConflicts.mockResolvedValue([]);
+    await request(app).patch('/api/bookings/5/status').set(asUser(manager)).send({ status: 'approved' });
+    const args = Booking.findConflicts.mock.calls[0][0];
+    expect(args.startDate).toBe('2026-11-01');
+    expect(args.endDate).toBe('2026-11-03');
+  });
+
+  test('approving with no overlap succeeds', async () => {
+    Booking.findConflicts.mockResolvedValue([]);
+    const res = await request(app).patch('/api/bookings/5/status').set(asUser(manager)).send({ status: 'approved' });
+    expect(res.status).toBe(200);
+    expect(Booking.updateStatus).toHaveBeenCalledWith('5', 'approved', undefined);
+  });
+
+  test('a manager can approve anyway with overrideConflicts: true, and no check is made', async () => {
+    Booking.findConflicts.mockResolvedValue(clash);
+    const res = await request(app).patch('/api/bookings/5/status').set(asUser(manager)).send({ status: 'approved', overrideConflicts: true });
+    expect(res.status).toBe(200);
+    expect(Booking.findConflicts).not.toHaveBeenCalled();
+    expect(Booking.updateStatus).toHaveBeenCalled();
+  });
+
+  test('a truthy string does not count as an override', async () => {
+    Booking.findConflicts.mockResolvedValue(clash);
+    const res = await request(app).patch('/api/bookings/5/status').set(asUser(manager)).send({ status: 'approved', overrideConflicts: 'true' });
+    expect(res.status).toBe(409);
+  });
+
+  test('denying or returning a booking to pending does not run the overlap check', async () => {
+    Booking.findConflicts.mockResolvedValue(clash);
+    await request(app).patch('/api/bookings/5/status').set(asUser(manager)).send({ status: 'denied' });
+    await request(app).patch('/api/bookings/5/status').set(asUser(manager)).send({ status: 'pending' });
+    expect(Booking.findConflicts).not.toHaveBeenCalled();
+    expect(Booking.updateStatus).toHaveBeenCalledTimes(2);
+  });
+
+  test('approving a booking that does not exist returns 404', async () => {
+    Booking.findById.mockResolvedValue(null);
+    const res = await request(app).patch('/api/bookings/99/status').set(asUser(manager)).send({ status: 'approved' });
+    expect(res.status).toBe(404);
+    expect(Booking.updateStatus).not.toHaveBeenCalled();
+  });
+
+  test('a member still cannot approve, and no check runs', async () => {
+    const res = await request(app).patch('/api/bookings/5/status').set(asUser({ id: 3, role: 'member' })).send({ status: 'approved' });
+    expect(res.status).toBe(403);
+    expect(Booking.findConflicts).not.toHaveBeenCalled();
+  });
+
+  test('a manager creating an already-approved booking that overlaps is refused with 409', async () => {
+    Booking.findConflicts.mockResolvedValue(clash);
+    const res = await request(app).post('/api/bookings').set(asUser(manager)).send({ ...validBody, status: 'approved' });
+    expect(res.status).toBe(409);
+    expect(res.body.conflicts).toEqual(clash);
+    expect(Booking.create).not.toHaveBeenCalled();
+  });
+
+  test('a manager can create the overlapping approved booking with overrideConflicts: true', async () => {
+    Booking.findConflicts.mockResolvedValue(clash);
+    const res = await request(app).post('/api/bookings').set(asUser(manager)).send({ ...validBody, status: 'approved', overrideConflicts: true });
+    expect(res.status).toBe(201);
+    expect(Booking.create).toHaveBeenCalled();
+  });
+
+  test('a booking created as pending is never checked (the manager reviews it later)', async () => {
+    Booking.findConflicts.mockResolvedValue(clash);
+    const res = await request(app).post('/api/bookings').set(asUser(manager)).send({ ...validBody });
+    expect(res.status).toBe(201);
+    expect(Booking.findConflicts).not.toHaveBeenCalled();
+  });
+
+  test('a member cannot skip the check by sending status approved and the override flag', async () => {
+    Booking.create.mockResolvedValue({ ...stored, status: 'pending', user_id: 3 });
+    const res = await request(app).post('/api/bookings').set(asUser({ id: 3, role: 'member' })).send({ ...validBody, status: 'approved', overrideConflicts: true });
+    expect(res.status).toBe(201);
+    expect(Booking.create.mock.calls[0][0].status).toBe('pending');
   });
 });

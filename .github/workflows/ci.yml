@@ -8,7 +8,7 @@ on:
 
 jobs:
   backend-tests:
-    name: Backend tests
+    name: Backend lint and tests
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -21,6 +21,8 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
       - run: npm ci
+      # Static checks first (ESLint, see backend/eslint.config.js).
+      - run: npm run lint
       # Tests mock the database (jest.mock('pg')), so no Postgres is needed.
       - run: npm test
 

@@ -1,4 +1,3 @@
-// frontend/src/pages/ResetPasswordPage.jsx
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -71,6 +70,8 @@ export default function ResetPasswordPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              minLength={8}
+              title="Must be 8 characters"
               autoComplete="new-password"
               className="w-full border rounded px-3 py-2"
             />

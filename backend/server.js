@@ -15,12 +15,11 @@ const checklistRoutes = require('./routes/checklists');
 const settingsRoutes = require('./routes/settings');
 const caretakerTaskRoutes = require('./routes/caretakerTasks');
 const equipmentRoutes = require('./routes/equipment');
+const rateLimit = require('express-rate-limit');
+
 
 const app = express();
 
-// Hosted platforms (Render, etc.) put a TLS-terminating proxy in front of
-// the app. Trusting it lets Express see the original https request, which
-// the Secure login cookie (see routes/auth.js) relies on in production.
 app.set('trust proxy', 1);
 
 const DEV_ORIGIN_PATTERN = /^http:\/\/(localhost|127\.0\.0\.1|(10|172\.(1[6-9]|2\d|3[01])|192\.168)\.\d{1,3}\.\d{1,3}):3000$/;
@@ -42,6 +41,18 @@ app.use(
 
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+const authLimiter = rateLimit({
+     windowMs: 15 * 60 * 1000,
+     limit: 20,
+     standardHeaders: true,
+     legacyHeaders: false,
+     message: { error: 'Too many attempts. Please wait a few minutes and try again.' },
+   });
+   app.use(
+     ['/api/auth/login', '/api/auth/register', '/api/auth/forgot-password', '/api/auth/reset-password'],
+     authLimiter
+   );
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
