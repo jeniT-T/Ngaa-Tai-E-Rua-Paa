@@ -7,8 +7,8 @@ dist/
 # environment variables
 .env
 .env.local
-.env.back
-.env.*.back
+.env.bak
+.env.*.bak
 coverage/
 
 # logs
