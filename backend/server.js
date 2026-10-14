@@ -1,7 +1,9 @@
 // backend/server.js
-require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
+// The .env file lives in the project root (next to README.md), so load it from
+// there no matter which folder node is started from.
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
