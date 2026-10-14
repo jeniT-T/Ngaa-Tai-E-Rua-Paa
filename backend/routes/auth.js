@@ -1,7 +1,7 @@
 
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const { signToken } = require('../utils/jwt');
 const crypto = require('crypto');
 const User = require('../models/User');
 const requireAuth = require('../middleware/requireAuth');
@@ -61,7 +61,7 @@ router.post('/register', async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 12);
     const user = await User.create({ email, passwordHash, role: 'member', name });
 
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = signToken({ userId: user.id });
     res.cookie('token', token, COOKIE_OPTIONS);
 
     res.status(201).json({ user });
@@ -89,7 +89,7 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = signToken({ userId: user.id });
     res.cookie('token', token, COOKIE_OPTIONS);
 
     const { password_hash, ...safeUser } = user;

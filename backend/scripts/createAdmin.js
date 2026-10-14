@@ -1,5 +1,7 @@
 // Bootstrap an Admin or Manager; role defaults to admin.
-require('dotenv').config();
+const path = require('path');
+// Reads the same .env file as the server (project root).
+require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 

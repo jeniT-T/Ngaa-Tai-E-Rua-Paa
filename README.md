@@ -4,112 +4,100 @@ A content management system for a marae. It provides a public website for visito
 
 ## Quick setup for a first-time user
 
-This guide is intended for a non-technical user who wants to run the project locally using Visual Studio Code and Docker.
+This runs the project on your own computer with Node.js and PostgreSQL.
 
-### 1. Check that Docker is available
+### 1. Install the tools
 
-Install Docker before continuing:
+- **Node.js 20 (LTS)** from https://nodejs.org. Check it with `node -v`.
+- **PostgreSQL 16** (newer versions should also work) from https://www.postgresql.org/download. Remember the password you set for the `postgres` user. Check it with `psql --version`.
+- **Git**, to download the project.
 
-- **Windows and macOS:** Docker Desktop
-- **Linux:** Docker Engine and Docker Compose
+### 2. Create the database
 
-Open Docker Desktop or Docker Engine and make sure Docker is running. If you are using Visual Studio Code, also install the **Docker** extension.
+Open a terminal and run:
 
-### 2. Open the project in Visual Studio Code
+```bash
+psql -U postgres -c "CREATE DATABASE marae_db;"
+```
 
-1. Open Visual Studio Code.
-2. Select **File → Open Folder**.
-3. Choose the folder containing this project.
+Enter your PostgreSQL password when asked. (You can also use a free hosted Postgres such as Neon instead; just use its connection string in step 3.)
+
+> **Mac with Homebrew?** A Homebrew install has no `postgres` user and no password, so the command above fails with `role "postgres" does not exist`. Use your Mac username instead:
+>
+> - Step 2: run `createdb marae_db`.
+> - Step 3: set `DATABASE_URL` to `postgresql://YOUR_MAC_USERNAME@localhost:5432/marae_db` (no password). Find your username with `whoami`.
+> - Step 4: run `psql -d marae_db -v ON_ERROR_STOP=1 -f database/schema.sql` (leave out `-U postgres`).
 
 ### 3. Create the local environment file
 
-The project uses a file named `.env` to store local settings.
+The project reads its settings from a file named `.env` in the project folder (next to this README). It is not part of a GitHub download, so each developer creates their own.
 
-If `.env` does not already exist:
+1. Copy `.env.example` and name the copy `.env`.
+2. Set `DATABASE_URL` to match your PostgreSQL password, for example `postgresql://postgres:YOUR_PASSWORD@localhost:5432/marae_db`.
+3. Set `JWT_SECRET` to a long random value. You can make one with: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`
 
-1. Open `.env.example` in Visual Studio Code.
-2. Copy all of its contents.
-3. Create a new file named `.env` in the project root.
-4. Paste the copied contents into `.env`.
+> Use a different `JWT_SECRET` for every installation and never share or commit your `.env`.
 
-Each developer needs their own `.env`; it is not included in a GitHub clone.
+### 4. Create the tables
 
-### 4. Add the login secret
-
-The backend needs a `JWT_SECRET` for login and registration to work.
-
-Open `.env` and add this line near the other settings:
-
-```env
-JWT_SECRET=replace-this-with-a-long-random-value
-```
-
-Use a long value that contains letters, numbers, and symbols. For example:
-
-```env
-JWT_SECRET=local-development-secret-1234567890
-```
-
-> This is only for local development. Do not use this value in a public or production environment.
-
-### 5. Start the project with Docker
-
-Open the VS Code terminal by selecting **Terminal → New Terminal**. Then enter:
+Run this once, from the project folder, on an empty database:
 
 ```bash
-docker compose up --build
+psql -U postgres -d marae_db -v ON_ERROR_STOP=1 -f database/schema.sql
 ```
 
-Wait for Docker to build the images and start the services. The first run can take a few minutes.
+If the database already contains the project tables, do not run it again.
 
-### 6. Open the website
+The schema also seeds the Marae Guide with its saved categories and item order, then creates the default Cleaning & Checkout checklist. Existing guide items remain editable in **Content Manager -> Arrival Guide**. Staff can edit the booking template at `/checklists/default`.
 
-After the containers start, open this address in your web browser:
-
-**http://localhost:3000**
-
-The project website should appear.
-
-### 7. Set up the database
-
-The local database is managed by Docker. If you are using a fresh copy of the project and the database has no tables yet, open the terminal and run:
+### 5. Install the packages
 
 ```bash
-docker compose exec -T db psql -U postgres -d marae_db -v ON_ERROR_STOP=1 < database/schema.sql
+cd backend && npm ci
+cd ../frontend && npm ci
 ```
 
-If the database already contains the project tables, do not run this command again.
+### 6. Start the project
 
-The schema also seeds the Marae Guide with its saved categories and item order, then creates the default Cleaning & Checkout checklist. Existing guide items remain editable in **Content Manager → Arrival Guide**. Staff can edit the booking template at `/checklists/default`.
-
-### 8. Create Admin and Manager accounts
-
-Create separate Admin and Manager accounts on a fresh database. Admins manage content and site settings; Managers manage users, booking approvals, and issues.
-
-Run this command in the terminal:
+Open two terminals.
 
 ```bash
-docker compose exec backend node scripts/createAdmin.js "Admin Name" admin@example.com "your-admin-password" admin
-docker compose exec backend node scripts/createAdmin.js "Manager Name" manager@example.com "your-manager-password" manager
+# Terminal 1: the backend (API on port 4000)
+cd backend
+npm run dev
 ```
-
-Replace `Your Name`, `your@email.com`, and `yourPassword123` with the details you want to use.
-
-### 9. Stop the project
-
-Press **Ctrl + C** in the terminal where Docker Compose is running.
-
-To stop it later from another terminal, run:
 
 ```bash
-docker compose down
+# Terminal 2: the website (port 3000)
+cd frontend
+npm run dev
 ```
 
-To start the project again, run:
+Then open **http://localhost:3000** in your browser. Stop either one with **Ctrl + C**.
+
+### 7. Create Admin and Manager accounts
+
+Create separate Admin and Manager accounts on a fresh database. Admins manage content and site settings; Managers manage users, booking approvals, and issues. From the `backend` folder run:
 
 ```bash
-docker compose up
+node scripts/createAdmin.js "Admin Name" admin@example.com "your-admin-password" admin
+node scripts/createAdmin.js "Manager Name" manager@example.com "your-manager-password" manager
 ```
+
+Replace the names, emails and passwords with your own. Passwords should be at least 8 characters. Anyone who registers on the website becomes a `member`; the Manager can create caretaker accounts from the app.
+
+### 8. Email while developing
+
+If `SMTP_HOST` is not set in `.env`, the app prints each email (for example a password-reset link) in the backend terminal instead of sending it. To send real email, fill in the `SMTP_*` and `EMAIL_FROM` settings with the details from your email provider.
+
+### 9. Run the checks
+
+```bash
+cd backend && npm test && npm run lint
+cd ../frontend && npm run lint && npm run build
+```
+
+The backend tests use a mocked database, so they do not need PostgreSQL.
 
 ## Deploying a demo for the client (Render + Neon)
 
@@ -138,36 +126,38 @@ need a real SMTP service (`SMTP_*` variables); use demo data only.
 
 - Website: http://localhost:3000
 - Backend API: http://localhost:4000
-- Email inbox: http://localhost:8025
-- Database: port 5433
+- Database: PostgreSQL on port 5432 (the default)
 
 ## Environment variables
 
-Set these in `.env` (backend reads them via `docker-compose.yml`'s `env_file`):
+Set these in the `.env` file in the project folder (copy `.env.example` to start):
 
 | Variable | Used for | Example |
 |---|---|---|
-| `DATABASE_URL` | Postgres connection string | `postgresql://postgres:password@db:5432/marae_db` |
+| `DATABASE_URL` | Postgres connection string | `postgresql://postgres:password@localhost:5432/marae_db` |
 | `JWT_SECRET` | Signing/verifying login session tokens | any long random string |
-| `PAYLOAD_SECRET` | Reserved, not currently read by the app | `notsetyet` |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` | Sending email. If `SMTP_HOST` is empty, emails are printed in the backend terminal | `smtp.example.com`, `587`, `false` |
+| `EMAIL_FROM` | Sender name and address on emails | `Manage My Marae <no-reply@example.com>` |
+| `FRONTEND_URL` | Production only: the public address of the site | `https://your-site.example.com` |
+| `NODE_ENV` | Set to `production` on a live site | `production` |
 
 Without `JWT_SECRET`, `jwt.sign()` in `backend/routes/auth.js` will throw and login/register
 will fail.
 
 ## Database
 
-Run `database/schema.sql` only on an empty database, using the command in step 7. It includes the current tables, guide seed, and booking checklist template; do not apply all historical migrations afterward.
+Run `database/schema.sql` only on an empty database, using the command in step 4. It includes the current tables, guide seed, and booking checklist template; do not apply all historical migrations afterward.
 
 For an existing database, back it up first and apply only migrations missing from that installation. Filenames are not a chronological migration sequence. `migration_content_v2.sql` is only for the old `type`/`audience` content schema and must not be rerun on the current schema.
 
 For an installation updated before the latest cleaning checklist and issue changes, apply these files in this order (skip any already applied):
 
 ```bash
-docker compose exec -T db psql -U postgres -d marae_db -v ON_ERROR_STOP=1 < database/migration_issue_completion_notes.sql
-docker compose exec -T db psql -U postgres -d marae_db -v ON_ERROR_STOP=1 < database/migration_checklist_completions.sql
-docker compose exec -T db psql -U postgres -d marae_db -v ON_ERROR_STOP=1 < database/migration_arrival_content.sql
-docker compose exec -T db psql -U postgres -d marae_db -v ON_ERROR_STOP=1 < database/migration_booking_cleaning_checklist.sql
-docker compose exec -T db psql -U postgres -d marae_db -v ON_ERROR_STOP=1 < database/migration_default_checklist_editor.sql
+psql -U postgres -d marae_db -v ON_ERROR_STOP=1 -f database/migration_issue_completion_notes.sql
+psql -U postgres -d marae_db -v ON_ERROR_STOP=1 -f database/migration_checklist_completions.sql
+psql -U postgres -d marae_db -v ON_ERROR_STOP=1 -f database/migration_arrival_content.sql
+psql -U postgres -d marae_db -v ON_ERROR_STOP=1 -f database/migration_booking_cleaning_checklist.sql
+psql -U postgres -d marae_db -v ON_ERROR_STOP=1 -f database/migration_default_checklist_editor.sql
 ```
 
 The guide seed inserts missing items without changing existing categories or text. Do not rerun the historical `migration_arrival_categories.sql` or `migration_arrival_groups.sql`: they reassign categories and can undo Content Manager edits. The default-template migration fills an empty template but preserves a populated staff-edited template.
@@ -188,7 +178,6 @@ For older installations, inspect their tables and apply the relevant earlier mig
 ```
 marae-app/
 │
-├── docker-compose.yml
 ├── README.md
 ├── .env.example
 │
@@ -272,8 +261,7 @@ marae-app/
 
 ## Setting this up for a different marae
 
-This app is built as a single-tenant system: one deployment (one database, one Docker
-Compose stack) per marae. If another marae wants their own version, they fork this repo and
+This app is built as a single-tenant system: one deployment (one database, one running copy of the app) per marae. If another marae wants their own version, they fork this repo and
 run their own copy — no code sharing or shared login between maraes. Here's everything that
 needs to change to make a fork "theirs":
 
@@ -289,7 +277,7 @@ needs to change to make a fork "theirs":
    the image) so the numbered pins land on the right spots for your own site. The pin
    name/description text itself is CMS-editable once the app is running (Content Manager →
    Map).
-5. **First staff accounts** — follow step 8 to create both an Admin and a Manager. Log in as the Manager to create or update other users; use the Admin for Content Manager and Site Settings.
+5. **First staff accounts** — follow step 7 to create both an Admin and a Manager. Log in as the Manager to create or update other users; use the Admin for Content Manager and Site Settings.
 6. **Everything else is content, not code.** Once you've got an admin account, log in and use
    the Content Manager to write your own Home/History/Facilities/Events/Map copy, your own
    arrival guide sections (equipment, cleaning, facilities info), and set your own colors per
