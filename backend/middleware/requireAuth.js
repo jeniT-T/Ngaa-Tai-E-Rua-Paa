@@ -1,5 +1,5 @@
 
-const jwt = require('jsonwebtoken');
+const { verifyToken } = require('../utils/jwt');
 const User = require('../models/User');
 
 async function requireAuth(req, res, next) {
@@ -10,7 +10,7 @@ async function requireAuth(req, res, next) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = verifyToken(token);
 
     const user = await User.findById(decoded.userId);
     if (!user) {

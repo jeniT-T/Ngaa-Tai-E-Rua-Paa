@@ -1,9 +1,11 @@
 // backend/routes/content.js
+const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const express = require('express');
 const multer = require('multer');
 const ContentItem = require('../models/ContentItem');
+const { IMAGE_EXTENSIONS, detectImageExtension, readHead } = require('../utils/imageTypes');
 const requireAuth = require('../middleware/requireAuth');
 const requireRole = require('../middleware/requireRole');
 
@@ -18,13 +20,14 @@ const router = express.Router();
 // object storage (S3-compatible) and keep image_url as just a URL either
 // way, so nothing above this layer has to change.
 const UPLOAD_DIR = path.join(__dirname, '..', 'uploads');
-const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+const ALLOWED_IMAGE_TYPES = new Set(Object.keys(IMAGE_EXTENSIONS));
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8MB — generous for a photo, small enough to not fill the disk
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOAD_DIR),
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
+    // The extension comes from the MIME type, never from the name the browser sent (CR-11).
+    const ext = IMAGE_EXTENSIONS[file.mimetype];
     cb(null, `${Date.now()}-${crypto.randomBytes(8).toString('hex')}${ext}`);
   },
 });
@@ -56,6 +59,20 @@ router.post('/upload', requireAuth, requireRole('admin', 'caretaker'), (req, res
     if (!req.file) {
       return res.status(400).json({ error: 'No image file provided' });
     }
+
+    // The MIME type is set by the browser, so also check the first bytes of the
+    // saved file. If they do not match the type, delete the file (CR-11).
+    let looksRight;
+    try {
+      looksRight = detectImageExtension(readHead(req.file.path)) === IMAGE_EXTENSIONS[req.file.mimetype];
+    } catch {
+      looksRight = false;
+    }
+    if (!looksRight) {
+      fs.unlink(req.file.path, () => {});
+      return res.status(400).json({ error: 'The file is not a valid JPEG, PNG, WEBP or GIF image' });
+    }
+
     res.status(201).json({ url: `/uploads/${req.file.filename}` });
   });
 });
